@@ -16,7 +16,7 @@ const linkSub = (rawMD, links, baseUrl) => {
       let replacement;
       if (each[2] !== "~") {
           const bareName = each.substring(2, each.length - 2);
-          replacement = `[${bareName}](${baseUrl}notes/${bareName})`;
+          replacement = `[${bareName}](${baseUrl}notes/${encodeURI(bareName)})`;
       } else {
         // if the link is escaped with ~
           const bareName = each.substring(3, each.length - 2);
@@ -28,7 +28,7 @@ const linkSub = (rawMD, links, baseUrl) => {
 };
 
 const getUniqueLinks = rawMD => {
-  const uniqueLinks = [...new Set(rawMD.match(/[[~[\w\d]+]]/g))];
+  const uniqueLinks = [...new Set(rawMD.match(/\[\[(.*?)\]]/g))];
   return uniqueLinks;
 };
 
