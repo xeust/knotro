@@ -2,7 +2,7 @@
 
 ### General Info
 
-*yarc* gives you a "box" of notes. It is a minimal micro-homage to the bi-directional linking tools like [Roam Research](https://roamresearch.com/).
+*yarc* gives you a "box" of notes. It is a minimal micro-homage to the bi-directional linking in tools like [Roam Research](https://roamresearch.com/).
 
 Every note has a url at: `:base_url/notes/:note_name`
 
@@ -20,7 +20,26 @@ A list of all notes that link to the present note are under a header **Backlinks
 The home page lets one search for or go to notes.
 
 
-### Installing
+### Deploying
+
+My instance of this app is currently running on [Deta](https://www.deta.sh/) (disclosure: I work there).
+
+It could, with little modification, be configured to run elsewhere; a database is needed.
+
+#### On Deta
+Clone the GitHub repo.
+
+Install the [Deta CLI](https://docs.deta.sh/docs/cli/install) and use 2 commands from within the yarc directory:
+
+```
+deta login
+```
+
+```
+deta new
+```
+
+You're copy of *yarc* should be live for personal use.
 
 ### Libraries Used
 
