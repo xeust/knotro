@@ -28,6 +28,8 @@ def search_handler(search_term: str):
 #create notes or update backlinks server side if diff in links
 @app.get("/notes/{note_name}")
 async def read_note(note_name: str, json: bool = False):
+    note_key = urlsafe_key(note_name)
+    print(note_key)
     note = get_note(note_name)
     note_dict = {}
 
@@ -37,7 +39,7 @@ async def read_note(note_name: str, json: bool = False):
     else:
       new_note = Note(name=note_name)
       note_dict = new_note.dict()
-      notes.put(note_dict, new_note.name)
+      notes.put(note_dict, note_key)
 
     note_dict["base_url"] = base_url
 
@@ -52,7 +54,8 @@ async def read_note(note_name: str, json: bool = False):
 
 @app.put("/{note_name}")
 async def add_note(new_note: Note):
-    old_note = get_note(new_note.name)
+    note_key = urlsafe_key(new_note.name)
+    old_note = get_note(note_key)
     old_links = old_note.links if old_note else []
     removed_links = list_diff(old_links, new_note.links)
     added_links = list_diff(new_note.links, old_links)

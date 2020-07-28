@@ -58,7 +58,7 @@ const results = props => {
 };
 
 const main = props => {
-    let goToNote = props.toSearch.split(' ').join('_');
+    let goToNote = props.toSearch;
     if (goToNote === "") {
         goToNote = "getting_started";
     }

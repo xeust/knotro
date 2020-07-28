@@ -1,4 +1,5 @@
 import os
+import base64
 import bleach
 from pydantic import BaseModel
 from deta import Deta
@@ -30,6 +31,10 @@ class Links(BaseModel):
     links: list = []
 
 
+def urlsafe_key(note_name):
+    return base64.b64encode(note_name.encode('ascii')).decode('ascii').replace("=", "_")
+
+
 # db operations
 def fetch_notes(term):
     my_notes = next(notes.fetch([{"name?contains": term}, {"content?contains": term}]))
@@ -38,7 +43,8 @@ def fetch_notes(term):
 
 # get note, transform if empty lists
 def get_note(note_name):
-    note_dict = notes.get(note_name)
+    note_key = urlsafe_key(note_name)
+    note_dict = notes.get(note_key)
 
     if not note_dict:
         return None
@@ -56,7 +62,7 @@ def get_note(note_name):
 def db_update_note(note: Note):
     note_dict = note.dict()
     note_dict["content"] = bleach.clean(note_dict["content"])
-    notes.put(note_dict, note.name)
+    notes.put(note_dict, urlsafe_key(note.name))
     return Note(**note_dict)
 
 
