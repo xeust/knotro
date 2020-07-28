@@ -53,3 +53,5 @@ You're copy of *yarc* should be live for personal use.
 - [Deta](https://www.deta.sh/)
 - [hyperapp](https://github.com/jorgebucaran/hyperapp)
 - [Showdown](http://showdownjs.com/)
+- [CodeJar](https://github.com/antonmedv/codejar)
+- [highlightjs](https://highlightjs.org/usage/)
