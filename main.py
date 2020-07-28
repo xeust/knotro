@@ -54,7 +54,6 @@ async def read_note(note_name: str, json: bool = False):
 @app.put("/{note_name}")
 async def add_note(new_note: Note):
     old_note = get_note(new_note.name)
-    print(old_note)
     old_links = old_note.links if old_note else []
     removed_links = list_diff(old_links, new_note.links)
     added_links = list_diff(new_note.links, old_links)
@@ -77,9 +76,3 @@ def runner(event):
     note = notes.get(key)
     print(note)
     return notes.delete(note["key"])
-    #return get_note("getting_started").dict()
-    
-
-@app.lib.run("clear")
-def runner(event):
-    return notes.delete("nine")
