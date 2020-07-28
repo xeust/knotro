@@ -33,7 +33,7 @@ Clone the GitHub repo.
 
 Login to the [Deta](https://web.deta.sh/) web app, and a 'default project' will be created.
 
-Install the [Deta CLI](https://docs.deta.sh/docs/cli/install) and use 3 commands from within the yarc directory:
+Install the [Deta CLI](https://docs.deta.sh/docs/cli/install) and use 3 commands from within your local yarc directory:
 
 ```
 deta login
