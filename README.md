@@ -29,7 +29,7 @@ It could, with little modification, be configured to run elsewhere; a database i
 #### On Deta
 Clone the GitHub repo.
 
-Install the [Deta CLI](https://docs.deta.sh/docs/cli/install) and use 2 commands from within the yarc directory:
+Install the [Deta CLI](https://docs.deta.sh/docs/cli/install) and use 3 commands from within the yarc directory:
 
 ```
 deta login
@@ -37,6 +37,10 @@ deta login
 
 ```
 deta new
+```
+
+```
+deta deploy
 ```
 
 You're copy of *yarc* should be live for personal use.
