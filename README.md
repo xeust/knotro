@@ -26,9 +26,8 @@ A list of all notes that link to the present note are under a header **Backlinks
 
 The home page lets one search for or go directly to notes.
 
-**search** brings up all notes that contain a given query.
-
-**go** brings you directly to a (potentially new) note.
+- **search**: brings up all notes that contain a given query.
+- **go**: brings you directly to a (potentially new) note.
 
 
 ### Deploying
@@ -38,11 +37,12 @@ My instance of yarc is running on [Deta](https://www.deta.sh/).
 It could, with little modification, be configured to run elsewhere; a database is needed.
 
 #### On Deta
-Clone the GitHub repo.
 
-Login to the [Deta](https://web.deta.sh/) web app, and a 'default project' will be created (if you have a project, you can skip this step).
+1. Clone the GitHub repo.
 
-Install the [Deta CLI](https://docs.deta.sh/docs/cli/install) and use 3 commands from within the yarc directory:
+2. Login to the [Deta](https://web.deta.sh/) web app, and a 'default project' will be created (if you have a project, you can skip this step).
+
+3. Install the [Deta CLI](https://docs.deta.sh/docs/cli/install) and use 3 commands from within the yarc directory:
 
 ```
 deta login
