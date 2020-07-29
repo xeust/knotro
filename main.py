@@ -69,10 +69,18 @@ async def add_note(new_note: Note):
     return {"message": "success"}
     
     
-@app.lib.run()
+@app.lib.run("del")
 def runner(event):
     note_name = event.json.get("name")
     key = urlsafe_key(note_name)
     note = notes.get(key)
     print(note)
     return notes.delete(note["key"])
+
+
+@app.lib.run("get")
+def runner(event):
+    note_name = event.json.get("name")
+    key = urlsafe_key(note_name)
+    note = notes.get(key)
+    return note

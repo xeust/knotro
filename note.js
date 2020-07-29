@@ -101,7 +101,7 @@ const edit = state => {
   return [newState,
     [attachCodeJar, { state: newState, updateContent }]
   ];
-}
+};
 
 const save = state => {
   let markdown = state.note.content;
