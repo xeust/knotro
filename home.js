@@ -9,14 +9,9 @@ const getNotes = async (dispatch, options) => {
     const searchTerm = options.state.toSearch;
     const rawResponse = await fetch(`${options.state.base_url}search/${searchTerm}`, {
         method: 'GET',
-        mode: 'cors',
-        cache: 'no-cache',
-        credentials: 'same-origin',
         headers: {
         'Content-Type': 'application/json'
-        },
-        redirect: 'follow',
-        referrerPolicy: 'no-referrer'
+        }
     });
     let links = await rawResponse.json();
     dispatch(options.addNotes(options.state, links));
