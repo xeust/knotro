@@ -15,7 +15,7 @@ The notes are also accessible via API:
 
 `GET :base_url/notes/:note_name?json=true`
 
-You can edit notes using the **edit** button, writing regular markdown. **save** will save your changes.
+You can edit notes using the **edit** button, writing regular markdown. **save** will save your changes and switch to a notes view.
 
 You can link to any note in your box using the convention **[[note_name]]**.
 - This creates bi-directional links. 
@@ -29,8 +29,6 @@ The home page lets one search for or go directly to notes.
 **search** brings up all notes that contain a given query.
 
 **go** brings you directly to a (potentially new) note.
-
-
 
 
 ### Deploying
