@@ -19,8 +19,8 @@ const getNotes = async (dispatch, options) => {
         referrerPolicy: 'no-referrer'
     });
     let links = await rawResponse.json();
-    dispatch(options.addNotes(options.state, links))
-}
+    dispatch(options.addNotes(options.state, links));
+};
 
 // actions
 
@@ -28,21 +28,21 @@ const addNotes = (state, notes) => ({
     ...state,
     hasSearched: true,
     links: notes
-})
+});
 
 const newToSearch = (state, val) => {
     return {
         ...state,
         hasSearched: false,
         toSearch: val,
-    }
+    };
 };
 
 const search = state => {
     return [state,
         [getNotes, { state, addNotes }]
     ];
-}
+};
 
 const results = props => {
     return h("div", {class: "home-right"}, [
