@@ -57,14 +57,9 @@ const updateDatabase = (dispatch, options) => {
   note.links = options.bareLinks;
   const response = fetch(`${options.state.note.base_url}${options.state.note.name}`, {
         method: 'PUT',
-        mode: 'cors',
-        cache: 'no-cache',
-        credentials: 'same-origin',
         headers: {
           'Content-Type': 'application/json'
         },
-        redirect: 'follow',
-        referrerPolicy: 'no-referrer',
         body: JSON.stringify(options.state.note)
     });
 };
