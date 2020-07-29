@@ -1,7 +1,7 @@
 ## yarc
 
 
-![yarc_view](assets/yarc.png)
+![yarc](assets/yarc_note.png)
 
 ### General Info
 
