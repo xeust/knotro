@@ -47,7 +47,7 @@ deta new
 deta deploy
 ```
 
-You're copy of *yarc* should be live for personal use.
+You're copy of *yarc* should be live for personal use (you can get the url from a `deta details` cli command or from the Micros dashboard within Deta).
 
 ### Libraries Used
 
