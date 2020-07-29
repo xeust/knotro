@@ -1,5 +1,7 @@
 ## yarc
 
+![yarc](assets/yarc.png)
+
 ### General Info
 
 *yarc* gives you a "box" of notes. It is a minimal micro-homage to the bi-directional linking in tools like [Roam Research](https://roamresearch.com/).
