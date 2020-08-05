@@ -34,7 +34,7 @@ The home page lets one search for or go directly to notes.
 
 My instance of yarc is running on [Deta](https://www.deta.sh/).
 
-It could, with little modification, be configured to run elsewhere; a database is needed.
+It could, with little modification, be configured to run elsewhere (it's a FastAPI app), but a database is needed.
 
 #### On Deta
 
@@ -54,6 +54,8 @@ deta new
 
 
 You're copy of *yarc* should be live for personal use (you can get the url from a `deta details` cli command or from the Micros dashboard within Deta).
+
+The endpoint and "box" are protected by default, but is accessible if one is logged in to Deta, with api keys, or by making it public.
 
 ### Libraries Used
 
