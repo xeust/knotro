@@ -53,7 +53,7 @@ deta new
 ```
 
 
-You're copy of *yarc* should be live for personal use (you can get the url from a `deta details` cli command or from the Micros dashboard within Deta).
+Your copy of *yarc* should be live for personal use (you can get the url from a `deta details` cli command or from the Micros dashboard within Deta).
 
 The endpoint and "box" are protected by default, but is accessible if one is logged in to Deta, with api keys, or by making it public.
 
