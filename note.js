@@ -46,7 +46,7 @@ const attachCodeJar = (dispatch, options) => {
     jar = CodeJar(container, highlight);
     jar.updateCode(options.state.note.content);
     jar.onUpdate(code =>
-      dispatch(options.updateContent(options.state, code)) // this is an old state
+      dispatch(options.UpdateContent(options.state, code)) // this is an old state
     );
 
   });
@@ -78,7 +78,7 @@ const attachMarkdown = (dispatch, options) => {
 };
 
 // actions
-const updateContent = (state, newContent) => {
+const UpdateContent = (state, newContent) => {
   return {
     ...state,
     note: {
@@ -88,17 +88,17 @@ const updateContent = (state, newContent) => {
   };
 };
 
-const edit = state => {
+const Edit = state => {
   const newState = {
     ...state,
     view: "EDIT"
   };
   return [newState,
-    [attachCodeJar, { state: newState, updateContent }]
+    [attachCodeJar, { state: newState, UpdateContent }]
   ];
 };
 
-const save = state => {
+const Save = state => {
   let markdown = state.note.content;
   const uniqueLinks = getUniqueLinks(markdown);
   const bareLinks = uniqueLinks.map(each =>
@@ -131,8 +131,8 @@ const main = props => {
         ]),
         h("div", {class: "navbar-right"}, [
           props.view === "EDIT" ?
-            h("button", { onclick: save, class: "nav-button" }, "save") :
-            h("button", { onclick: edit, class: "nav-button" }, "edit")
+            h("button", { onclick: Save, class: "nav-button" }, "save") :
+            h("button", { onclick: Edit, class: "nav-button" }, "edit")
         ])
     ]),
     h("div", {class: "content-wrapper"}, [

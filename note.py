@@ -8,7 +8,7 @@ def base_wrapper(name):
   deta = Deta(os.environ["DETA_PROJECT_KEY"])
   return deta.Base(name)
 
-notes = base_wrapper("notes")
+notes = base_wrapper("notes2")
 
 base_url = "https://" + os.environ["DETA_PATH"] + ".deta.dev/"
 
@@ -49,11 +49,14 @@ def get_note(note_name):
     if not note_dict:
         return None
 
-    checks = ["links", "backlinks"] # db can't store empty lists ??
+    list_checks = ["links", "backlinks"] # db can't store empty lists, fix db
 
-    for each in checks:
+    for each in list_checks:
       if not note_dict[each]:
         note_dict[each] = []
+    
+    if not note_dict["content"]: # db can't store empty strings, fix db
+        note_dict["content"] = ""
 
     return Note(**note_dict)
 

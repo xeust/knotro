@@ -74,7 +74,6 @@ def runner(event):
     note_name = event.json.get("name")
     key = urlsafe_key(note_name)
     note = notes.get(key)
-    print(note)
     return notes.delete(note["key"])
 
 
