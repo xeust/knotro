@@ -4,11 +4,8 @@ import bleach
 from pydantic import BaseModel
 from deta import Deta
 
-def base_wrapper(name):
-  deta = Deta(os.environ["DETA_PROJECT_KEY"])
-  return deta.Base(name)
-
-notes = base_wrapper("notes")
+deta = Deta()
+notes = deta.Base("notes")
 
 base_url = "https://" + os.environ["DETA_PATH"] + ".deta.dev/"
 
