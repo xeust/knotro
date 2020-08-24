@@ -5,8 +5,7 @@ from pydantic import BaseModel
 from deta import Deta
 
 deta = Deta()
-
-notes = deta.Base("my_notes")
+notes = deta.Base("notes")
 
 base_url = "https://" + os.environ["DETA_PATH"] + ".deta.dev/"
 
