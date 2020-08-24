@@ -53,14 +53,12 @@ const attachCodeJar = (dispatch, options) => {
 };
 
 const updateDatabase = (dispatch, options) => {
-  const note = options.state.note;
-  note.links = options.bareLinks;
-  const response = fetch(`${options.state.note.base_url}${options.state.note.name}`, {
+  const response = fetch(`${options.note.base_url}${options.note.name}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(options.state.note)
+        body: JSON.stringify(options.note)
     });
 };
 
@@ -104,18 +102,20 @@ const Save = state => {
   const bareLinks = uniqueLinks.map(each =>
     each.substring(2, each.length - 2)
   ).filter(mappedEach => mappedEach[0] !== "~");
+
+  const newState = {
+    ...state,
+    view: "VIEW",
+    note: {
+      ...state.note,
+      content: markdown,
+      links: bareLinks
+    }
+  };
   return [
-    {
-      ...state,
-      view: "VIEW",
-      note: {
-        ...state.note,
-        content: markdown,
-        links: bareLinks
-      }
-    },
+    newState,
     [attachMarkdown, { state, uniqueLinks }],
-    [updateDatabase, { state, bareLinks }]
+    [updateDatabase, { note: newState.note }]
   ];
 };
 
