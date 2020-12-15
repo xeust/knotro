@@ -6,7 +6,7 @@ from deta import Deta
 
 deta = Deta()
 
-notes = deta.Base("test_notes")
+notes = deta.Base("notes")
 
 base_url = ""
 
