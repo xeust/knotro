@@ -7,10 +7,10 @@
 // effects
 const getNotes = async (dispatch, options) => {
     const searchTerm = options.state.toSearch;
-    const rawResponse = await fetch(`${options.state.base_url}search/${searchTerm}`, {
+    const rawResponse = await fetch(`/search/${searchTerm}`, {
         method: 'GET',
         headers: {
-        'Content-Type': 'application/json'
+            'Content-Type': 'application/json'
         }
     });
     let links = await rawResponse.json();
@@ -40,15 +40,15 @@ const search = state => {
 };
 
 const results = props => {
-    return h("div", {class: "home-right"}, [
-            h("h2", {}, "Results"),
-            h("ul", {class: "backlink-list"},  [
-                props.links.map(link => 
-                    h("li", {}, [
-                        h("a", {href: `${props.base_url}notes/${link}`}, link)
-                    ])
-                )   
-            ])
+    return h("div", { class: "home-right" }, [
+        h("h2", {}, "Results"),
+        h("ul", { class: "backlink-list" }, [
+            props.links.map(link =>
+                h("li", {}, [
+                    h("a", { href: `/notes/${link}` }, link)
+                ])
+            )
+        ])
     ]);
 };
 
@@ -57,17 +57,17 @@ const main = props => {
     if (goToNote === "") {
         goToNote = "getting_started";
     }
-    return h("div", {class: "home-wrapper"}, [
-        h("div", {class: "home-left"}, [
+    return h("div", { class: "home-wrapper" }, [
+        h("div", { class: "home-left" }, [
             h("h1", {}, "yarc"),
-            h("input", {class: "search-bar", type: "text", oninput: [newToSearch, (event) => event.target.value]}),
-            h("div", {class: "search-wrapper"}, [
-                h("button", {onclick: search, class: "nav-button", id: "mr10"}, "search"),
-                h("a", {href: `${props.base_url}notes/${goToNote}`, class: "nav-button"}, "go")
+            h("input", { class: "search-bar", type: "text", oninput: [newToSearch, (event) => event.target.value] }),
+            h("div", { class: "search-wrapper" }, [
+                h("button", { onclick: search, class: "nav-button", id: "mr10" }, "search"),
+                h("a", { href: `/notes/${goToNote}`, class: "nav-button" }, "go")
             ])
         ]),
-        props.links.length > 0 ? results(props) : 
-            props.toSearch !== "" && props.hasSearched ? h("h4", {class: "home-right"}, "No Results (click 'go' to create)") : null,
+        props.links.length > 0 ? results(props) :
+            props.toSearch !== "" && props.hasSearched ? h("h4", { class: "home-right" }, "No Results (click 'go' to create)") : null,
     ]);
 };
 
