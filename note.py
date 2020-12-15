@@ -8,7 +8,7 @@ deta = Deta()
 
 notes = deta.Base("notes")
 
-base_url = ""
+base_url = "/"
 
 if os.getenv("DETA_PATH"):
     base_url = "https://" + os.environ["DETA_PATH"] + ".deta.dev/"
