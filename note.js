@@ -10,19 +10,19 @@ const converter = new showdown.Converter();
 let jar;
 
 // helpers
-const linkSub = (rawMD, links, baseUrl) => {
+const linkSub = (rawMD, links) => {
   let newMD = rawMD;
   for (const each of links) {
-      let replacement;
-      if (each[2] !== "~") {
-          const bareName = each.substring(2, each.length - 2);
-          replacement = `[${bareName}](${baseUrl}notes/${encodeURI(bareName)})`;
-      } else {
-        // if the link is escaped with ~
-          const bareName = each.substring(3, each.length - 2);
-          replacement = `[[${bareName}]]`;
-      }
-      newMD = newMD.split(each).join(replacement);
+    let replacement;
+    if (each[2] !== "~") {
+      const bareName = each.substring(2, each.length - 2);
+      replacement = `[${bareName}](/notes/${encodeURI(bareName)})`;
+    } else {
+      // if the link is escaped with ~
+      const bareName = each.substring(3, each.length - 2);
+      replacement = `[[${bareName}]]`;
+    }
+    newMD = newMD.split(each).join(replacement);
   }
   return newMD;
 };
@@ -39,8 +39,8 @@ const attachCodeJar = (dispatch, options) => {
     container.classList.add("markdown");
 
     const highlight = editor => {
-        editor.textContent = editor.textContent;
-        hljs.highlightBlock(editor);
+      editor.textContent = editor.textContent;
+      hljs.highlightBlock(editor);
     };
 
     jar = CodeJar(container, highlight);
@@ -53,17 +53,17 @@ const attachCodeJar = (dispatch, options) => {
 };
 
 const updateDatabase = (dispatch, options) => {
-  const response = fetch(`${options.note.base_url}${options.note.name}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(options.note)
-    });
+  const response = fetch(`/${options.note.name}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(options.note)
+  });
 };
 
 const attachMarkdown = (dispatch, options) => {
-  const convertedMarkdown = linkSub(options.state.note.content, options.uniqueLinks, options.state.note.base_url);
+  const convertedMarkdown = linkSub(options.state.note.content, options.uniqueLinks);
   const html = converter.makeHtml(convertedMarkdown);
   requestAnimationFrame(() => {
     const container = document.getElementById("container");
@@ -121,32 +121,32 @@ const Save = state => {
 
 // views
 const main = props => {
-  return h("div", {class: "wrapper"}, [
-    h("div", {class: "navbar"}, [
-        h("div", {class: "navbar-left"}, [
-            h("a", {class: "nav-button", href: props.note.base_url}, "home")
-        ]),
-        h("div", {class: "navbar-center"}, [
-            h("div", {class: "navbar-title"}, props.note.name)
-        ]),
-        h("div", {class: "navbar-right"}, [
-          props.view === "EDIT" ?
-            h("button", { onclick: Save, class: "nav-button" }, "save") :
-            h("button", { onclick: Edit, class: "nav-button" }, "edit")
-        ])
+  return h("div", { class: "wrapper" }, [
+    h("div", { class: "navbar" }, [
+      h("div", { class: "navbar-left" }, [
+        h("a", { class: "nav-button", href: "/" }, "home")
+      ]),
+      h("div", { class: "navbar-center" }, [
+        h("div", { class: "navbar-title" }, props.note.name)
+      ]),
+      h("div", { class: "navbar-right" }, [
+        props.view === "EDIT" ?
+          h("button", { onclick: Save, class: "nav-button" }, "save") :
+          h("button", { onclick: Edit, class: "nav-button" }, "edit")
+      ])
     ]),
-    h("div", {class: "content-wrapper"}, [
-        h("div", { id: "container", class: "main" }),
-        props.note.backlinks.length > 0 ?
+    h("div", { class: "content-wrapper" }, [
+      h("div", { id: "container", class: "main" }),
+      props.note.backlinks.length > 0 ?
         h("div", { class: "footer" }, [
-            h("h2", {}, "Backlinks"),
-            h("ul", {class: "backlink-list"},  [
-                props.note.backlinks.map(link => 
-                    h("li", {}, [
-                        h("a", {href: `${props.note.base_url}notes/${link}`}, link)
-                    ])
-                )
-            ])
+          h("h2", {}, "Backlinks"),
+          h("ul", { class: "backlink-list" }, [
+            props.note.backlinks.map(link =>
+              h("li", {}, [
+                h("a", { href: `/notes/${link}` }, link)
+              ])
+            )
+          ])
         ]) : null
     ])
   ]);
@@ -166,19 +166,20 @@ note:
 
 
 const initState = {
-    view: "VIEW",
-    note: input
+  view: "VIEW",
+  note: input
 };
 
 app({
-    init: [initState,
-        [
-        attachMarkdown,
-        { state: initState, 
-            uniqueLinks: getUniqueLinks(input.content)
-        }
-        ]
-    ],
-    view: state => main(state),
-    node: document.getElementById("app")
+  init: [initState,
+    [
+      attachMarkdown,
+      {
+        state: initState,
+        uniqueLinks: getUniqueLinks(input.content)
+      }
+    ]
+  ],
+  view: state => main(state),
+  node: document.getElementById("app")
 });
