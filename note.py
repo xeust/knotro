@@ -10,7 +10,7 @@ notes = deta.Base("notes")
 
 base_url = "/"
 
-if os.getenv("DETA_PATH"):
+if not os.getenv("DETA_SPACE_APP"):
     base_url = "https://" + os.environ["DETA_PATH"] + ".deta.dev/"
 
 default_content = f"## Info:\n\nThis is a \"box\" of notes. \n\nEvery note has a  url at: `{base_url}notes/:note_name`\n\nThe notes are also accessible via API:\n\n`GET {base_url}notes/:note_name?json=true`\n\nAnyone with **run access** can edit and view the note.\n\nYou can edit notes using the **edit** button, writing regular markdown.\n\nYou can [[link]] to any note in your box using the convention **[[~note_name]]**.\n- This creates bi-directional links. \n\nA list of all notes that link to the present note are under a header **Backlinks**.\n \n\n"
