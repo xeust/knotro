@@ -56,11 +56,16 @@ body {
     box-sizing: border-box;
 }
 
-.icon-wrap {
+a.icon-wrap {
     display: flex;
     width: 24px;
     height: 24px;
     color: #8F8F8F;
+}
+
+a.icon-wrap:hover {
+    color: #313131;
+    cursor: pointer;
 }
 
 .mlauto {
