@@ -32,6 +32,13 @@ const getUniqueLinks = rawMD => {
 };
 
 // effects
+const renderIcons = (dispatch, options) => {
+  requestAnimationFrame(() => {
+      feather.replace();
+  });
+}
+
+
 const attachCodeJar = (dispatch, options) => {
   requestAnimationFrame(() => {
     var container = document.getElementById("container");
@@ -129,7 +136,7 @@ const ToggleList = (title, links) => {
 }
 
 const LinkNumberDec = (length, backlinks = true) => {
-  return h("div", {class: "link-num-dec"}, `${length} ${backlinks ? "back" : ""}link${length > 1 ? "s" : ""}`)
+  return h("div", {class: "link-num-dec"}, `${length} ${backlinks ? "back" : ""}link${length !== 1 ? "s" : ""}`)
 }
 
 
@@ -137,7 +144,11 @@ const left =  props => {
   return h("div",  {class: "side-pane left-pane"}, [
     ToggleList("Search", dummyLinks),
     ToggleList("Recent", dummyLinks),
-    h("div", {class: "footer"}, [])
+    h("div", {class: "footer"}, [
+      h("a", {class: "icon-wrap mlauto"}, [
+        h("i", { "data-feather": "chevrons-left", class: "icon" })
+      ])
+    ])
   ]);
 }
 
@@ -149,7 +160,11 @@ const right =  props => {
     ]),
     LinkNumberDec(props.note.links.length, false),
     LinkNumberDec(props.note.backlinks.length),
-    h("div", {class: "footer"}, [])
+    h("div", {class: "footer"}, [
+      h("a", {class: "icon-wrap"}, [
+        h("i", { "data-feather": "chevrons-right", class: "icon" })
+      ])
+    ])
   ]);
 }
 
@@ -209,7 +224,8 @@ app({
         state: initState,
         uniqueLinks: getUniqueLinks(input.content)
       }
-    ]
+    ],
+    [renderIcons]
   ],
   view: state => main(state),
   node: document.getElementById("app")

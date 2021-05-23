@@ -2,6 +2,7 @@ from deta import App
 from fastapi import FastAPI
 from fastapi import FastAPI, Response
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from jinja2 import Template
 from note import *
@@ -10,6 +11,8 @@ from note import *
 fast = FastAPI()
 
 app = App(fast)
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 @app.get("/")

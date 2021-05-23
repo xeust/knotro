@@ -46,16 +46,29 @@ body {
 .footer {
     display: flex;
     margin-top: auto;
+    align-items: center;
+    padding-left: 8px;
+    padding-right: 8px;
     height: 40px;
     border-top: 1px solid #EAEAEA;
 }
 
+.icon-wrap {
+    display: flex;
+    width: 24px;
+    height: 24px;
+    color: #8F8F8F;
+}
+
+.mlauto {
+    margin-left: auto;
+}
 /* side panes */
 .toggle-list {
     border-top: 1px solid #EAEAEA;
     display: flex;
     flex-direction: column;
-    padding-left: 16px;
+    padding-left: 12px;
     padding-bottom: 24px;
 }
 
@@ -71,7 +84,7 @@ a.toggle-link  {
     display: flex;
     align-items: center;
     height: 30px;
-    padding-left: 16px;
+    padding-left: 12px;
     color: #8F8F8F;
     text-decoration: none;
 }
@@ -84,15 +97,15 @@ a.toggle-link:hover {
 /* /* right-pane */
 
 .right-content-wrap {
-    height: calc(100% - 100px);
+    height: calc(100% - 90px);
 }
 
 .link-num-dec {
     display: flex;
     align-items: center;
-    height: 30px;
+    height: 24px;
     font-size: 14px;
-    padding-left: 16px;
+    padding-left: 12px;
     color: #8F8F8F;
     font-family: Roboto Mono, Courier, monospace;
     border-top: 1px solid #EAEAEA;
