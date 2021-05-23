@@ -30,10 +30,12 @@ body {
 
 .left-pane {
     border-right: 1px solid #EAEAEA;
+    box-sizing: border-box;
 }
 
 .right-pane {
     border-left: 1px solid #EAEAEA;
+    box-sizing: border-box;
 }
 
 .central-pane {
@@ -51,6 +53,7 @@ body {
     padding-right: 8px;
     height: 40px;
     border-top: 1px solid #EAEAEA;
+    box-sizing: border-box;
 }
 
 .icon-wrap {
@@ -66,6 +69,7 @@ body {
 /* side panes */
 .toggle-list {
     border-top: 1px solid #EAEAEA;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     padding-left: 12px;
@@ -109,6 +113,7 @@ a.toggle-link:hover {
     color: #8F8F8F;
     font-family: Roboto Mono, Courier, monospace;
     border-top: 1px solid #EAEAEA;
+    box-sizing: border-box;
 }
 
 /* central pane */
@@ -118,7 +123,7 @@ a.toggle-link:hover {
     flex-direction: column;
     padding-left: 96px;
     padding-right: 96px;
-    height: calc(100% - 50px);
+    height: calc(100% - 40px);
 }
 
 /* /* note title bar */
@@ -177,9 +182,10 @@ a.toggle-link:hover {
 .content-wrapper {
     display: flex;
     flex-direction: column;
-    padding-bottom: 15px;
+    padding-bottom: 16px;
+    padding-top: 16px;
     width: 100%;
-    height: calc(100vh - 50px);
+    height: calc(100% - 120px);
     overflow-y: scroll;
 }
 
@@ -249,6 +255,7 @@ ul {
 .search-bar {
     margin-bottom: 10px;
     border: 1px solid #d3d3d3;
+    box-sizing: border-box;
     line-height: 30px;
     border-radius: 0.25rem;
 }
