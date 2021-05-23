@@ -1,0 +1,251 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'avenir next', avenir, helvetica, 'helvetica neue', ubuntu, roboto, noto, 'segoe ui', arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    line-height: 1.5;
+    font-size: 1rem;
+    background-color: #fff;
+    color: #313131;
+    height: 100vh;
+    margin: 0px;
+    display: flex;
+    flex-direction: column;
+}
+
+
+.wrapper {
+    display: flex;
+    height: 100%;
+}
+
+
+/* control panes */
+.side-pane {
+    display: flex;
+    flex-direction: column;
+    width: 240px;
+    height: 100%;
+    background-color: #F5F5F5;  
+}
+
+.left-pane {
+    border-right: 1px solid #EAEAEA;
+}
+
+.right-pane {
+    border-left: 1px solid #EAEAEA;
+}
+
+.central-pane {
+    display: flex;
+    flex-direction: column;
+    width: calc(100% - 480px);
+    height: 100%;
+}
+
+.footer {
+    display: flex;
+    margin-top: auto;
+    height: 40px;
+    border-top: 1px solid #EAEAEA;
+}
+
+/* side panes */
+.toggle-list {
+    border-top: 1px solid #EAEAEA;
+    display: flex;
+    flex-direction: column;
+    padding-left: 16px;
+    padding-bottom: 24px;
+}
+
+.toggle-title {
+    display: flex;
+    align-items: center;
+    height: 50px;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+a.toggle-link  {
+    display: flex;
+    align-items: center;
+    height: 30px;
+    padding-left: 16px;
+    color: #8F8F8F;
+    text-decoration: none;
+}
+
+a.toggle-link:hover {
+    color: #313131;
+    cursor: pointer;
+}
+
+/* /* right-pane */
+
+.right-content-wrap {
+    height: calc(100% - 100px);
+}
+
+.link-num-dec {
+    display: flex;
+    align-items: center;
+    height: 30px;
+    font-size: 14px;
+    padding-left: 16px;
+    color: #8F8F8F;
+    font-family: Roboto Mono, Courier, monospace;
+    border-top: 1px solid #EAEAEA;
+}
+
+/* central pane */
+
+.central-content-wrap {
+    display: flex;
+    flex-direction: column;
+    padding-left: 96px;
+    padding-right: 96px;
+    height: calc(100% - 50px);
+}
+
+/* /* note title bar */
+
+.title-bar {
+    display: flex;
+    flex-direction: row;
+    background-color: transparent;
+    height: 80px;
+    width: 100%; /* Full width */
+    align-items: center;
+}
+
+.titlebar-title {
+    font-size: 2rem;
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.titlebar-right {
+    display: flex;
+    flex-direction: row-reverse;
+    width: calc(100% / 2);
+    min-width: 50px;
+    height: 50px;
+    align-items: center;
+    margin-left: auto;
+}
+
+.config-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+    border: 1px solid #EAEAEA;
+    color: #313131;
+    background-color: transparent;
+    border-radius: 0.25rem;
+    height: 30px;
+    width: 50px;
+    margin-left: 10px;
+    text-decoration: none;
+    box-sizing: border-box;
+}
+
+.config-button:hover {
+    color: #313131;
+    border-color: #313131;
+    cursor: pointer;
+}
+
+/* /* editor / content */
+
+.content-wrapper {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 15px;
+    width: 100%;
+    height: calc(100vh - 50px);
+    overflow-y: scroll;
+}
+
+
+.main {
+    display: inline-block;
+    padding-bottom: 15px;
+    overflow-y: visible !important;
+}
+
+/* codemirror */
+
+.CodeMirror {
+    height: auto;
+    font-family: Roboto Mono, Courier, monospace;
+}
+
+.CodeMirror-scroll {
+    overflow-y: hidden;
+    overflow-x: auto;
+}
+
+
+/* old */
+
+
+
+ul {
+    padding-inline-start: 20px;
+}
+
+
+.home-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+}
+
+.home-left {
+    display: flex;
+    flex-direction: column;
+    height: 200px;
+    width: 250px;
+    justify-content: center;
+}
+
+.home-right {
+    display: flex;
+    flex-direction: column;
+    padding-top: 10px;
+    max-height: calc(100% - 200px);
+    width: 250px;
+    justify-content: center;
+}
+
+.backlink-list {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    padding-bottom: 10px;
+}
+
+.search-bar {
+    margin-bottom: 10px;
+    border: 1px solid #d3d3d3;
+    line-height: 30px;
+    border-radius: 0.25rem;
+}
+
+
+
+.search-wrapper {
+    display: flex;
+}
+
+#mr10 {
+    margin-right: 10px;
+}
