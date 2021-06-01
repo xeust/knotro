@@ -28,18 +28,20 @@ class Note(BaseModel):
     links: list = []
     backlinks: list = []
     last_modified: str = "12:00:PM"
-
+    is_public: bool = False
 
 class NoteMeta(BaseModel):
     name: str
     links: list = []
     backlinks: list = []
     last_modified: str
-
+    is_public: bool = False
 
 class Links(BaseModel):
     links: list = []
 
+class NoteStatus(BaseModel):
+    is_public: bool = False
 
 def urlsafe_key(note_name):
     return base64.b64encode(note_name.encode('ascii')).decode('ascii').replace("=", "_")
@@ -85,7 +87,7 @@ def db_update_note(note: Note):
     
     note_dict["last_modified"] = str(datetime.now())
     note_meta = NoteMeta(name=note_dict["name"], links=note_dict["links"],
-                         backlinks=note_dict["backlinks"], last_modified=note_dict["last_modified"])
+                         backlinks=note_dict["backlinks"], last_modified=note_dict["last_modified"], is_public=note_dict["is_public"])
     notes.put(note_meta.dict(), urlsafe_key(note.name))
     return Note(**note_dict)
 
@@ -125,3 +127,13 @@ def add_backlink_or_create(note_name, backlink):
         backlinks = [backlink]
         note = Note(name=note_name, backlinks=backlinks)
         return db_update_note(note)
+
+def modify_public_status(note_name, is_public):
+    note = get_note(note_name)
+    
+    if note:
+        note.is_public = is_public
+        return db_update_note(note)
+    else:
+        return None
+        
