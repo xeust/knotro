@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi import FastAPI, Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from datetime import datetime
 from pydantic import BaseModel
 from jinja2 import Template
 from note import *
@@ -41,7 +42,11 @@ async def read_note(note_name: str, json: bool = False):
       new_note = Note(name=note_name)
       note_dict = new_note.dict()
       note_key = urlsafe_key(note_name)
-      notes.put(note_dict, note_key)
+      drive_notes.put(note_name, note_dict["content"])
+      note_dict["last_modified"] = str(datetime.now())
+      note_meta = NoteMeta(name=note_dict["name"], links=note_dict["links"],
+                         backlinks=note_dict["backlinks"], last_modified=note_dict["last_modified"])
+      notes.put(note_meta.dict(), note_key)
 
     note_dict["base_url"] = base_url
 

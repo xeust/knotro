@@ -3,10 +3,11 @@ import base64
 import bleach
 from pydantic import BaseModel
 from deta import Deta
-
+from datetime import datetime
 deta = Deta()
 
 notes = deta.Base("deta_notes")
+drive_notes = deta.Drive("notes")
 
 base_url = "/"
 
@@ -26,6 +27,14 @@ class Note(BaseModel):
     content: str = default_content
     links: list = []
     backlinks: list = []
+    last_modified: str = "12:00:PM"
+
+
+class NoteMeta(BaseModel):
+    name: str
+    links: list = []
+    backlinks: list = []
+    last_modified: str
 
 
 class Links(BaseModel):
@@ -38,7 +47,8 @@ def urlsafe_key(note_name):
 
 # db operations
 def fetch_notes(term):
-    my_notes = next(notes.fetch([{"name?contains": term}, {"content?contains": term}]))
+    my_notes = next(notes.fetch(
+        [{"name?contains": term}, {"content?contains": term}]))
     links = [d["name"] for d in my_notes]
     return links
 
@@ -50,23 +60,33 @@ def get_note(note_name):
     if not note_dict:
         return None
 
-    list_checks = ["links", "backlinks"] # db can't store empty lists, fix db
+    list_checks = ["links", "backlinks"]  # db can't store empty lists, fix db
 
     for each in list_checks:
-      if not note_dict[each]:
-        note_dict[each] = []
-    
-    if not note_dict["content"]: # db can't store empty strings, fix db
+        if not note_dict[each]:
+            note_dict[each] = []
+
+    note_content = drive_notes.get(note_name)
+    if note_content:
+        note_content = str(note_content.read(), 'ascii')
+        note_dict["content"] = note_content
+
+    if not note_dict["content"]:  # db can't store empty strings, fix db
         note_dict["content"] = ""
 
     return Note(**note_dict)
 
-
-# update note with new info  
+# update note with new info
 def db_update_note(note: Note):
     note_dict = note.dict()
     note_dict["content"] = bleach.clean(note_dict["content"])
-    notes.put(note_dict, urlsafe_key(note.name))
+
+    drive_notes.put(note_dict["name"], str(note_dict["content"]))
+    
+    note_dict["last_modified"] = str(datetime.now())
+    note_meta = NoteMeta(name=note_dict["name"], links=note_dict["links"],
+                         backlinks=note_dict["backlinks"], last_modified=note_dict["last_modified"])
+    notes.put(note_meta.dict(), urlsafe_key(note.name))
     return Note(**note_dict)
 
 
@@ -75,20 +95,33 @@ def remove_backlink(note_name, backlink):
     note = get_note(note_name)
     try:
         note.backlinks.remove(backlink)
+        note_dict = note.dict()
+        note_content = drive_notes.get(note_name)
+        if note_content:
+            note_content = str(note_content.read(), 'ascii')
+            note_dict["content"] = note_content
+        else:
+            note_dict["content"] = default_content
     except ValueError:
         pass
-    return db_update_note(note)
-    
+    return db_update_note(Note(**note_dict))
+
 
 # add a backlink to a new note, if non-existent, create
 def add_backlink_or_create(note_name, backlink):
-      note = get_note(note_name)
-      
-      if note:
-        note.backlinks.append(backlink)
-        return db_update_note(note)
+    note = get_note(note_name)
 
-      else:
+    if note:
+        note.backlinks.append(backlink)
+        note_dict = note.dict()
+        note_content = drive_notes.get(note_name)
+        if note_content:
+            note_content = str(note_content.read(), 'ascii')
+            note_dict["content"] = note_content
+        else:
+            note_dict["content"] = default_content
+        return db_update_note(Note(**note_dict))
+    else:
         backlinks = [backlink]
         note = Note(name=note_name, backlinks=backlinks)
         return db_update_note(note)
