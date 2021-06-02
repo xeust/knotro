@@ -2,7 +2,7 @@ from deta import App
 from fastapi import FastAPI, Response, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
-from datetime import datetime
+from datetime import datetime, timezone
 from pydantic import BaseModel
 from jinja2 import Template
 from note import *
@@ -42,7 +42,7 @@ async def read_note(note_name: str, json: bool = False):
       note_dict = new_note.dict()
       note_key = urlsafe_key(note_name)
       drive_notes.put(note_name, note_dict["content"])
-      note_dict["last_modified"] = str(datetime.now())
+      note_dict["last_modified"] = str(datetime.now(timezone.utc).isoformat())
       note_meta = NoteMeta(name=note_dict["name"], links=note_dict["links"],
                          backlinks=note_dict["backlinks"], last_modified=note_dict["last_modified"])
       notes.put(note_meta.dict(), note_key)

@@ -3,7 +3,7 @@ import base64
 import bleach
 from pydantic import BaseModel
 from deta import Deta
-from datetime import datetime
+from datetime import datetime, timezone
 deta = Deta()
 
 notes = deta.Base("deta_notes")
@@ -85,7 +85,7 @@ def db_update_note(note: Note):
 
     drive_notes.put(note_dict["name"], str(note_dict["content"]))
     
-    note_dict["last_modified"] = str(datetime.now())
+    note_dict["last_modified"] = str(datetime.now(timezone.utc).isoformat())
     note_meta = NoteMeta(name=note_dict["name"], links=note_dict["links"],
                          backlinks=note_dict["backlinks"], last_modified=note_dict["last_modified"], is_public=note_dict["is_public"])
     notes.put(note_meta.dict(), urlsafe_key(note.name))
