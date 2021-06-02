@@ -99,6 +99,8 @@ const Edit = state => {
   ];
 };
 
+
+
 const Save = state => {
   let markdown = state.note.content;
   const uniqueLinks = getUniqueLinks(markdown);
@@ -121,6 +123,10 @@ const Save = state => {
     [updateDatabase, { note: newState.note }]
   ];
 };
+
+const Share = state => {
+  console.log("Share clicked...")  
+}
 
 // views
 
@@ -178,7 +184,7 @@ const central = props => {
         h("div", { class: "titlebar-title" }, props.note.name),
         h("div", { class: "titlebar-right" }, [
           viewButton,
-          h("a", { class: "config-button", href: "/" }, "share"),
+          h("button", { onclick: Share, class: "config-button"}, "share"),
         ])
       ]),
       h("div", { class: "content-wrapper" }, [
@@ -191,6 +197,7 @@ const central = props => {
 
 
 const main = props => {
+  console.log(props)
   return h("div", { class: "wrapper" }, [
     left(props),
     central(props),

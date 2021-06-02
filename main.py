@@ -1,7 +1,6 @@
 from deta import App
-from fastapi import FastAPI
-from fastapi import FastAPI, Response
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, Response, HTTPException
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from datetime import datetime
 from pydantic import BaseModel
@@ -57,6 +56,28 @@ async def read_note(note_name: str, json: bool = False):
     note_css = open("style.css").read()
     note_js = open("note.js").read()
     return HTMLResponse(note_template.render(note_data=note_dict, note_js=note_js, css=note_css))
+
+
+@app.get("/public/{note_name}")
+async def read_public_note(note_name: str, json: bool = False):
+    note = get_note(note_name)
+    note_dict = {}
+
+    if note and note.is_public:
+      note_dict = note.dict()
+    
+    else:
+        return FileResponse("./404.html")
+
+    note_dict["base_url"] = base_url
+
+    if json:
+        return note_dict
+    
+    note_template = Template((open("public.html").read()))
+    note_css = open("style.css").read()
+    public_js = open("public.js").read()
+    return HTMLResponse(note_template.render(note_data=note_dict, public_js=public_js, css=note_css))
 
 
 @app.put("/{note_name}")

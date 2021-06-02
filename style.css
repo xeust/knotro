@@ -191,7 +191,7 @@ a.toggle-link:hover {
     padding-top: 16px;
     width: 100%;
     height: calc(100% - 120px);
-    overflow-y: scroll;
+    overflow-y: hidden;
 }
 
 
@@ -199,6 +199,40 @@ a.toggle-link:hover {
     display: inline-block;
     padding-bottom: 15px;
     overflow-y: visible !important;
+}
+
+
+/* kntro.com tag */
+.knotro-wrap {
+    height: 24px;
+    font-size: 14px;
+    font-family: Roboto Mono, Courier, monospace;
+}
+.sponsor {
+    height: 24px;
+    font-size: 14px;
+    display: inline-flex;
+    text-decoration: none;
+    font-family: Roboto Mono, Courier, monospace;    
+}
+/* public url */
+.url-content {
+    display: inline-flex;
+}
+.url-tag {
+    height: 24px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #8F8F8F;
+    font-family: Roboto Mono, Courier, monospace;
+}
+.url-wrapper {
+    height: 24px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #98B9F9;
+    text-decoration: none;
+    font-family: Roboto Mono, Courier, monospace;
 }
 
 /* codemirror */
