@@ -60,19 +60,21 @@ const getlastEdited = (lastModified) => {
   }
 };
 
-const checkUnsaved = (dispatch, options) => {
-  const note = options.state.note;
+const checkUnsaved = (options) => {
+  const note = options.note;
   const name = note.name;
   const localNote = JSON.parse(localStorage.getItem(name));
-  if (localNote && new Date(localNote.last_modified) > new Date(note.last_modified)) {
-    dispatch(options.UpdateContent(options.state, localNote.content));
-
-    dispatch(options.DebounceSave(dispatch, options.state, localNote.content));
+  if (
+    localNote &&
+    new Date(localNote.last_modified) > new Date(note.last_modified)
+  ) {
+    return {
+      content: localNote.content,
+      uniqueLinks: getUniqueLinks(localNote.content),
+    };
   }
-  dispatch(options.UpdateContent(options.state, note.content));
-
-  dispatch(options.DebounceSave(dispatch, options.state, localNote.content));
-}
+  return { content: note.content, uniqueLinks: getUniqueLinks(note.content) };
+};
 
 // effects
 const renderIcons = (dispatch, options) => {
@@ -126,12 +128,15 @@ const updateDatabase = (dispatch, options) => {
       console.log("error");
       const newState = {
         ...options.state,
-        note:{
+        note: {
           ...options.state.note,
-          last_modified: new Date().toUTCString()
-        }
-      }
-      localStorage.setItem(options.state.note.name, JSON.stringify(newState.note))
+          last_modified: new Date().toUTCString(),
+        },
+      };
+      localStorage.setItem(
+        options.state.note.name,
+        JSON.stringify(newState.note)
+      );
       dispatch(setStatus(options.state, "failed to save"));
     });
 };
@@ -147,15 +152,15 @@ const modifyPublic = (dispatch, options) => {
 };
 
 const attachMarkdown = (dispatch, options) => {
-  const convertedMarkdown = linkSub(
-    options.state.note.content,
-    options.uniqueLinks
-  );
+  const { content, uniqueLinks } = checkUnsaved({ note: options.state.note });
+
+  const convertedMarkdown = linkSub(content, uniqueLinks);
   const html = converter.makeHtml(convertedMarkdown);
   requestAnimationFrame(() => {
     const container = document.getElementById("container");
     container.innerHTML = html;
   });
+  dispatch(UpdateUnsaved(options.state, content));
 };
 
 const DebounceSave = (dispatch, state, newContent) => {
@@ -177,10 +182,10 @@ const DebounceSave = (dispatch, state, newContent) => {
 const getNotes = async (dispatch, options) => {
   const searchTerm = options.state.searchTerm;
   const rawResponse = await fetch(`/search/${searchTerm}`, {
-      method: 'GET',
-      headers: {
-          'Content-Type': 'application/json'
-      }
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
   });
   let links = await rawResponse.json();
   dispatch(options.addSearchNotes(options.state, links));
@@ -205,6 +210,26 @@ const UpdateContent = (state, newContent) => {
   ];
 };
 
+const UpdateUnsaved = (state, newContent) => {
+  const newState = {
+    ...state,
+    note: {
+      ...state.note,
+      content: newContent,
+      last_modified: "saving",
+      recent_notes: [
+        state.note.name,
+        ...state.note.recent_notes.filter((name) => name != state.note.name),
+      ],
+    },
+  };
+
+  return [
+    newState,
+    [updateDatabase, { state: newState }],
+    [renderIcons],
+  ];
+};
 const setStatus = (state, status) => {
   return [
     {
@@ -226,7 +251,7 @@ const setStatus = (state, status) => {
 
 const addSearchNotes = (state, notes) => ({
   ...state,
-  searchLinks: notes
+  searchLinks: notes,
 });
 
 const Edit = (state) => {
@@ -306,7 +331,7 @@ const collapseLeft = (state) => {
   return [newState, [renderIcons]];
 };
 
-// modules 
+// modules
 
 const list = {
   init: (x) => x,
@@ -336,7 +361,7 @@ const list = {
       ]);
     }
     return h("div", { class: "toggle-list" }, [
-      h("div", { class: "toggle-title"  }, [
+      h("div", { class: "toggle-title" }, [
         h("div", { class: "title-tag" }, model.tag),
         h(
           "a",
@@ -351,7 +376,6 @@ const list = {
   },
 };
 
-
 const searchModule = {
   init: (x) => x,
   toggle: (x) => !x,
@@ -363,7 +387,6 @@ const searchModule = {
       setSearch(state, event.target.value);
 
     const SearchLinks = (state) => setSearchLinks(state);
-    
 
     return (state) => ({
       value: getter(state)[0],
@@ -382,47 +405,43 @@ const searchModule = {
             placeholder: "Search",
             oninput: model.SearchHandler,
           }),
-          h(
-            "div",
-            { class: "icon-wrap mlauto ", onclick: model.SearchLinks },
-            [h("i", { "data-feather": "check", class: "icon" })]
-          ),
-          h(
-            "a",
-            { class: "icon-wrap mlauto ", onclick: model.Toggle },
-            [h("i", { "data-feather": "x", class: "icon" })]
-          ),
+          h("div", { class: "icon-wrap mlauto ", onclick: model.SearchLinks }, [
+            h("i", { "data-feather": "check", class: "icon" }),
+          ]),
+          h("a", { class: "icon-wrap mlauto ", onclick: model.Toggle }, [
+            h("i", { "data-feather": "x", class: "icon" }),
+          ]),
         ]),
-        list.view(searchList(model._state))
+        list.view(searchList(model._state)),
       ]);
     }
-    return h("a", { class: "icon-wrap icons-top search_icon", onclick: model.Toggle }, [
-      h("i", { "data-feather": "search", class: "icon" }),
-    ])
+    return h(
+      "a",
+      { class: "icon-wrap icons-top search_icon", onclick: model.Toggle },
+      [h("i", { "data-feather": "search", class: "icon" })]
+    );
   },
 };
-
 
 const addModule = {
   init: (x) => x,
   toggle: (x) => !x,
-  model: ({ getter, setter, setNewNoteName}) => {
-    const Toggle = (state) =>
-      setter(state, addModule.toggle(getter(state)));
+  model: ({ getter, setter, setNewNoteName }) => {
+    const Toggle = (state) => setter(state, addModule.toggle(getter(state)));
 
     const AddHandler = (state, event) =>
-      setNewNoteName(state, event.target.value);    
+      setNewNoteName(state, event.target.value);
 
     const redirectToPage = (state) => {
-      window.location.href = `${location.origin}/notes/${state.newNoteName}`
-    }
+      window.location.href = `${location.origin}/notes/${state.newNoteName}`;
+    };
 
     return (state) => ({
       value: getter(state),
       Toggle,
       _state: state,
       AddHandler,
-      redirectToPage
+      redirectToPage,
     });
   },
   view: (model) => {
@@ -439,20 +458,17 @@ const addModule = {
             { class: "icon-wrap mlauto ", onclick: model.redirectToPage },
             [h("i", { "data-feather": "check", class: "icon" })]
           ),
-          h(
-            "a",
-            { class: "icon-wrap mlauto ", onclick: model.Toggle },
-            [h("i", { "data-feather": "x", class: "icon" })]
-          ),
+          h("a", { class: "icon-wrap mlauto ", onclick: model.Toggle }, [
+            h("i", { "data-feather": "x", class: "icon" }),
+          ]),
         ]),
       ]);
     }
     return h("a", { class: "icon-wrap icons-top", onclick: model.Toggle }, [
       h("i", { "data-feather": "plus", class: "icon" }),
-    ])
+    ]);
   },
 };
-
 
 // views
 const dummyLinks = ["one", "two", "three", "four"];
@@ -511,45 +527,31 @@ const backlinksList = list.model({
 });
 
 const searchList = list.model({
-  getter: (state) => [
-    state.collapseSearch,
-    "Search",
-    state.searchLinks,
-  ],
+  getter: (state) => [state.collapseSearch, "Search", state.searchLinks],
   setter: (state, newFoo) => [
     { ...state, collapseSearch: newFoo },
     [renderIcons],
   ],
 });
 
-
 const searchInput = searchModule.model({
   getter: (state) => [state.inputSearch, "Search"],
-  setter: (state, newFoo) => [
-    { ...state, inputSearch: newFoo},
-    [renderIcons],
-  ],
+  setter: (state, newFoo) => [{ ...state, inputSearch: newFoo }, [renderIcons]],
   setSearch: (state, newSearchTerm) => [
     { ...state, searchTerm: newSearchTerm },
     [renderIcons],
   ],
-  setSearchLinks: (state) => [state,
-    [getNotes, { state, addSearchNotes }]
-  ]
+  setSearchLinks: (state) => [state, [getNotes, { state, addSearchNotes }]],
 });
 
 const addInput = addModule.model({
   getter: (state) => state.inputAdd,
-  setter: (state, newFoo) => [
-    { ...state, inputAdd: newFoo },
+  setter: (state, newFoo) => [{ ...state, inputAdd: newFoo }, [renderIcons]],
+  setNewNoteName: (state, newValue) => [
+    { ...state, newNoteName: newValue },
     [renderIcons],
   ],
-  setNewNoteName: (state, newValue) => [
-    {...state, newNoteName: newValue},
-    [renderIcons]
-  ]
 });
-
 
 const left = (props) => {
   if (props.collapseLeft) {
@@ -571,11 +573,9 @@ const left = (props) => {
   return h("div", { class: "side-pane left-pane" }, [
     addModule.view(addInput(props)),
 
-      searchModule.view(searchInput(props)),
+    searchModule.view(searchInput(props)),
 
-    h("div", {class: "list-border"}, [
-    list.view(recentList(props)),
-    ]),
+    h("div", { class: "list-border" }, [list.view(recentList(props))]),
     h("div", { class: "footer" }, [
       h("a", { class: "icon-wrap mlauto", onclick: collapseLeft }, [
         h("i", { "data-feather": "chevrons-left", class: "icon" }),
@@ -602,9 +602,7 @@ const right = (props) => {
   return h("div", { class: "side-pane right-pane" }, [
     h("div", { class: "right-content-wrap" }, [
       list.view(linksList(props)),
-      h("div", {class: "list-border"}, [
-        list.view(backlinksList(props)),
-      ])
+      h("div", { class: "list-border" }, [list.view(backlinksList(props))]),
     ]),
     LinkNumberDec(props.note.links.length, false, false),
     LinkNumberDec(props.note.backlinks.length, true, false),
@@ -692,7 +690,7 @@ const initState = {
   inputAdd: false,
   searchTerm: "",
   searchLinks: [],
-  newNoteName: ""
+  newNoteName: "",
 };
 
 app({
