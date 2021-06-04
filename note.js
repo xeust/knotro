@@ -59,6 +59,21 @@ const getlastEdited = (lastModified) => {
     return `last edited: ${days} days ago`;
   }
 };
+
+const checkUnsaved = (dispatch, options) => {
+  const note = options.state.note;
+  const name = note.name;
+  const localNote = JSON.parse(localStorage.getItem(name));
+  if (localNote && new Date(localNote.last_modified) > new Date(note.last_modified)) {
+    dispatch(options.UpdateContent(options.state, localNote.content));
+
+    dispatch(options.DebounceSave(dispatch, options.state, localNote.content));
+  }
+  dispatch(options.UpdateContent(options.state, note.content));
+
+  dispatch(options.DebounceSave(dispatch, options.state, localNote.content));
+}
+
 // effects
 const renderIcons = (dispatch, options) => {
   requestAnimationFrame(() => {
@@ -117,7 +132,6 @@ const updateDatabase = (dispatch, options) => {
         }
       }
       localStorage.setItem(options.state.note.name, JSON.stringify(newState.note))
-      console.log(JSON.stringify(newState.note))
       dispatch(setStatus(options.state, "failed to save"));
     });
 };
@@ -348,7 +362,7 @@ const list = {
       ]);
     }
     return h("div", { class: "toggle-list" }, [
-      h("div", { class: "toggle-title" }, [
+      h("div", { class: "toggle-title"  }, [
         h("div", { class: "title-tag" }, model.tag),
         h(
           "a",
@@ -447,7 +461,9 @@ const search_module = {
         list.view(search_list(model._state))
       ]);
     }
-    return h("div", {})
+    return h("a", { class: "icon-wrap icons-top search_icon", onclick: model.Toggle }, [
+      h("i", { "data-feather": "search", class: "icon" }),
+    ])
   },
 };
 
@@ -511,8 +527,9 @@ const add_module = {
         ]),
       ]);
     }
-    return h("div", {})
-
+    return h("a", { class: "icon-wrap icons-top", onclick: model.Toggle }, [
+      h("i", { "data-feather": "plus", class: "icon" }),
+    ])
   },
 };
 
@@ -547,15 +564,13 @@ const left = (props) => {
   }
 
   return h("div", { class: "side-pane left-pane" }, [
-    h("a", { class: "icon-wrap  icons-top", onclick: collapseLeft }, [
-      h("i", { "data-feather": "plus", class: "icon" }),
-    ]),
-    h("a", { class: "icon-wrap icons-top", onclick: collapseLeft }, [
-      h("i", { "data-feather": "search", class: "icon" }),
-    ]),
     add_module.view(add_input(props)),
-    search_module.view(search_input(props)),
+
+      search_module.view(search_input(props)),
+
+    h("div", {class: "list-border"}, [
     list.view(recent_list(props)),
+    ]),
     h("div", { class: "footer" }, [
       h("a", { class: "icon-wrap mlauto", onclick: collapseLeft }, [
         h("i", { "data-feather": "chevrons-left", class: "icon" }),
@@ -582,7 +597,10 @@ const right = (props) => {
   return h("div", { class: "side-pane right-pane" }, [
     h("div", { class: "right-content-wrap" }, [
       list.view(links_list(props)),
-      list.view(backlinks_list(props)),
+      h("div", {class: "list-border"}, [
+        list.view(backlinks_list(props)),
+      ])
+
     ]),
     LinkNumberDec(props.note.links.length, false, false),
     LinkNumberDec(props.note.backlinks.length, true, false),
@@ -660,13 +678,13 @@ note:
 const initState = {
   view: "VIEW",
   note: input,
-  collapse_left: true,
+  collapse_left: false,
   collapse_right: false,
   collapse_recent: false,
   collapse_links: false,
   collapse_backlinks: false,
   collapse_search: false,
-  input_search: true,
+  input_search: false,
   input_add: false,
   search_term: "",
   search_links: [],

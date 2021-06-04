@@ -76,7 +76,7 @@ body {
 .icons-top {
     padding-left: 8px;
     padding-right: 8px;
-    margin-top: 13px;
+    margin-top: 22px;
 } 
 .footer {
     display: flex;
@@ -99,6 +99,10 @@ body {
 .icon-wrap:hover {
     color: #313131;
     cursor: pointer;
+}
+
+.search_icon {
+    padding-bottom: 24px;
 }
 
 .mlauto {
@@ -126,6 +130,10 @@ body {
     font-size: 24px;
     font-weight: bold;
 }
+
+.list-border {
+    border-top: 1px solid #EAEAEA;
+} 
 
 .collapsed{
     color:#8F8F8F
