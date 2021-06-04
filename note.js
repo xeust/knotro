@@ -158,6 +158,34 @@ const attachMarkdown = (dispatch, options) => {
   });
 };
 
+const DebounceSave = (dispatch, state, newContent) => {
+  const newState = {
+    ...state,
+    note: {
+      ...state.note,
+      content: newContent,
+      last_modified: "saving",
+      recent_notes: [
+        state.note.name,
+        ...state.note.recent_notes.filter((name) => name != state.note.name),
+      ],
+    },
+  };
+  return [newState, [updateDatabase, { state: newState }], [renderIcons]];
+};
+
+const getNotes = async (dispatch, options) => {
+  const searchTerm = options.state.searchTerm;
+  const rawResponse = await fetch(`/search/${searchTerm}`, {
+      method: 'GET',
+      headers: {
+          'Content-Type': 'application/json'
+      }
+  });
+  let links = await rawResponse.json();
+  dispatch(options.addSearchNotes(options.state, links));
+};
+
 // actions
 const UpdateContent = (state, newContent) => {
   return [
@@ -194,39 +222,11 @@ const setStatus = (state, status) => {
   ];
 };
 
-const DebounceSave = (dispatch, state, newContent) => {
-  const newState = {
-    ...state,
-    note: {
-      ...state.note,
-      content: newContent,
-      last_modified: "saving",
-      recent_notes: [
-        state.note.name,
-        ...state.note.recent_notes.filter((name) => name != state.note.name),
-      ],
-    },
-  };
-  return [newState, [updateDatabase, { state: newState }], [renderIcons]];
-};
-
-const getNotes = async (dispatch, options) => {
-  const searchTerm = options.state.search_term;
-  const rawResponse = await fetch(`/search/${searchTerm}`, {
-      method: 'GET',
-      headers: {
-          'Content-Type': 'application/json'
-      }
-  });
-  let links = await rawResponse.json();
-  dispatch(options.addSearchNotes(options.state, links));
-};
-
 // actions
 
 const addSearchNotes = (state, notes) => ({
   ...state,
-  search_links: notes
+  searchLinks: notes
 });
 
 const Edit = (state) => {
@@ -285,7 +285,7 @@ const Share = (state) => {
 const collapseRight = (state) => {
   const newState = {
     ...state,
-    collapse_right: !state.collapse_right,
+    collapseRight: !state.collapseRight,
     note: {
       ...state.note,
     },
@@ -297,7 +297,7 @@ const collapseRight = (state) => {
 const collapseLeft = (state) => {
   const newState = {
     ...state,
-    collapse_left: !state.collapse_left,
+    collapseLeft: !state.collapseLeft,
     note: {
       ...state.note,
     },
@@ -305,34 +305,8 @@ const collapseLeft = (state) => {
 
   return [newState, [renderIcons]];
 };
-// views
 
-const dummyLinks = ["one", "two", "three", "four"];
-
-const ToggleList = (title, links) => {
-  return h("div", { class: "toggle-list" }, [
-    h("div", { class: "toggle-title" }, [
-      h("div", { class: "title-tag" }, title),
-      h("a", { class: "icon-wrap mlauto toggle-chevron" }, [
-        h("i", { "data-feather": "chevron-down", class: "icon" }),
-      ]),
-    ]),
-    links.map((link) =>
-      h("a", { href: `/notes/${link}`, class: "toggle-link" }, link)
-    ),
-  ]);
-};
-
-const LinkNumberDec = (length, backlinks = true, collapsed) => {
-  if (collapsed) {
-    return h("div", { class: "link-num-dec icons-top" }, `${length}`);
-  }
-  return h(
-    "div",
-    { class: "link-num-dec" },
-    `${length} ${backlinks ? "back" : ""}link${length !== 1 ? "s" : ""}`
-  );
-};
+// modules 
 
 const list = {
   init: (x) => x,
@@ -377,52 +351,13 @@ const list = {
   },
 };
 
-const recent_list = list.model({
-  getter: (state) => [state.collapse_recent, "Recent", state.note.recent_notes],
-  setter: (state, newFoo) => [
-    { ...state, collapse_recent: newFoo },
-    [renderIcons],
-  ],
-});
 
-const links_list = list.model({
-  getter: (state) => [state.collapse_links, "Links", state.note.links],
-  setter: (state, newFoo) => [
-    { ...state, collapse_links: newFoo },
-    [renderIcons],
-  ],
-});
-
-const backlinks_list = list.model({
-  getter: (state) => [
-    state.collapse_backlinks,
-    "Backlinks",
-    state.note.backlinks,
-  ],
-  setter: (state, newFoo) => [
-    { ...state, collapse_backlinks: newFoo },
-    [renderIcons],
-  ],
-});
-
-const search_list = list.model({
-  getter: (state) => [
-    state.collapse_search,
-    "Search",
-    state.search_links,
-  ],
-  setter: (state, newFoo) => [
-    { ...state, collapse_search: newFoo },
-    [renderIcons],
-  ],
-});
-
-const search_module = {
+const searchModule = {
   init: (x) => x,
   toggle: (x) => !x,
   model: ({ getter, setter, setSearch, setSearchLinks }) => {
     const Toggle = (state) =>
-      setter(state, search_module.toggle(getter(state)[0]));
+      setter(state, searchModule.toggle(getter(state)[0]));
 
     const SearchHandler = (state, event) =>
       setSearch(state, event.target.value);
@@ -449,16 +384,16 @@ const search_module = {
           }),
           h(
             "div",
-            { class: "icon-wrap mlauto icons-top", onclick: model.SearchLinks },
+            { class: "icon-wrap mlauto ", onclick: model.SearchLinks },
             [h("i", { "data-feather": "check", class: "icon" })]
           ),
           h(
             "a",
-            { class: "icon-wrap mlauto icons-top", onclick: model.Toggle },
+            { class: "icon-wrap mlauto ", onclick: model.Toggle },
             [h("i", { "data-feather": "x", class: "icon" })]
           ),
         ]),
-        list.view(search_list(model._state))
+        list.view(searchList(model._state))
       ]);
     }
     return h("a", { class: "icon-wrap icons-top search_icon", onclick: model.Toggle }, [
@@ -467,34 +402,19 @@ const search_module = {
   },
 };
 
-const search_input = search_module.model({
-  getter: (state) => [state.input_search, "Search"],
-  setter: (state, newFoo) => [
-    { ...state, input_search: newFoo},
-    [renderIcons],
-  ],
-  setSearch: (state, searchTerm) => [
-    { ...state, search_term: searchTerm },
-    [renderIcons],
-  ],
-  setSearchLinks: (state) => [state,
-    [getNotes, { state, addSearchNotes }]
-  ]
-});
 
-
-const add_module = {
+const addModule = {
   init: (x) => x,
   toggle: (x) => !x,
   model: ({ getter, setter, setNewNoteName}) => {
     const Toggle = (state) =>
-      setter(state, add_module.toggle(getter(state)));
+      setter(state, addModule.toggle(getter(state)));
 
     const AddHandler = (state, event) =>
       setNewNoteName(state, event.target.value);    
 
     const redirectToPage = (state) => {
-      window.location.href = `${location.origin}/notes/${state.new_note_name}`
+      window.location.href = `${location.origin}/notes/${state.newNoteName}`
     }
 
     return (state) => ({
@@ -516,12 +436,12 @@ const add_module = {
           }),
           h(
             "a",
-            { class: "icon-wrap mlauto icons-top", onclick: model.redirectToPage },
+            { class: "icon-wrap mlauto ", onclick: model.redirectToPage },
             [h("i", { "data-feather": "check", class: "icon" })]
           ),
           h(
             "a",
-            { class: "icon-wrap mlauto icons-top", onclick: model.Toggle },
+            { class: "icon-wrap mlauto ", onclick: model.Toggle },
             [h("i", { "data-feather": "x", class: "icon" })]
           ),
         ]),
@@ -533,21 +453,106 @@ const add_module = {
   },
 };
 
-const add_input = add_module.model({
-  getter: (state) => state.input_add,
+
+// views
+const dummyLinks = ["one", "two", "three", "four"];
+
+const ToggleList = (title, links) => {
+  return h("div", { class: "toggle-list" }, [
+    h("div", { class: "toggle-title" }, [
+      h("div", { class: "title-tag" }, title),
+      h("a", { class: "icon-wrap mlauto toggle-chevron" }, [
+        h("i", { "data-feather": "chevron-down", class: "icon" }),
+      ]),
+    ]),
+    links.map((link) =>
+      h("a", { href: `/notes/${link}`, class: "toggle-link" }, link)
+    ),
+  ]);
+};
+
+const LinkNumberDec = (length, backlinks = true, collapsed) => {
+  if (collapsed) {
+    return h("div", { class: "link-num-dec icons-top" }, `${length}`);
+  }
+  return h(
+    "div",
+    { class: "link-num-dec" },
+    `${length} ${backlinks ? "back" : ""}link${length !== 1 ? "s" : ""}`
+  );
+};
+
+const recentList = list.model({
+  getter: (state) => [state.collapseRecent, "Recent", state.note.recent_notes],
   setter: (state, newFoo) => [
-    { ...state, input_add: newFoo },
+    { ...state, collapseRecent: newFoo },
+    [renderIcons],
+  ],
+});
+
+const linksList = list.model({
+  getter: (state) => [state.collapseLinks, "Links", state.note.links],
+  setter: (state, newFoo) => [
+    { ...state, collapseLinks: newFoo },
+    [renderIcons],
+  ],
+});
+
+const backlinksList = list.model({
+  getter: (state) => [
+    state.collapseBacklinks,
+    "Backlinks",
+    state.note.backlinks,
+  ],
+  setter: (state, newFoo) => [
+    { ...state, collapseBacklinks: newFoo },
+    [renderIcons],
+  ],
+});
+
+const searchList = list.model({
+  getter: (state) => [
+    state.collapseSearch,
+    "Search",
+    state.searchLinks,
+  ],
+  setter: (state, newFoo) => [
+    { ...state, collapseSearch: newFoo },
+    [renderIcons],
+  ],
+});
+
+
+const searchInput = searchModule.model({
+  getter: (state) => [state.inputSearch, "Search"],
+  setter: (state, newFoo) => [
+    { ...state, inputSearch: newFoo},
+    [renderIcons],
+  ],
+  setSearch: (state, newSearchTerm) => [
+    { ...state, searchTerm: newSearchTerm },
+    [renderIcons],
+  ],
+  setSearchLinks: (state) => [state,
+    [getNotes, { state, addSearchNotes }]
+  ]
+});
+
+const addInput = addModule.model({
+  getter: (state) => state.inputAdd,
+  setter: (state, newFoo) => [
+    { ...state, inputAdd: newFoo },
     [renderIcons],
   ],
   setNewNoteName: (state, newValue) => [
-    {...state, new_note_name: newValue},
+    {...state, newNoteName: newValue},
     [renderIcons]
   ]
 });
 
 
 const left = (props) => {
-  if (props.collapse_left) {
+  if (props.collapseLeft) {
     return h("div", { class: "side-pane-collapsed left-pane-collapsed" }, [
       h("a", { class: "icon-wrap mlauto icons-top", onclick: collapseLeft }, [
         h("i", { "data-feather": "plus", class: "icon" }),
@@ -564,12 +569,12 @@ const left = (props) => {
   }
 
   return h("div", { class: "side-pane left-pane" }, [
-    add_module.view(add_input(props)),
+    addModule.view(addInput(props)),
 
-      search_module.view(search_input(props)),
+      searchModule.view(searchInput(props)),
 
     h("div", {class: "list-border"}, [
-    list.view(recent_list(props)),
+    list.view(recentList(props)),
     ]),
     h("div", { class: "footer" }, [
       h("a", { class: "icon-wrap mlauto", onclick: collapseLeft }, [
@@ -580,7 +585,7 @@ const left = (props) => {
 };
 
 const right = (props) => {
-  if (props.collapse_right) {
+  if (props.collapseRight) {
     return h("div", { class: "side-pane-collapsed right-pane-collapsed" }, [
       LinkNumberDec(props.note.links.length, false, true),
 
@@ -596,11 +601,10 @@ const right = (props) => {
 
   return h("div", { class: "side-pane right-pane" }, [
     h("div", { class: "right-content-wrap" }, [
-      list.view(links_list(props)),
+      list.view(linksList(props)),
       h("div", {class: "list-border"}, [
-        list.view(backlinks_list(props)),
+        list.view(backlinksList(props)),
       ])
-
     ]),
     LinkNumberDec(props.note.links.length, false, false),
     LinkNumberDec(props.note.backlinks.length, true, false),
@@ -613,18 +617,18 @@ const right = (props) => {
 };
 
 const central = (props) => {
-  const public_url = `${location.origin}/public/${props.note.name}`;
+  const publicUrl = `${location.origin}/public/${props.note.name}`;
 
   const viewButton =
     props.view === "EDIT"
       ? h("button", { onclick: View, class: "config-button" }, "view")
       : h("button", { onclick: Edit, class: "config-button" }, "edit");
 
-  const public_content =
+  const publicContent =
     props.note.is_public === true
       ? h("div", { class: "url-content mlauto" }, [
           h("div", { class: "url-tag " }, "public url: "),
-          h("a", { class: "url-wrapper ", href: public_url }, public_url),
+          h("a", { class: "url-wrapper ", href: publicUrl }, publicUrl),
         ])
       : h("div", { class: "url-content mlauto" }, [
           h("div", { class: "url-tag " }, ""),
@@ -651,7 +655,7 @@ const central = (props) => {
         { class: "last-modified" },
         `${getlastEdited(props.note.last_modified)}`
       ),
-      public_content,
+      publicContent,
     ]),
   ]);
 };
@@ -678,17 +682,17 @@ note:
 const initState = {
   view: "VIEW",
   note: input,
-  collapse_left: false,
-  collapse_right: false,
-  collapse_recent: false,
-  collapse_links: false,
-  collapse_backlinks: false,
-  collapse_search: false,
-  input_search: false,
-  input_add: false,
-  search_term: "",
-  search_links: [],
-  new_note_name: ""
+  collapseLeft: false,
+  collapseRight: false,
+  collapseRecent: false,
+  collapseLinks: false,
+  collapseBacklinks: false,
+  collapseSearch: false,
+  inputSearch: false,
+  inputAdd: false,
+  searchTerm: "",
+  searchLinks: [],
+  newNoteName: ""
 };
 
 app({

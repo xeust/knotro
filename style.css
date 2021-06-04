@@ -274,6 +274,7 @@ a.toggle-link:hover {
     font-size: 14px;
     display: inline-flex;
     text-decoration: none;
+    padding-left: 96px;
     font-family: Roboto Mono, Courier, monospace;    
 }
 /* public url */

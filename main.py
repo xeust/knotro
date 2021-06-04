@@ -69,7 +69,6 @@ async def read_public_note(note_name: str, json: bool = False):
         return FileResponse("./404.html")
 
     note_dict["base_url"] = base_url
-    note_dict["recent_notes"] = most_recent()
     if json:
         return note_dict
     
