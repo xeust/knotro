@@ -26,18 +26,45 @@ const linkSub = (rawMD, links) => {
   return newMD;
 };
 
-const getUniqueLinks = rawMD => {
+const getUniqueLinks = (rawMD) => {
   const uniqueLinks = [...new Set(rawMD.match(/\[\[(.*?)\]]/g))];
   return uniqueLinks;
 };
+const getlastEdited = (lastModified) => {
+  if (lastModified === "saving" || lastModified === "failed to save") {
+    return lastModified;
+  }
+  const date = new Date(lastModified);
 
+  let elapsed = Math.abs(new Date() - date) / 1000;
+
+  const days = Math.floor(elapsed / 86400);
+  elapsed -= days * 86400;
+
+  // calculate hours
+  const hours = Math.floor(elapsed / 3600) % 24;
+  elapsed -= hours * 3600;
+
+  // calculate minutes
+  const minutes = Math.floor(elapsed / 60) % 60;
+  elapsed -= minutes * 60;
+
+  if (days < 1 || days === NaN) {
+    if (hours < 1 || hours === NaN) {
+      return `last edited: ${minutes} minutes ago`;
+    } else {
+      return `last edited: ${hours} hours ago`;
+    }
+  } else {
+    return `last edited: ${days} days ago`;
+  }
+};
 // effects
 const renderIcons = (dispatch, options) => {
   requestAnimationFrame(() => {
-      feather.replace();
+    feather.replace();
   });
-}
-
+};
 
 const attachCodeJar = (dispatch, options) => {
   requestAnimationFrame(() => {
@@ -50,45 +77,66 @@ const attachCodeJar = (dispatch, options) => {
       lineWrapping: true,
       viewportMargin: Infinity,
       autoCloseBrackets: true,
-      mode: 'markdown'
+      mode: "markdown",
     });
 
     jar.on("change", function (cm, change) {
-      dispatch(options.UpdateContent(options.state, cm.getValue()))
+      dispatch(options.UpdateContent(options.state, cm.getValue()));
 
       clearTimeout(timeout);
 
       timeout = setTimeout(function () {
-        dispatch(options.DebounceSave(dispatch, options.state, cm.getValue()))
-        console.log("...")
-      }, 1000)
-    })
-
+        dispatch(options.DebounceSave(dispatch, options.state, cm.getValue()));
+        console.log("...");
+      }, 1000);
+    });
   });
 };
 
 const updateDatabase = (dispatch, options) => {
-  const response = fetch(`/${options.note.name}`, {
-    method: 'PUT',
+  fetch(`/${options.state.note.name}`, {
+    method: "PUT",
     headers: {
-      'Content-Type': 'application/json'
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify(options.note)
-  });
+    body: JSON.stringify(options.state.note),
+  })
+    .then((res) => {
+      if (res.status === 200) {
+        console.log("saved");
+        dispatch(setStatus(options.state, new Date().toUTCString()));
+      }
+    })
+    .catch((err) => {
+      console.log("error");
+      const newState = {
+        ...options.state,
+        note:{
+          ...options.state.note,
+          last_modified: new Date().toUTCString()
+        }
+      }
+      localStorage.setItem(options.state.note.name, JSON.stringify(newState.note))
+      console.log(JSON.stringify(newState.note))
+      dispatch(setStatus(options.state, "failed to save"));
+    });
 };
 
 const modifyPublic = (dispatch, options) => {
   const response = fetch(`/public/${options.note.name}`, {
-    method: 'PUT',
+    method: "PUT",
     headers: {
-      'Content-Type': 'application/json'
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify({is_public: options.note.is_public})
+    body: JSON.stringify({ is_public: options.note.is_public }),
   });
 };
 
 const attachMarkdown = (dispatch, options) => {
-  const convertedMarkdown = linkSub(options.state.note.content, options.uniqueLinks);
+  const convertedMarkdown = linkSub(
+    options.state.note.content,
+    options.uniqueLinks
+  );
   const html = converter.makeHtml(convertedMarkdown);
   requestAnimationFrame(() => {
     const container = document.getElementById("container");
@@ -98,103 +146,93 @@ const attachMarkdown = (dispatch, options) => {
 
 // actions
 const UpdateContent = (state, newContent) => {
-  return {
-    ...state,
-    note: {
-      ...state.note,
-      content: newContent,
-      last_modified: "saving"
-    }
-  };
-};
-
-const setStatus = (state, status) => {
-  return {
-    ...state,
-    note: {
-      ...state.note,
-      last_modified: status
-    }
-  };
-}
-
-const DebounceSave =  (dispatch, state, newContent) => {
-  const newState = {
-    ...state,
-    note:{
-      ...state.note,
-      content: newContent,
-      last_modified: "saving"
-    }
-  }
-
-  const resp = fetch(`/${newState.note.name}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json'
+  return [
+    {
+      ...state,
+      note: {
+        ...state.note,
+        content: newContent,
+        last_modified: "saving",
+        recent_notes: [
+          state.note.name,
+          ...state.note.recent_notes.filter((name) => name != state.note.name),
+        ],
+      },
     },
-    body: JSON.stringify(newState.note)
-  }).then(res=> {
-    if (res.status === 200) {
-      console.log("saved")
-      dispatch(setStatus(newState, new Date().toUTCString()))
-    } 
-  }).catch((err)=> {
-    console.log("error")
-    dispatch(setStatus(newState, "failed to save"))
-  })
-  return newState;
-
-}
-
-const Edit = state => {
-  const newState = {
-    ...state,
-    view: "EDIT"
-  };
-  return [newState,
-    [attachCodeJar, { state: newState, UpdateContent, DebounceSave }]
+    [renderIcons],
   ];
 };
 
-const getlastEdited = (lastModified) => {
-  if (lastModified === "saving" || lastModified === "failed to save") {
-    return lastModified
-  }
-  const date = new Date(lastModified);
+const setStatus = (state, status) => {
+  return [
+    {
+      ...state,
+      note: {
+        ...state.note,
+        last_modified: status,
+        recent_notes: [
+          state.note.name,
+          ...state.note.recent_notes.filter((name) => name != state.note.name),
+        ],
+      },
+    },
+    [renderIcons],
+  ];
+};
 
-  let elapsed = Math.abs(new Date() - date)/1000;
+const DebounceSave = (dispatch, state, newContent) => {
+  const newState = {
+    ...state,
+    note: {
+      ...state.note,
+      content: newContent,
+      last_modified: "saving",
+      recent_notes: [
+        state.note.name,
+        ...state.note.recent_notes.filter((name) => name != state.note.name),
+      ],
+    },
+  };
+  return [newState, [updateDatabase, { state: newState }], [renderIcons]];
+};
 
-  const days = Math.floor(elapsed / 86400);
-  elapsed -= days * 86400;
+const getNotes = async (dispatch, options) => {
+  const searchTerm = options.state.search_term;
+  const rawResponse = await fetch(`/search/${searchTerm}`, {
+      method: 'GET',
+      headers: {
+          'Content-Type': 'application/json'
+      }
+  });
+  let links = await rawResponse.json();
+  dispatch(options.addSearchNotes(options.state, links));
+};
 
+// actions
 
-  // calculate hours
-  const hours = Math.floor(elapsed / 3600) % 24;
-  elapsed -= hours * 3600;
+const addSearchNotes = (state, notes) => ({
+  ...state,
+  search_links: notes
+});
 
+const Edit = (state) => {
+  const newState = {
+    ...state,
+    view: "EDIT",
+  };
+  return [
+    newState,
+    [attachCodeJar, { state: newState, UpdateContent, DebounceSave }],
+    [renderIcons],
+  ];
+};
 
-  // calculate minutes
-  const minutes = Math.floor(elapsed / 60) % 60;
-  elapsed -= minutes * 60;
-
-  if (days < 1 || days === NaN){
-    if (hours < 1 || hours === NaN) {
-      return `last edited: ${minutes} minutes ago`
-    } else {
-      return `last edited: ${hours} hours ago`
-    }
-  } else {
-    return `last edited: ${days} days ago`
-  }
-
-}
-const View = state => {
+const View = (state) => {
   let markdown = state.note.content;
   const uniqueLinks = getUniqueLinks(markdown);
-  const bareLinks = uniqueLinks.map(each =>
-    each.substring(2, each.length - 2)
-  ).filter(mappedEach => mappedEach[0] !== "~");
+  const bareLinks = uniqueLinks
+    .map((each) => each.substring(2, each.length - 2))
+    .filter((mappedEach) => mappedEach[0] !== "~");
 
   const newState = {
     ...state,
@@ -203,131 +241,410 @@ const View = state => {
       ...state.note,
       last_modified: new Date().toUTCString(),
       content: markdown,
-      links: bareLinks
-    }
+      links: bareLinks,
+      recent_notes: [
+        state.note.name,
+        ...state.note.recent_notes.filter((name) => name != state.note.name),
+      ],
+    },
   };
   return [
     newState,
     [attachMarkdown, { state, uniqueLinks }],
-    [updateDatabase, { note: newState.note }]
+    [updateDatabase, { state: newState }],
+    [renderIcons],
   ];
 };
 
-const Share = state => {
-
+const Share = (state) => {
   const newState = {
     ...state,
     view: "VIEW",
     note: {
       ...state.note,
-      is_public: !state.note.is_public
-    }
+      is_public: !state.note.is_public,
+    },
   };
 
-  return [
-    newState,
-    [modifyPublic, {note: newState.note}],
-    [renderIcons]
-  ];
-}
+  return [newState, [modifyPublic, { note: newState.note }], [renderIcons]];
+};
+const collapseRight = (state) => {
+  const newState = {
+    ...state,
+    collapse_right: !state.collapse_right,
+    note: {
+      ...state.note,
+    },
+  };
 
+  return [newState, [renderIcons]];
+};
+
+const collapseLeft = (state) => {
+  const newState = {
+    ...state,
+    collapse_left: !state.collapse_left,
+    note: {
+      ...state.note,
+    },
+  };
+
+  return [newState, [renderIcons]];
+};
 // views
 
 const dummyLinks = ["one", "two", "three", "four"];
 
 const ToggleList = (title, links) => {
-  return h("div", {class: "toggle-list"}, [
-    h("div", {class: "toggle-title"}, title),
-    links.map(link => 
-      h("a", { href: `/notes/${link}`, class: "toggle-link"}, link)
-    )
-  ]);
-}
-
-const LinkNumberDec = (length, backlinks = true) => {
-  return h("div", {class: "link-num-dec"}, `${length} ${backlinks ? "back" : ""}link${length !== 1 ? "s" : ""}`)
-}
-
-
-const left =  props => {
-  return h("div",  {class: "side-pane left-pane"}, [
-    ToggleList("Search", dummyLinks),
-    ToggleList("Recent", dummyLinks),
-    h("div", {class: "footer"}, [
-      h("a", {class: "icon-wrap mlauto"}, [
-        h("i", { "data-feather": "chevrons-left", class: "icon" })
-      ])
-    ])
-  ]);
-}
-
-const right =  props => {
-  return h("div",  {class: "side-pane right-pane"}, [
-    h("div", {class: "right-content-wrap"}, [
-      ToggleList("Links", props.note.links),
-      ToggleList("Backlinks", props.note.backlinks),
-    ]),
-    LinkNumberDec(props.note.links.length, false),
-    LinkNumberDec(props.note.backlinks.length),
-    h("div", {class: "footer"}, [
-      h("a", {class: "icon-wrap"}, [
-        h("i", { "data-feather": "chevrons-right", class: "icon" })
-      ])
-    ])
-  ]);
-}
-
-const central = props => {
-
-  const public_url = `${location.origin}/public/${props.note.name}`;
-
-  const viewButton = props.view === "EDIT" ?
-  h("button", { onclick: View, class: "config-button" }, "view") :
-  h("button", { onclick: Edit, class: "config-button" }, "edit");
-
-  const public_content = props.note.is_public === true ? 
-  h("div", { class: "url-content mlauto" }, [
-    h("div", { class: "url-tag " }, "public url: "),
-    h("a", { class: "url-wrapper ", href: public_url }, public_url),
-  ]) : 
-  h("div", { class: "url-content mlauto" }, [
-    h("div", { class: "url-tag " }, ""),
-  ]);
-
-  const shareButton = props.note.is_public === true ?
-  h("button", { onclick: Share, class: "config-button" }, "unlock") :
-  h("button", { onclick: Share, class: "config-button" }, "lock");
-
-  return h("div",  {class: "central-pane"}, [
-    h("div", {class: "central-content-wrap"}, [
-      h("div", { class: "title-bar" }, [
-        h("div", { class: "titlebar-title" }, props.note.name),
-        h("div", { class: "titlebar-right" }, [
-          viewButton,
-          shareButton
-        ])
+  return h("div", { class: "toggle-list" }, [
+    h("div", { class: "toggle-title" }, [
+      h("div", { class: "title-tag" }, title),
+      h("a", { class: "icon-wrap mlauto toggle-chevron" }, [
+        h("i", { "data-feather": "chevron-down", class: "icon" }),
       ]),
-      h("div", { class: "content-wrapper" }, [
-        h("div", { id: "container", class: "main" }),
-      ])
     ]),
-    h("div", {class: "footer"}, [
-      h("div", {class:"last-modified"}, `${getlastEdited(props.note.last_modified)}`),
-      public_content,
-    ])
-  ]);
-}
-
-
-const main = props => {
-
-  return h("div", { class: "wrapper" }, [
-    left(props),
-    central(props),
-    right(props)
+    links.map((link) =>
+      h("a", { href: `/notes/${link}`, class: "toggle-link" }, link)
+    ),
   ]);
 };
 
+const LinkNumberDec = (length, backlinks = true, collapsed) => {
+  if (collapsed) {
+    return h("div", { class: "link-num-dec icons-top" }, `${length}`);
+  }
+  return h(
+    "div",
+    { class: "link-num-dec" },
+    `${length} ${backlinks ? "back" : ""}link${length !== 1 ? "s" : ""}`
+  );
+};
+
+const list = {
+  init: (x) => x,
+  toggle: (x) => !x,
+  model: ({ getter, setter }) => {
+    const Toggle = (state) => setter(state, list.toggle(getter(state)[0]));
+
+    return (state) => ({
+      value: getter(state)[0],
+      tag: getter(state)[1],
+      links: getter(state)[2],
+      Toggle,
+    });
+  },
+  view: (model) => {
+    if (model.value) {
+      return h("div", { class: "toggle-list" }, [
+        h("div", { class: "toggle-title collapsed" }, [
+          h("div", { class: "title-tag", onclick: model.Toggle }, model.tag),
+
+          h(
+            "div",
+            { class: "icon-wrap mlauto toggle-chevron", onclick: model.Toggle },
+            [h("i", { "data-feather": "chevron-down", class: "icon" })]
+          ),
+        ]),
+      ]);
+    }
+    return h("div", { class: "toggle-list" }, [
+      h("div", { class: "toggle-title" }, [
+        h("div", { class: "title-tag" }, model.tag),
+        h(
+          "a",
+          { class: "icon-wrap mlauto toggle-chevron", onclick: model.Toggle },
+          [h("i", { "data-feather": "chevron-up", class: "icon" })]
+        ),
+      ]),
+      model.links.map((link) =>
+        h("a", { href: `/notes/${link}`, class: "toggle-link" }, link)
+      ),
+    ]);
+  },
+};
+
+const recent_list = list.model({
+  getter: (state) => [state.collapse_recent, "Recent", state.note.recent_notes],
+  setter: (state, newFoo) => [
+    { ...state, collapse_recent: newFoo },
+    [renderIcons],
+  ],
+});
+
+const links_list = list.model({
+  getter: (state) => [state.collapse_links, "Links", state.note.links],
+  setter: (state, newFoo) => [
+    { ...state, collapse_links: newFoo },
+    [renderIcons],
+  ],
+});
+
+const backlinks_list = list.model({
+  getter: (state) => [
+    state.collapse_backlinks,
+    "Backlinks",
+    state.note.backlinks,
+  ],
+  setter: (state, newFoo) => [
+    { ...state, collapse_backlinks: newFoo },
+    [renderIcons],
+  ],
+});
+
+const search_list = list.model({
+  getter: (state) => [
+    state.collapse_search,
+    "Search",
+    state.search_links,
+  ],
+  setter: (state, newFoo) => [
+    { ...state, collapse_search: newFoo },
+    [renderIcons],
+  ],
+});
+
+const search_module = {
+  init: (x) => x,
+  toggle: (x) => !x,
+  model: ({ getter, setter, setSearch, setSearchLinks }) => {
+    const Toggle = (state) =>
+      setter(state, search_module.toggle(getter(state)[0]));
+
+    const SearchHandler = (state, event) =>
+      setSearch(state, event.target.value);
+
+    const SearchLinks = (state) => setSearchLinks(state);
+    
+
+    return (state) => ({
+      value: getter(state)[0],
+      Toggle,
+      _state: state,
+      SearchHandler,
+      SearchLinks,
+    });
+  },
+  view: (model) => {
+    if (model.value) {
+      return h("div", {}, [
+        h("div", { class: "input-wrap" }, [
+          h("input", {
+            class: "input",
+            placeholder: "Search",
+            oninput: model.SearchHandler,
+          }),
+          h(
+            "div",
+            { class: "icon-wrap mlauto icons-top", onclick: model.SearchLinks },
+            [h("i", { "data-feather": "check", class: "icon" })]
+          ),
+          h(
+            "a",
+            { class: "icon-wrap mlauto icons-top", onclick: model.Toggle },
+            [h("i", { "data-feather": "x", class: "icon" })]
+          ),
+        ]),
+        list.view(search_list(model._state))
+      ]);
+    }
+    return h("div", {})
+  },
+};
+
+const search_input = search_module.model({
+  getter: (state) => [state.input_search, "Search"],
+  setter: (state, newFoo) => [
+    { ...state, input_search: newFoo},
+    [renderIcons],
+  ],
+  setSearch: (state, searchTerm) => [
+    { ...state, search_term: searchTerm },
+    [renderIcons],
+  ],
+  setSearchLinks: (state) => [state,
+    [getNotes, { state, addSearchNotes }]
+  ]
+});
+
+
+const add_module = {
+  init: (x) => x,
+  toggle: (x) => !x,
+  model: ({ getter, setter, setNewNoteName}) => {
+    const Toggle = (state) =>
+      setter(state, add_module.toggle(getter(state)));
+
+    const AddHandler = (state, event) =>
+      setNewNoteName(state, event.target.value);    
+
+    const redirectToPage = (state) => {
+      window.location.href = `${location.origin}/notes/${state.new_note_name}`
+    }
+
+    return (state) => ({
+      value: getter(state),
+      Toggle,
+      _state: state,
+      AddHandler,
+      redirectToPage
+    });
+  },
+  view: (model) => {
+    if (model.value) {
+      return h("div", {}, [
+        h("div", { class: "input-wrap" }, [
+          h("input", {
+            class: "input",
+            placeholder: "Note name...",
+            oninput: model.AddHandler,
+          }),
+          h(
+            "a",
+            { class: "icon-wrap mlauto icons-top", onclick: model.redirectToPage },
+            [h("i", { "data-feather": "check", class: "icon" })]
+          ),
+          h(
+            "a",
+            { class: "icon-wrap mlauto icons-top", onclick: model.Toggle },
+            [h("i", { "data-feather": "x", class: "icon" })]
+          ),
+        ]),
+      ]);
+    }
+    return h("div", {})
+
+  },
+};
+
+const add_input = add_module.model({
+  getter: (state) => state.input_add,
+  setter: (state, newFoo) => [
+    { ...state, input_add: newFoo },
+    [renderIcons],
+  ],
+  setNewNoteName: (state, newValue) => [
+    {...state, new_note_name: newValue},
+    [renderIcons]
+  ]
+});
+
+
+const left = (props) => {
+  if (props.collapse_left) {
+    return h("div", { class: "side-pane-collapsed left-pane-collapsed" }, [
+      h("a", { class: "icon-wrap mlauto icons-top", onclick: collapseLeft }, [
+        h("i", { "data-feather": "plus", class: "icon" }),
+      ]),
+      h("a", { class: "icon-wrap mlauto icons-top", onclick: collapseLeft }, [
+        h("i", { "data-feather": "search", class: "icon" }),
+      ]),
+      h("div", { class: "footer" }, [
+        h("a", { class: "icon-wrap", onclick: collapseLeft }, [
+          h("i", { "data-feather": "chevrons-right", class: "icon" }),
+        ]),
+      ]),
+    ]);
+  }
+
+  return h("div", { class: "side-pane left-pane" }, [
+    h("a", { class: "icon-wrap  icons-top", onclick: collapseLeft }, [
+      h("i", { "data-feather": "plus", class: "icon" }),
+    ]),
+    h("a", { class: "icon-wrap icons-top", onclick: collapseLeft }, [
+      h("i", { "data-feather": "search", class: "icon" }),
+    ]),
+    add_module.view(add_input(props)),
+    search_module.view(search_input(props)),
+    list.view(recent_list(props)),
+    h("div", { class: "footer" }, [
+      h("a", { class: "icon-wrap mlauto", onclick: collapseLeft }, [
+        h("i", { "data-feather": "chevrons-left", class: "icon" }),
+      ]),
+    ]),
+  ]);
+};
+
+const right = (props) => {
+  if (props.collapse_right) {
+    return h("div", { class: "side-pane-collapsed right-pane-collapsed" }, [
+      LinkNumberDec(props.note.links.length, false, true),
+
+      LinkNumberDec(props.note.backlinks.length, true, true),
+
+      h("div", { class: "footer" }, [
+        h("a", { class: "icon-wrap", onclick: collapseRight }, [
+          h("i", { "data-feather": "chevrons-left", class: "icon" }),
+        ]),
+      ]),
+    ]);
+  }
+
+  return h("div", { class: "side-pane right-pane" }, [
+    h("div", { class: "right-content-wrap" }, [
+      list.view(links_list(props)),
+      list.view(backlinks_list(props)),
+    ]),
+    LinkNumberDec(props.note.links.length, false, false),
+    LinkNumberDec(props.note.backlinks.length, true, false),
+    h("div", { class: "footer" }, [
+      h("a", { class: "icon-wrap", onclick: collapseRight }, [
+        h("i", { "data-feather": "chevrons-right", class: "icon" }),
+      ]),
+    ]),
+  ]);
+};
+
+const central = (props) => {
+  const public_url = `${location.origin}/public/${props.note.name}`;
+
+  const viewButton =
+    props.view === "EDIT"
+      ? h("button", { onclick: View, class: "config-button" }, "view")
+      : h("button", { onclick: Edit, class: "config-button" }, "edit");
+
+  const public_content =
+    props.note.is_public === true
+      ? h("div", { class: "url-content mlauto" }, [
+          h("div", { class: "url-tag " }, "public url: "),
+          h("a", { class: "url-wrapper ", href: public_url }, public_url),
+        ])
+      : h("div", { class: "url-content mlauto" }, [
+          h("div", { class: "url-tag " }, ""),
+        ]);
+
+  const shareButton =
+    props.note.is_public === true
+      ? h("button", { onclick: Share, class: "config-button" }, "unlock")
+      : h("button", { onclick: Share, class: "config-button" }, "lock");
+
+  return h("div", { class: "central-pane" }, [
+    h("div", { class: "central-content-wrap" }, [
+      h("div", { class: "title-bar" }, [
+        h("div", { class: "titlebar-title" }, props.note.name),
+        h("div", { class: "titlebar-right" }, [viewButton, shareButton]),
+      ]),
+      h("div", { class: "content-wrapper" }, [
+        h("div", { id: "container", class: "main" }),
+      ]),
+    ]),
+    h("div", { class: "footer" }, [
+      h(
+        "div",
+        { class: "last-modified" },
+        `${getlastEdited(props.note.last_modified)}`
+      ),
+      public_content,
+    ]),
+  ]);
+};
+
+const main = (props) => {
+  return h("div", { class: "wrapper" }, [
+    left(props),
+    central(props),
+    right(props),
+  ]);
+};
 
 /*
 note:
@@ -340,23 +657,34 @@ note:
 }
 */
 
-
 const initState = {
   view: "VIEW",
-  note: input
+  note: input,
+  collapse_left: true,
+  collapse_right: false,
+  collapse_recent: false,
+  collapse_links: false,
+  collapse_backlinks: false,
+  collapse_search: false,
+  input_search: true,
+  input_add: false,
+  search_term: "",
+  search_links: [],
+  new_note_name: ""
 };
 
 app({
-  init: [initState,
+  init: [
+    initState,
     [
       attachMarkdown,
       {
         state: initState,
-        uniqueLinks: getUniqueLinks(input.content)
-      }
+        uniqueLinks: getUniqueLinks(input.content),
+      },
     ],
-    [renderIcons]
+    [renderIcons],
   ],
-  view: state => main(state),
-  node: document.getElementById("app")
+  view: (state) => main(state),
+  node: document.getElementById("app"),
 });

@@ -26,6 +26,7 @@ body {
     width: 240px;
     height: 100%;
     background-color: #F5F5F5;  
+    position: fixed;
 }
 
 .left-pane {
@@ -36,15 +37,47 @@ body {
 .right-pane {
     border-left: 1px solid #EAEAEA;
     box-sizing: border-box;
+    left: calc(100% - 240px);
+}
+
+.right-pane-collapsed {
+    left: calc(100% - 44px);
+    border-left: 1px solid #EAEAEA;
+    box-sizing: border-box;
+}
+
+.left-pane-collapsed {
+    right: calc(100% - 44px);
+    border-right: 1px solid #EAEAEA;
+    box-sizing: border-box;
+}
+.side-pane-collapsed {
+    display: flex;
+    flex-direction: column;
+    width: 44px;
+    height: 100%;
+    position: fixed;
+    background-color: #F5F5F5;  
 }
 
 .central-pane {
     display: flex;
     flex-direction: column;
     width: calc(100% - 480px);
+    position: fixed;
+    left:240px;
     height: 100%;
 }
-
+.icons-bar {
+    
+    padding-left: 8px;
+    padding-right: 8px;
+}
+.icons-top {
+    padding-left: 8px;
+    padding-right: 8px;
+    margin-top: 13px;
+} 
 .footer {
     display: flex;
     margin-top: auto;
@@ -56,14 +89,14 @@ body {
     box-sizing: border-box;
 }
 
-a.icon-wrap {
+.icon-wrap {
     display: flex;
     width: 24px;
     height: 24px;
     color: #8F8F8F;
 }
 
-a.icon-wrap:hover {
+.icon-wrap:hover {
     color: #313131;
     cursor: pointer;
 }
@@ -73,12 +106,17 @@ a.icon-wrap:hover {
 }
 /* side panes */
 .toggle-list {
-    border-top: 1px solid #EAEAEA;
+
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     padding-left: 12px;
     padding-bottom: 24px;
+    margin-top: 13px;
+}
+
+.toggle-chevron {
+    margin-right: 8px;
 }
 
 .toggle-title {
@@ -87,6 +125,10 @@ a.icon-wrap:hover {
     height: 50px;
     font-size: 24px;
     font-weight: bold;
+}
+
+.collapsed{
+    color:#8F8F8F
 }
 
 a.toggle-link  {
@@ -212,6 +254,7 @@ a.toggle-link:hover {
 /* last edited */
 
 .last-modified {
+    padding-left: 96px;
     height: 24px;
     font-size: 14px;
     display: inline-flex;
@@ -228,6 +271,7 @@ a.toggle-link:hover {
 /* public url */
 .url-content {
     display: inline-flex;
+    padding-right: 96px;
 }
 .url-tag {
     height: 24px;
@@ -243,6 +287,29 @@ a.toggle-link:hover {
     color: #98B9F9;
     text-decoration: none;
     font-family: Roboto Mono, Courier, monospace;
+}
+
+/* search */
+.input {
+    border-color: #000000 !important;
+    background-color:#f9f9f9;
+    border-color: #000000 !important;
+    background-color: #F5F5F5;
+    outline: 0;
+    font-family: 'Menlo', 'Monaco', courier, monospace;
+    font-size: 16px;
+    border-width: 0 0 1px;
+    max-width: calc(100% - 90px);
+    margin: 0 0 0 0;
+}
+
+.input-wrap {
+    display: flex;
+    padding-left: 12px;
+    margin-top: 18px;
+    height: 30px;
+    align-items: center;
+    margin-bottom: 18px;
 }
 
 /* codemirror */

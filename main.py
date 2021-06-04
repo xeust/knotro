@@ -1,6 +1,6 @@
 from deta import App
 from fastapi import FastAPI, Response, HTTPException
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from datetime import datetime, timezone
 from pydantic import BaseModel
@@ -17,10 +17,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
 def html_handler():
-    home_template = Template((open("index.html").read()))
-    home_css = open("style.css").read()
-    home_hyper = open("home.js").read()
-    return HTMLResponse(home_template.render(home_js=home_hyper, base_url=base_url, css=home_css))
+    return RedirectResponse(url=f'/notes/{datetime.now().strftime("%Y-%m-%d")}')
 
 
 @app.get("/search/{search_term}")
@@ -48,7 +45,8 @@ async def read_note(note_name: str, json: bool = False):
       notes.put(note_meta.dict(), note_key)
 
     note_dict["base_url"] = base_url
-
+    note_dict["recent_notes"] = recent_notes()
+    
     if json:
         return note_dict
     
@@ -60,6 +58,7 @@ async def read_note(note_name: str, json: bool = False):
 
 @app.get("/public/{note_name}")
 async def read_public_note(note_name: str, json: bool = False):
+
     note = get_note(note_name)
     note_dict = {}
 
@@ -70,7 +69,7 @@ async def read_public_note(note_name: str, json: bool = False):
         return FileResponse("./404.html")
 
     note_dict["base_url"] = base_url
-
+    note_dict["recent_notes"] = most_recent()
     if json:
         return note_dict
     
@@ -91,7 +90,7 @@ async def add_note(new_note: Note):
         remove_backlink(each, new_note.name)
 
     db_update_note(new_note)
-    
+
     for each in added_links:
         add_backlink_or_create(each, new_note.name)
     

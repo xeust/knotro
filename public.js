@@ -6,7 +6,7 @@ let input = {{ note_data|tojson }};
 */
 
 const converter = new showdown.Converter();
-let jar;
+
 
 // helpers
 const linkSub = (rawMD, links) => {
@@ -38,35 +38,6 @@ const renderIcons = (dispatch, options) => {
   });
 };
 
-const attachCodeJar = (dispatch, options) => {
-  requestAnimationFrame(() => {
-    var container = document.getElementById("container");
-    container.innerHTML = "";
-    jar = CodeMirror(container, {
-      value: options.state.note.content,
-      lineNumbers: false,
-      lineWrapping: true,
-      viewportMargin: Infinity,
-      autoCloseBrackets: true,
-      mode: "markdown",
-    });
-
-    jar.on("change", function (cm, change) {
-      dispatch(options.UpdateContent(options.state, cm.getValue()));
-    });
-  });
-};
-
-const updateDatabase = (dispatch, options) => {
-  const response = fetch(`/${options.note.name}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(options.note),
-  });
-};
-
 const attachMarkdown = (dispatch, options) => {
   const convertedMarkdown = linkSub(
     options.state.note.content,
@@ -90,36 +61,18 @@ const UpdateContent = (state, newContent) => {
   };
 };
 
-const Edit = (state) => {
+const collapseLeft = (state) => {
   const newState = {
     ...state,
-    view: "EDIT",
-  };
-  return [newState, [attachCodeJar, { state: newState, UpdateContent }]];
-};
-
-const Save = (state) => {
-  let markdown = state.note.content;
-  const uniqueLinks = getUniqueLinks(markdown);
-  const bareLinks = uniqueLinks
-    .map((each) => each.substring(2, each.length - 2))
-    .filter((mappedEach) => mappedEach[0] !== "~");
-
-  const newState = {
-    ...state,
-    view: "VIEW",
+    collapse_left: !state.collapse_left,
     note: {
       ...state.note,
-      content: markdown,
-      links: bareLinks,
     },
   };
-  return [
-    newState,
-    [attachMarkdown, { state, uniqueLinks }],
-    [updateDatabase, { note: newState.note }],
-  ];
+
+  return [newState, [renderIcons]];
 };
+
 
 // views
 
@@ -132,7 +85,10 @@ const ToggleList = (title, links) => {
   ]);
 };
 
-const LinkNumberDec = (length, backlinks = true) => {
+const LinkNumberDec = (length, backlinks = true, collapsed) => {
+  if (collapsed) {
+    return h("div", { class: "link-num-dec icons-top" }, `${length}`);
+  }
   return h(
     "div",
     { class: "link-num-dec" },
@@ -141,16 +97,27 @@ const LinkNumberDec = (length, backlinks = true) => {
 };
 
 const left = (props) => {
+  if (props.collapse_left) {
+    return h("div", { class: "side-pane-collapsed left-pane-collapsed" }, [
+      LinkNumberDec(props.note.links.length, false, true),
+      LinkNumberDec(props.note.backlinks.length, true, true),
+      h("div", { class: "footer" }, [
+        h("a", { class: "icon-wrap", onclick: collapseLeft }, [
+          h("i", { "data-feather": "chevrons-left", class: "icon" }),
+        ]),
+      ]),
+    ]);
+  }
   return h("div", { class: "side-pane left-pane" }, [
     h("div", { class: "right-content-wrap" }, [
       ToggleList("Links", props.note.links),
       ToggleList("Backlinks", props.note.backlinks),
     ]),
-    LinkNumberDec(props.note.links.length, false),
-    LinkNumberDec(props.note.backlinks.length),
+    LinkNumberDec(props.note.links.length, false, false),
+    LinkNumberDec(props.note.backlinks.length, true, false),
     h("div", { class: "footer" }, [
       h("a", { class: "knotro-wrap" }, "knotro.com"),
-      h("a", { class: "icon-wrap mlauto" }, [
+      h("a", { class: "icon-wrap mlauto", onclick: collapseLeft }, [
         h("i", { "data-feather": "chevrons-left", class: "icon" }),
       ]),
     ]),
@@ -206,6 +173,7 @@ note:
 const initState = {
   view: "VIEW",
   note: input,
+  collapse_left: false 
 };
 
 app({
