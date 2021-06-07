@@ -1,9 +1,9 @@
-/** input in html file by Jinja template
- * 
-import { h, app } from "https://unpkg.com/hyperapp@2.0.4/src/index.js";
-let input = {{ note_data|tojson }};
+// /** input in html file by Jinja template
+//  *
+// import { h, app } from "https://unpkg.com/hyperapp";
+// let input = {{ note_data|tojson }};
 
-*/
+// */
 
 const converter = new showdown.Converter();
 let jar;
@@ -76,7 +76,7 @@ const checkUnsaved = (options) => {
   return { content: note.content, uniqueLinks: getUniqueLinks(note.content) };
 };
 
-// effects
+// // effects
 const renderIcons = (dispatch, options) => {
   requestAnimationFrame(() => {
     feather.replace();
@@ -104,7 +104,6 @@ const attachCodeJar = (dispatch, options) => {
 
       timeout = setTimeout(function () {
         dispatch(options.DebounceSave(dispatch, options.state, cm.getValue()));
-        console.log("...");
       }, 1000);
     });
   });
@@ -247,7 +246,7 @@ const setStatus = (state, status) => {
   ];
 };
 
-// actions
+// // actions
 
 const addSearchNotes = (state, notes) => ({
   ...state,
@@ -331,8 +330,31 @@ const collapseLeft = (state) => {
   return [newState, [renderIcons]];
 };
 
-// modules
+const openSearchCollapse = (state) => {
+  const newState = {
+    ...state,
+    inputSearch: !state.inputSearch,
+    collapseLeft: !state.collapseLeft,
+    note: {
+      ...state.note
+    }
+  }
+  return [newState, [renderIcons]];
+}
 
+const openAddCollapse = (state) => {
+  const newState = {
+    ...state,
+    inputAdd: !state.inputAdd,
+    collapseLeft: !state.collapseLeft,
+    note: {
+      ...state.note
+    }
+  }
+  return [newState, [renderIcons]];
+}
+
+// modules
 const list = {
   init: (x) => x,
   toggle: (x) => !x,
@@ -347,11 +369,14 @@ const list = {
     });
   },
   view: (model) => {
-    if (model.value) {
+    if (model.value || model.links.length === 0) {
       return h("div", { class: "toggle-list" }, [
         h("div", { class: "toggle-title collapsed" }, [
-          h("div", { class: "title-tag", onclick: model.Toggle }, model.tag),
-
+          h(
+            "div",
+            { class: "title-tag", onclick: model.Toggle },
+            text(model.tag)
+          ),
           h(
             "div",
             { class: "icon-wrap mlauto toggle-chevron", onclick: model.Toggle },
@@ -362,15 +387,15 @@ const list = {
     }
     return h("div", { class: "toggle-list" }, [
       h("div", { class: "toggle-title" }, [
-        h("div", { class: "title-tag" }, model.tag),
+        h("div", { class: "title-tag" }, text(model.tag)),
         h(
           "a",
           { class: "icon-wrap mlauto toggle-chevron", onclick: model.Toggle },
           [h("i", { "data-feather": "chevron-up", class: "icon" })]
         ),
       ]),
-      model.links.map((link) =>
-        h("a", { href: `/notes/${link}`, class: "toggle-link" }, link)
+      ...model.links.map((link) =>
+        h("a", { href: `/notes/${link}`, class: "toggle-link" }, text(link))
       ),
     ]);
   },
@@ -380,8 +405,7 @@ const searchModule = {
   init: (x) => x,
   toggle: (x) => !x,
   model: ({ getter, setter, setSearch, setSearchLinks }) => {
-    const Toggle = (state) =>
-      setter(state, searchModule.toggle(getter(state)[0]));
+    const Toggle = (state) => setter(state, searchModule.toggle(getter(state)));
 
     const SearchHandler = (state, event) =>
       setSearch(state, event.target.value);
@@ -389,7 +413,7 @@ const searchModule = {
     const SearchLinks = (state) => setSearchLinks(state);
 
     return (state) => ({
-      value: getter(state)[0],
+      value: getter(state),
       Toggle,
       _state: state,
       SearchHandler,
@@ -405,7 +429,7 @@ const searchModule = {
             placeholder: "Search",
             oninput: model.SearchHandler,
           }),
-          h("div", { class: "icon-wrap mlauto ", onclick: model.SearchLinks }, [
+          h("a", { class: "icon-wrap mlauto ", onclick: model.SearchLinks }, [
             h("i", { "data-feather": "check", class: "icon" }),
           ]),
           h("a", { class: "icon-wrap mlauto ", onclick: model.Toggle }, [
@@ -471,7 +495,6 @@ const addModule = {
 };
 
 // views
-const dummyLinks = ["one", "two", "three", "four"];
 
 const ToggleList = (title, links) => {
   return h("div", { class: "toggle-list" }, [
@@ -489,27 +512,26 @@ const ToggleList = (title, links) => {
 
 const LinkNumberDec = (length, backlinks = true, collapsed) => {
   if (collapsed) {
-    return h("div", { class: "link-num-dec icons-top" }, `${length}`);
+    return h("div", { class: "link-num-dec-collapsed icons-top" }, text(`${length}`));
   }
   return h(
     "div",
     { class: "link-num-dec" },
-    `${length} ${backlinks ? "back" : ""}link${length !== 1 ? "s" : ""}`
+    text(`${length} ${backlinks ? "back" : ""}link${length !== 1 ? "s" : ""}`)
   );
 };
-
 const recentList = list.model({
   getter: (state) => [state.collapseRecent, "Recent", state.note.recent_notes],
-  setter: (state, newFoo) => [
-    { ...state, collapseRecent: newFoo },
+  setter: (state, toggleRecent) => [
+    { ...state, collapseRecent: toggleRecent },
     [renderIcons],
   ],
 });
 
 const linksList = list.model({
   getter: (state) => [state.collapseLinks, "Links", state.note.links],
-  setter: (state, newFoo) => [
-    { ...state, collapseLinks: newFoo },
+  setter: (state, toggleLinks) => [
+    { ...state, collapseLinks: toggleLinks },
     [renderIcons],
   ],
 });
@@ -520,23 +542,26 @@ const backlinksList = list.model({
     "Backlinks",
     state.note.backlinks,
   ],
-  setter: (state, newFoo) => [
-    { ...state, collapseBacklinks: newFoo },
+  setter: (state, toggleBacklinks) => [
+    { ...state, collapseBacklinks: toggleBacklinks },
     [renderIcons],
   ],
 });
 
 const searchList = list.model({
   getter: (state) => [state.collapseSearch, "Search", state.searchLinks],
-  setter: (state, newFoo) => [
-    { ...state, collapseSearch: newFoo },
+  setter: (state, toggleSearch) => [
+    { ...state, collapseSearch: toggleSearch },
     [renderIcons],
   ],
 });
 
 const searchInput = searchModule.model({
-  getter: (state) => [state.inputSearch, "Search"],
-  setter: (state, newFoo) => [{ ...state, inputSearch: newFoo }, [renderIcons]],
+  getter: (state) => state.inputSearch,
+  setter: (state, newSearchTerm) => [
+    { ...state, inputSearch: newSearchTerm },
+    [renderIcons],
+  ],
   setSearch: (state, newSearchTerm) => [
     { ...state, searchTerm: newSearchTerm },
     [renderIcons],
@@ -546,7 +571,7 @@ const searchInput = searchModule.model({
 
 const addInput = addModule.model({
   getter: (state) => state.inputAdd,
-  setter: (state, newFoo) => [{ ...state, inputAdd: newFoo }, [renderIcons]],
+  setter: (state, newName) => [{ ...state, inputAdd: newName }, [renderIcons]],
   setNewNoteName: (state, newValue) => [
     { ...state, newNoteName: newValue },
     [renderIcons],
@@ -556,10 +581,10 @@ const addInput = addModule.model({
 const left = (props) => {
   if (props.collapseLeft) {
     return h("div", { class: "side-pane-collapsed left-pane-collapsed" }, [
-      h("a", { class: "icon-wrap mlauto icons-top", onclick: collapseLeft }, [
+      h("a", { class: "icon-wrap mlauto icons-top", onclick: openAddCollapse }, [
         h("i", { "data-feather": "plus", class: "icon" }),
       ]),
-      h("a", { class: "icon-wrap mlauto icons-top", onclick: collapseLeft }, [
+      h("a", { class: "icon-wrap mlauto icons-top", onclick: openSearchCollapse }, [
         h("i", { "data-feather": "search", class: "icon" }),
       ]),
       h("div", { class: "footer" }, [
@@ -588,8 +613,11 @@ const right = (props) => {
   if (props.collapseRight) {
     return h("div", { class: "side-pane-collapsed right-pane-collapsed" }, [
       LinkNumberDec(props.note.links.length, false, true),
-
-      LinkNumberDec(props.note.backlinks.length, true, true),
+      h (
+        "div", {class: "list-border"}, [
+          LinkNumberDec(props.note.backlinks.length, true, true),
+        ]
+      ),
 
       h("div", { class: "footer" }, [
         h("a", { class: "icon-wrap", onclick: collapseRight }, [
@@ -614,33 +642,72 @@ const right = (props) => {
   ]);
 };
 
+const editBtn = (props) => {
+  return h(
+    "button",
+    { onclick: View, class: "config-button" },
+    h("div", {}, [
+      h("a", { class: "icon-wrap" }, [
+        h("i", { "data-feather": "eye", class: "icon" }),
+      ]),
+    ])
+  );
+};
+const viewBtn = (props) => {
+  return h(
+    "button",
+    { onclick: Edit, class: "config-button" },
+    h("a", { class: "icon-wrap" }, [
+      h("i", { "data-feather": "edit-2", class: "icon" }),
+    ])
+  );
+};
+
+const lockBtn = (props) => {
+  return h(
+    "button",
+    { onclick: Share, class: "config-button" },
+    h("a", { class: "icon-wrap" }, [
+      h("i", { "data-feather": "lock", class: "icon" }),
+    ])
+  );
+};
+
+const unlockBtn = (props) => {
+  return h(
+    "button",
+    { onclick: Share, class: "config-button" },
+    h("div", {}, [
+      h("a", { class: "icon-wrap" }, [
+        h("i", { "data-feather": "unlock", class: "icon" }),
+      ]),
+    ])
+  );
+};
 const central = (props) => {
   const publicUrl = `${location.origin}/public/${props.note.name}`;
 
-  const viewButton =
-    props.view === "EDIT"
-      ? h("button", { onclick: View, class: "config-button" }, "view")
-      : h("button", { onclick: Edit, class: "config-button" }, "edit");
+  const viewButton = props.view === "EDIT" ? editBtn(props) : viewBtn(props);
 
   const publicContent =
     props.note.is_public === true
       ? h("div", { class: "url-content mlauto" }, [
-          h("div", { class: "url-tag " }, "public url: "),
-          h("a", { class: "url-wrapper ", href: publicUrl }, publicUrl),
+          h("div", { class: "url-tag " }, text("public url: ")),
+          h("a", { class: "url-wrapper ", href: publicUrl }, text(publicUrl)),
         ])
       : h("div", { class: "url-content mlauto" }, [
-          h("div", { class: "url-tag " }, ""),
+          h("div", { class: "url-tag " }, text("")),
         ]);
 
   const shareButton =
     props.note.is_public === true
-      ? h("button", { onclick: Share, class: "config-button" }, "unlock")
-      : h("button", { onclick: Share, class: "config-button" }, "lock");
+      ? lockBtn(props)
+      : unlockBtn(props);
 
   return h("div", { class: "central-pane" }, [
     h("div", { class: "central-content-wrap" }, [
       h("div", { class: "title-bar" }, [
-        h("div", { class: "titlebar-title" }, props.note.name),
+        h("div", { class: "titlebar-title" }, text(props.note.name)),
         h("div", { class: "titlebar-right" }, [viewButton, shareButton]),
       ]),
       h("div", { class: "content-wrapper" }, [
@@ -651,7 +718,7 @@ const central = (props) => {
       h(
         "div",
         { class: "last-modified" },
-        `${getlastEdited(props.note.last_modified)}`
+        text(`${getlastEdited(props.note.last_modified)}`)
       ),
       publicContent,
     ]),
@@ -673,7 +740,9 @@ note:
     content: str,
     links: [],
     backlinks: [],
-    base_url: str
+    base_url: str,
+    last_modified: str,
+    recent_notes: []
 }
 */
 
@@ -691,6 +760,8 @@ const initState = {
   searchTerm: "",
   searchLinks: [],
   newNoteName: "",
+  todos: [],
+  value: "",
 };
 
 app({
@@ -708,3 +779,6 @@ app({
   view: (state) => main(state),
   node: document.getElementById("app"),
 });
+
+
+

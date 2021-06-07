@@ -1,6 +1,6 @@
 /** input in html file by Jinja template
  * 
-import { h, app } from "https://unpkg.com/hyperapp@2.0.4/src/index.js";
+import { h, app } from "https://unpkg.com/hyperapp";
 let input = {{ note_data|tojson }};
 
 */
@@ -90,10 +90,10 @@ const list = {
     });
   },
   view: (model) => {
-    if (model.value) {
+    if (model.value || model.links.length === 0) {
       return h("div", { class: "toggle-list" }, [
         h("div", { class: "toggle-title collapsed" }, [
-          h("div", { class: "title-tag", onclick: model.Toggle }, model.tag),
+          h("div", { class: "title-tag", onclick: model.Toggle }, text(model.tag)),
 
           h(
             "div",
@@ -105,15 +105,15 @@ const list = {
     }
     return h("div", { class: "toggle-list" }, [
       h("div", { class: "toggle-title"  }, [
-        h("div", { class: "title-tag" }, model.tag),
+        h("div", { class: "title-tag" }, text(model.tag)),
         h(
           "a",
           { class: "icon-wrap mlauto toggle-chevron", onclick: model.Toggle },
           [h("i", { "data-feather": "chevron-up", class: "icon" })]
         ),
       ]),
-      model.links.map((link) =>
-        h("a", { href: `/notes/${link}`, class: "toggle-link" }, link)
+      ...model.links.map((link) =>
+        h("a", { href: `/notes/${link}`, class: "toggle-link" }, text(link))
       ),
     ]);
   },
@@ -142,38 +142,35 @@ const backlinksList = list.model({
   ],
 });
 
-const ToggleList = (title, links) => {
-  return h("div", { class: "toggle-list" }, [
-    h("div", { class: "toggle-title" }, title),
-    links.map((link) =>
-      h("a", { href: `/public/${link}`, class: "toggle-link" }, link)
-    ),
-  ]);
-};
-
 const LinkNumberDec = (length, backlinks = true, collapsed) => {
   if (collapsed) {
-    return h("div", { class: "link-num-dec icons-top" }, `${length}`);
+    return h("div", { class: "link-num-dec-collapsed icons-top" }, text(`${length}`));
   }
   return h(
     "div",
     { class: "link-num-dec" },
-    `${length} ${backlinks ? "back" : ""}link${length !== 1 ? "s" : ""}`
+    text(`${length} ${backlinks ? "back" : ""}link${length !== 1 ? "s" : ""}`)
   );
 };
 
 const left = (props) => {
   if (props.collapse_left) {
     return h("div", { class: "side-pane-collapsed left-pane-collapsed" }, [
+
       LinkNumberDec(props.note.links.length, false, true),
-      LinkNumberDec(props.note.backlinks.length, true, true),
+      h (
+        "div", {class: "list-border"}, [
+          LinkNumberDec(props.note.backlinks.length, true, true),
+        ]
+      ),
       h("div", { class: "footer" }, [
         h("a", { class: "icon-wrap", onclick: collapseLeft }, [
-          h("i", { "data-feather": "chevrons-left", class: "icon" }),
+          h("i", { "data-feather": "chevrons-right", class: "icon" }),
         ]),
       ]),
     ]);
   }
+
   return h("div", { class: "side-pane left-pane" }, [
     h("div", { class: "right-content-wrap" }, [
       list.view(linksList(props)),
@@ -184,7 +181,7 @@ const left = (props) => {
     LinkNumberDec(props.note.links.length, false, false),
     LinkNumberDec(props.note.backlinks.length, true, false),
     h("div", { class: "footer" }, [
-      h("a", { class: "knotro-wrap" }, "knotro.com"),
+      h("a", { class: "knotro-wrap" }, text("knotro.com")),
       h("a", { class: "icon-wrap mlauto", onclick: collapseLeft }, [
         h("i", { "data-feather": "chevrons-left", class: "icon" }),
       ]),
@@ -202,7 +199,7 @@ const central = (props) => {
   return h("div", { class: "central-pane" }, [
     h("div", { class: "central-content-wrap" }, [
       h("div", { class: "title-bar" }, [
-        h("div", { class: "titlebar-title" }, props.note.name),
+        h("div", { class: "titlebar-title" }, text(props.note.name)),
       ]),
       h("div", { class: "content-wrapper" }, [
         h("div", { id: "container", class: "main" }),
@@ -211,10 +208,8 @@ const central = (props) => {
     h("div", { class: "footer" }, [
       h("a", { class: "sponsor", href:"https://deta.space/discovery/yarc" }, [
         h("div", { innerHTML: svg, class: "sponsor-svg" }),
-        h("div", { class: "sponsor-message" }, "Install on Deta"),
+        h("div", { class: "sponsor-message" }, text("Install on Deta")),
       ]),
-
-
     ]),
   ]);
 };

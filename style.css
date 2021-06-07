@@ -78,6 +78,7 @@ body {
     padding-right: 8px;
     margin-top: 22px;
 } 
+
 .footer {
     display: flex;
     margin-top: auto;
@@ -169,6 +170,19 @@ a.toggle-link:hover {
     font-family: Roboto Mono, Courier, monospace;
     border-top: 1px solid #EAEAEA;
     box-sizing: border-box;
+}
+
+
+.link-num-dec-collapsed {
+    display: flex;
+    align-items: center;
+    height: 24px;
+    font-size: 14px;
+    padding-left: 12px;
+    color: #8F8F8F;
+    font-family: Roboto Mono, Courier, monospace;
+    box-sizing: border-box;
+    margin-bottom: 22px;
 }
 
 /* central pane */
