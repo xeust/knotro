@@ -104,7 +104,7 @@ const attachCodeJar = (dispatch, options) => {
 
       timeout = setTimeout(function () {
         dispatch(options.DebounceSave(dispatch, options.state, cm.getValue()));
-      }, 1000);
+      }, 200);
     });
   });
 };
@@ -180,13 +180,17 @@ const DebounceSave = (dispatch, state, newContent) => {
 
 const getNotes = async (dispatch, options) => {
   const searchTerm = options.state.searchTerm;
+  let links = [];
+
   const rawResponse = await fetch(`/search/${searchTerm}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
     },
   });
-  let links = await rawResponse.json();
+  if (rawResponse.status === 200) {
+    links = await rawResponse.json();
+  }
   dispatch(options.addSearchNotes(options.state, links));
 };
 
@@ -223,11 +227,7 @@ const UpdateUnsaved = (state, newContent) => {
     },
   };
 
-  return [
-    newState,
-    [updateDatabase, { state: newState }],
-    [renderIcons],
-  ];
+  return [newState, [updateDatabase, { state: newState }], [renderIcons]];
 };
 const setStatus = (state, status) => {
   return [
@@ -333,26 +333,28 @@ const collapseLeft = (state) => {
 const openSearchCollapse = (state) => {
   const newState = {
     ...state,
-    inputSearch: !state.inputSearch,
+    inputSearch: true,
+    inputAdd: false,
     collapseLeft: !state.collapseLeft,
     note: {
-      ...state.note
-    }
-  }
+      ...state.note,
+    },
+  };
   return [newState, [renderIcons]];
-}
+};
 
 const openAddCollapse = (state) => {
   const newState = {
     ...state,
-    inputAdd: !state.inputAdd,
+    inputAdd: true,
+    inputSearch: false,
     collapseLeft: !state.collapseLeft,
     note: {
-      ...state.note
-    }
-  }
+      ...state.note,
+    },
+  };
   return [newState, [renderIcons]];
-}
+};
 
 // modules
 const list = {
@@ -426,15 +428,27 @@ const searchModule = {
         h("div", { class: "input-wrap" }, [
           h("input", {
             class: "input",
+            id: "search-input",
             placeholder: "Search",
             oninput: model.SearchHandler,
           }),
-          h("a", { class: "icon-wrap mlauto ", onclick: model.SearchLinks }, [
-            h("i", { "data-feather": "check", class: "icon" }),
-          ]),
-          h("a", { class: "icon-wrap mlauto ", onclick: model.Toggle }, [
-            h("i", { "data-feather": "x", class: "icon" }),
-          ]),
+          h(
+            "a",
+            {
+              class: "icon-wrap mlauto check-search",
+              id: "check-search",
+              onclick: model.SearchLinks,
+            },
+            [h("i", { "data-feather": "check", class: "icon" })]
+          ),
+          h(
+            "a",
+            {
+              class: "icon-wrap mlauto x-icon x-search",
+              onclick: model.Toggle,
+            },
+            [h("i", { "data-feather": "x", class: "icon" })]
+          ),
         ]),
         list.view(searchList(model._state)),
       ]);
@@ -474,17 +488,23 @@ const addModule = {
         h("div", { class: "input-wrap" }, [
           h("input", {
             class: "input",
+            id: "new-input",
             placeholder: "Note name...",
             oninput: model.AddHandler,
           }),
           h(
             "a",
-            { class: "icon-wrap mlauto ", onclick: model.redirectToPage },
+            {
+              class: "icon-wrap mlauto check-add",
+              onclick: model.redirectToPage,
+            },
             [h("i", { "data-feather": "check", class: "icon" })]
           ),
-          h("a", { class: "icon-wrap mlauto ", onclick: model.Toggle }, [
-            h("i", { "data-feather": "x", class: "icon" }),
-          ]),
+          h(
+            "a",
+            { class: "icon-wrap mlauto x-icon x-add", onclick: model.Toggle },
+            [h("i", { "data-feather": "x", class: "icon" })]
+          ),
         ]),
       ]);
     }
@@ -512,7 +532,11 @@ const ToggleList = (title, links) => {
 
 const LinkNumberDec = (length, backlinks = true, collapsed) => {
   if (collapsed) {
-    return h("div", { class: "link-num-dec-collapsed icons-top" }, text(`${length}`));
+    return h(
+      "div",
+      { class: "link-num-dec-collapsed icons-top" },
+      text(`${length}`)
+    );
   }
   return h(
     "div",
@@ -558,8 +582,12 @@ const searchList = list.model({
 
 const searchInput = searchModule.model({
   getter: (state) => state.inputSearch,
-  setter: (state, newSearchTerm) => [
-    { ...state, inputSearch: newSearchTerm },
+  setter: (state, showSearch) => [
+    {
+      ...state,
+      inputSearch: showSearch,
+      inputAdd: showSearch === true ? false : state.inputAdd,
+    },
     [renderIcons],
   ],
   setSearch: (state, newSearchTerm) => [
@@ -571,7 +599,14 @@ const searchInput = searchModule.model({
 
 const addInput = addModule.model({
   getter: (state) => state.inputAdd,
-  setter: (state, newName) => [{ ...state, inputAdd: newName }, [renderIcons]],
+  setter: (state, showAdd) => {
+    const newState = {
+      ...state,
+      inputAdd: showAdd,
+      inputSearch: showAdd === true ? false : state.inputSearch,
+    };
+    return [newState, [renderIcons]];
+  },
   setNewNoteName: (state, newValue) => [
     { ...state, newNoteName: newValue },
     [renderIcons],
@@ -581,12 +616,16 @@ const addInput = addModule.model({
 const left = (props) => {
   if (props.collapseLeft) {
     return h("div", { class: "side-pane-collapsed left-pane-collapsed" }, [
-      h("a", { class: "icon-wrap mlauto icons-top", onclick: openAddCollapse }, [
-        h("i", { "data-feather": "plus", class: "icon" }),
-      ]),
-      h("a", { class: "icon-wrap mlauto icons-top", onclick: openSearchCollapse }, [
-        h("i", { "data-feather": "search", class: "icon" }),
-      ]),
+      h(
+        "a",
+        { class: "icon-wrap mlauto icons-top", onclick: openAddCollapse },
+        [h("i", { "data-feather": "plus", class: "icon" })]
+      ),
+      h(
+        "a",
+        { class: "icon-wrap mlauto icons-top", onclick: openSearchCollapse },
+        [h("i", { "data-feather": "search", class: "icon" })]
+      ),
       h("div", { class: "footer" }, [
         h("a", { class: "icon-wrap", onclick: collapseLeft }, [
           h("i", { "data-feather": "chevrons-right", class: "icon" }),
@@ -613,11 +652,9 @@ const right = (props) => {
   if (props.collapseRight) {
     return h("div", { class: "side-pane-collapsed right-pane-collapsed" }, [
       LinkNumberDec(props.note.links.length, false, true),
-      h (
-        "div", {class: "list-border"}, [
-          LinkNumberDec(props.note.backlinks.length, true, true),
-        ]
-      ),
+      h("div", { class: "list-border" }, [
+        LinkNumberDec(props.note.backlinks.length, true, true),
+      ]),
 
       h("div", { class: "footer" }, [
         h("a", { class: "icon-wrap", onclick: collapseRight }, [
@@ -700,9 +737,7 @@ const central = (props) => {
         ]);
 
   const shareButton =
-    props.note.is_public === true
-      ? lockBtn(props)
-      : unlockBtn(props);
+    props.note.is_public === true ? lockBtn(props) : unlockBtn(props);
 
   return h("div", { class: "central-pane" }, [
     h("div", { class: "central-content-wrap" }, [
@@ -779,6 +814,3 @@ app({
   view: (state) => main(state),
   node: document.getElementById("app"),
 });
-
-
-
