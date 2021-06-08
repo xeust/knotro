@@ -83,12 +83,10 @@ async def add_note(new_note: Note):
     old_note = get_note(new_note.name)
     old_links = old_note.links if old_note else []
 
-    print(old_links)
+
     removed_links = list_diff(old_links, new_note.links)
     added_links = list_diff(new_note.links, old_links)
     
-    print(removed_links, added_links)
-
     for each in removed_links:
         remove_backlink(each, new_note.name)
 
