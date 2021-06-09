@@ -320,18 +320,13 @@ a.toggle-link:hover {
   max-width: calc(100% - 90px);
   margin: 0 0 0 0;
 }
-input#search-input:focus ~ .check-search {
+.check:hover {
   color: green;
 }
-input#search-input:focus ~ .x-search {
-  color: red;
+.x:hover {
+  color:red
 }
-input#new-input:focus ~ .check-add {
-  color: green;
-}
-input#new-input:focus ~ .x-add {
-  color: red;
-}
+
 .input-wrap {
   display: flex;
   padding-left: 12px;
@@ -340,7 +335,9 @@ input#new-input:focus ~ .x-add {
   align-items: center;
   margin-bottom: 18px;
 }
-
+.remove-marginbot {
+  margin-bottom: 0px;
+}
 .x-icon {
   margin-right: 8px;
 }

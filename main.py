@@ -86,14 +86,16 @@ async def add_note(new_note: Note):
 
     removed_links = list_diff(old_links, new_note.links)
     added_links = list_diff(new_note.links, old_links)
-    
+
     for each in removed_links:
-        remove_backlink(each, new_note.name)
+        if each != '':
+            remove_backlink(each, new_note.name)
 
     db_update_note(new_note)
 
     for each in added_links:
-        add_backlink_or_create(each, new_note.name)
+        if each != '':
+            add_backlink_or_create(each, new_note.name)
     
     return {"message": "success"}
 

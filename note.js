@@ -30,6 +30,16 @@ const getUniqueLinks = (rawMD) => {
   const uniqueLinks = [...new Set(rawMD.match(/\[\[(.*?)\]]/g))];
   return uniqueLinks;
 };
+
+const getBareLinks = (rawMD) => {
+  let markdown = rawMD;
+  const uniqueLinks = getUniqueLinks(markdown);
+  const bareLinks = uniqueLinks
+    .map((each) => each.substring(2, each.length - 2))
+    .filter((mappedEach) => mappedEach[0] !== "~");
+  return bareLinks;
+}
+
 const getlastEdited = (lastModified) => {
   if (lastModified === "saving" || lastModified === "failed to save") {
     return lastModified;
@@ -83,6 +93,11 @@ const renderIcons = (dispatch, options) => {
   });
 };
 
+const focusInput = (dispatch, options) => {
+  requestAnimationFrame(() => {
+    document.getElementById(options.id).focus();
+  })
+}
 const attachCodeJar = (dispatch, options) => {
   requestAnimationFrame(() => {
     let timeout = null;
@@ -99,13 +114,17 @@ const attachCodeJar = (dispatch, options) => {
 
     jar.on("change", function (cm, change) {
       dispatch(options.UpdateContent(options.state, cm.getValue()));
+      container.addEventListener("keyup", (event)=> {
+        if (event.keyCode === 13) {
+          clearTimeout(timeout);
+          timeout = setTimeout(function () {
+            dispatch(options.DebounceSave(dispatch, options.state, cm.getValue()));
+          }, 1000);
+        }
 
-      clearTimeout(timeout);
-
-      timeout = setTimeout(function () {
-        dispatch(options.DebounceSave(dispatch, options.state, cm.getValue()));
-      }, 200);
+      })
     });
+
   });
 };
 
@@ -163,12 +182,14 @@ const attachMarkdown = (dispatch, options) => {
 };
 
 const DebounceSave = (dispatch, state, newContent) => {
+  const bareLinks = getBareLinks(newContent);
   const newState = {
     ...state,
     note: {
       ...state.note,
-      content: newContent,
       last_modified: "saving",
+      content: newContent,
+      links: bareLinks,
       recent_notes: [
         state.note.name,
         ...state.note.recent_notes.filter((name) => name != state.note.name),
@@ -196,6 +217,7 @@ const getNotes = async (dispatch, options) => {
 
 // actions
 const UpdateContent = (state, newContent) => {
+  const bareLinks = getBareLinks(newContent);
   return [
     {
       ...state,
@@ -203,6 +225,7 @@ const UpdateContent = (state, newContent) => {
         ...state.note,
         content: newContent,
         last_modified: "saving",
+        links: bareLinks,
         recent_notes: [
           state.note.name,
           ...state.note.recent_notes.filter((name) => name != state.note.name),
@@ -266,19 +289,16 @@ const Edit = (state) => {
 };
 
 const View = (state) => {
-  let markdown = state.note.content;
-  const uniqueLinks = getUniqueLinks(markdown);
-  const bareLinks = uniqueLinks
-    .map((each) => each.substring(2, each.length - 2))
-    .filter((mappedEach) => mappedEach[0] !== "~");
-
+  const rawMD = state.note.content;
+  const bareLinks = getBareLinks(state.note.content);
+  const uniqueLinks = getUniqueLinks(rawMD);
   const newState = {
     ...state,
     view: "VIEW",
     note: {
       ...state.note,
       last_modified: new Date().toUTCString(),
-      content: markdown,
+      content: rawMD,
       links: bareLinks,
       recent_notes: [
         state.note.name,
@@ -340,7 +360,7 @@ const openSearchCollapse = (state) => {
       ...state.note,
     },
   };
-  return [newState, [renderIcons]];
+  return [newState, [renderIcons], [focusInput, {id: "search-input"}]];
 };
 
 const openAddCollapse = (state) => {
@@ -353,7 +373,7 @@ const openAddCollapse = (state) => {
       ...state.note,
     },
   };
-  return [newState, [renderIcons]];
+  return [newState, [renderIcons],  [focusInput, {id: "search-input"}]];
 };
 
 // modules
@@ -435,7 +455,7 @@ const searchModule = {
           h(
             "a",
             {
-              class: "icon-wrap mlauto check-search",
+              class: "icon-wrap mlauto check",
               id: "check-search",
               onclick: model.SearchLinks,
             },
@@ -444,7 +464,7 @@ const searchModule = {
           h(
             "a",
             {
-              class: "icon-wrap mlauto x-icon x-search",
+              class: "icon-wrap mlauto x-icon x",
               onclick: model.Toggle,
             },
             [h("i", { "data-feather": "x", class: "icon" })]
@@ -485,7 +505,7 @@ const addModule = {
   view: (model) => {
     if (model.value) {
       return h("div", {}, [
-        h("div", { class: "input-wrap" }, [
+        h("div", { class: "input-wrap remove-marginbot" }, [
           h("input", {
             class: "input",
             id: "new-input",
@@ -495,14 +515,14 @@ const addModule = {
           h(
             "a",
             {
-              class: "icon-wrap mlauto check-add",
+              class: "icon-wrap mlauto check",
               onclick: model.redirectToPage,
             },
             [h("i", { "data-feather": "check", class: "icon" })]
           ),
           h(
             "a",
-            { class: "icon-wrap mlauto x-icon x-add", onclick: model.Toggle },
+            { class: "icon-wrap mlauto x-icon x", onclick: model.Toggle },
             [h("i", { "data-feather": "x", class: "icon" })]
           ),
         ]),
@@ -582,14 +602,17 @@ const searchList = list.model({
 
 const searchInput = searchModule.model({
   getter: (state) => state.inputSearch,
-  setter: (state, showSearch) => [
-    {
+  setter: (state, showSearch) => {
+    const newState = {
       ...state,
       inputSearch: showSearch,
       inputAdd: showSearch === true ? false : state.inputAdd,
-    },
-    [renderIcons],
-  ],
+    }
+    if (showSearch) {
+      return [newState,[renderIcons], [focusInput, {id:"search-input"}]]
+    }
+    return [newState,[renderIcons]]
+},
   setSearch: (state, newSearchTerm) => [
     { ...state, searchTerm: newSearchTerm },
     [renderIcons],
@@ -605,6 +628,9 @@ const addInput = addModule.model({
       inputAdd: showAdd,
       inputSearch: showAdd === true ? false : state.inputSearch,
     };
+    if (showAdd){
+      return [newState, [renderIcons], [focusInput, { id: "new-input"}]];
+    } 
     return [newState, [renderIcons]];
   },
   setNewNoteName: (state, newValue) => [
@@ -725,7 +751,10 @@ const central = (props) => {
   const publicUrl = `${location.origin}/public/${props.note.name}`;
 
   const viewButton = props.view === "EDIT" ? editBtn(props) : viewBtn(props);
-
+  // const viewButton =
+  //   props.view === "EDIT"
+  //     ? h("button", { onclick: View, class: "config-button" }, text("edit"))
+  //     : h("button", { onclick: Edit, class: "config-button" }, text("view"));
   const publicContent =
     props.note.is_public === true
       ? h("div", { class: "url-content mlauto" }, [

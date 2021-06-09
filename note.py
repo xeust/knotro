@@ -124,6 +124,8 @@ def add_backlink_or_create(note_name, backlink):
 
     if note:
         note.backlinks.append(backlink)
+        unique_backlinks = set(note.backlinks)
+        note.backlinks = list(unique_backlinks)
         return db_update_note(note)
     else:
         backlinks = [backlink]
