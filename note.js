@@ -373,7 +373,7 @@ const openAddCollapse = (state) => {
       ...state.note,
     },
   };
-  return [newState, [renderIcons],  [focusInput, {id: "search-input"}]];
+  return [newState, [renderIcons],  [focusInput, {id: "new-input"}]];
 };
 
 // modules
