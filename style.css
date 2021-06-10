@@ -252,7 +252,7 @@ a.toggle-link:hover {
   padding-top: 16px;
   width: 100%;
   height: calc(100% - 120px);
-  overflow-y: hidden;
+  overflow-y: auto;
 }
 
 .main {
@@ -271,7 +271,7 @@ a.toggle-link:hover {
 /* last edited */
 
 .last-modified {
-  padding-left: 96px;
+  padding-left: 88px;
   height: 24px;
   font-size: 14px;
   display: inline-flex;
@@ -289,7 +289,7 @@ a.toggle-link:hover {
 /* public url */
 .url-content {
   display: inline-flex;
-  padding-right: 96px;
+  padding-right: 88px;
 }
 .url-tag {
   height: 24px;
@@ -304,6 +304,13 @@ a.toggle-link:hover {
   font-weight: 700;
   color: #98b9f9;
   text-decoration: none;
+  font-family: Roboto Mono, Courier, monospace;
+}
+/* link */
+a {
+  color: #98b9f9;
+  text-decoration: none;
+  font-weight: 700;
   font-family: Roboto Mono, Courier, monospace;
 }
 

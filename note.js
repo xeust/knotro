@@ -766,7 +766,7 @@ const central = (props) => {
         ]);
 
   const shareButton =
-    props.note.is_public === true ? lockBtn(props) : unlockBtn(props);
+    props.note.is_public === true ? unlockBtn(props) : lockBtn(props);
 
   return h("div", { class: "central-pane" }, [
     h("div", { class: "central-content-wrap" }, [
