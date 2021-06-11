@@ -98,6 +98,7 @@ const focusInput = (dispatch, options) => {
     document.getElementById(options.id).focus();
   })
 }
+
 const attachCodeJar = (dispatch, options) => {
   requestAnimationFrame(() => {
     let timeout = null;
@@ -376,6 +377,30 @@ const openAddCollapse = (state) => {
   return [newState, [renderIcons],  [focusInput, {id: "new-input"}]];
 };
 
+const Uncollapse = (state, type = "") => {
+  const types = {
+    ADD: {
+      focusId: "new-input",
+    },
+    SEARCH: {
+      focusId: "search-input",
+    }
+  }
+  const newState = {
+    ...state,
+    collapseLeft: !state.collapseLeft,
+    controls: {
+      ...state.controls,
+      active: type,
+    },
+    note: {
+      ...state.note,
+    },
+  };
+  const toFocus = types[type].focusId || "";
+  return [newState, [renderIcons],  toFocus ? [focusInput, {id: toFocus}] : null];
+};
+
 // modules
 const list = {
   init: (x) => x,
@@ -421,6 +446,109 @@ const list = {
       ),
     ]);
   },
+};
+
+
+
+// toggle input OR icon
+
+// set some value for the input on input change
+
+// add event handlers to
+// onchange
+// check
+// confirm
+
+const ControlModule = (state, type) => {
+  const types = {
+      SEARCH: {
+          iconKey: "search",
+          inputId: "search-input",
+          placeholder: "Search...",
+          onConfirm: () => {},
+      },
+      ADD: {
+          iconKey: "plus",
+          inputId: "new-input",
+          placeholder: "Add a Note",
+          onConfirm: () => {
+            window.location.href = `${location.origin}/notes/${state.controls.ADD.inputValue}`
+          },
+      },
+  };
+
+  const inputHandler = (state, event) => ({
+    ...state,
+    controls: {
+      ...state.controls,
+      [type]: {
+        inputValue: event.target.value
+      }
+        
+    }
+  });
+
+  const open = (state) => {
+      const newState = {
+        ...state,
+        controls: {
+          ...state.controls,
+          active: type,
+          [type]: {
+            inputValue: ""
+          }
+        }
+      }
+      return [newState, [renderIcons], [focusInput, {id: types[type].inputId}]]
+  };
+
+  const close = (state) => {
+    const newState = {
+      ...state,
+      controls: {
+        ...state.controls,
+        active: "",
+      }
+    }
+    return [newState, [renderIcons]]
+  };
+
+  const isOpen = state.controls.active === type;
+
+    if (isOpen) {
+      return h("div", {}, [
+        h("div", { class: "input-wrap" }, [
+          h("input", {
+            class: "input",
+            id: types[type].inputId,
+            placeholder: types[type].placeholder,
+            oninput: inputHandler,
+          }),
+          h(
+            "a",
+            {
+              class: "icon-wrap mlauto check",
+              id: "check-search",
+              onclick: types[type].onConfirm,
+            },
+            [h("i", { "data-feather": "check", class: "icon" })]
+          ),
+          h(
+            "a",
+            {
+              class: "icon-wrap mlauto x-icon x",
+              onclick: close,
+            },
+            [h("i", { "data-feather": "x", class: "icon" })]
+          ),
+        ]),
+      ]);
+    }
+    return h(
+      "a",
+      { class: "icon-wrap icons-top search_icon", onclick: open },
+      [h("i", { "data-feather": types[type].iconKey, class: "icon" })]
+    );
 };
 
 const searchModule = {
@@ -564,6 +692,7 @@ const LinkNumberDec = (length, backlinks = true, collapsed) => {
     text(`${length} ${backlinks ? "back" : ""}link${length !== 1 ? "s" : ""}`)
   );
 };
+
 const recentList = list.model({
   getter: (state) => [state.collapseRecent, "Recent", state.note.recent_notes],
   setter: (state, toggleRecent) => [
@@ -609,9 +738,9 @@ const searchInput = searchModule.model({
       inputAdd: showSearch === true ? false : state.inputAdd,
     }
     if (showSearch) {
-      return [newState,[renderIcons], [focusInput, {id:"search-input"}]]
+      return [newState, [renderIcons], [focusInput, {id:"search-input"}]]
     }
-    return [newState,[renderIcons]]
+    return [newState, [renderIcons]]
 },
   setSearch: (state, newSearchTerm) => [
     { ...state, searchTerm: newSearchTerm },
@@ -639,17 +768,19 @@ const addInput = addModule.model({
   ],
 });
 
+// left section
+
 const left = (props) => {
   if (props.collapseLeft) {
     return h("div", { class: "side-pane-collapsed left-pane-collapsed" }, [
       h(
         "a",
-        { class: "icon-wrap mlauto icons-top", onclick: openAddCollapse },
+        { class: "icon-wrap mlauto icons-top", onclick: [Uncollapse, "ADD"] },
         [h("i", { "data-feather": "plus", class: "icon" })]
       ),
       h(
         "a",
-        { class: "icon-wrap mlauto icons-top", onclick: openSearchCollapse },
+        { class: "icon-wrap mlauto icons-top", onclick: [Uncollapse, "SEARCH"] },
         [h("i", { "data-feather": "search", class: "icon" })]
       ),
       h("div", { class: "footer" }, [
@@ -661,9 +792,11 @@ const left = (props) => {
   }
 
   return h("div", { class: "side-pane left-pane" }, [
-    addModule.view(addInput(props)),
+    // addModule.view(addInput(props)),
 
-    searchModule.view(searchInput(props)),
+    // searchModule.view(searchInput(props)),
+    ControlModule(props, "ADD"),
+    ControlModule(props, "SEARCH"),
 
     h("div", { class: "list-border" }, [list.view(recentList(props))]),
     h("div", { class: "footer" }, [
@@ -716,6 +849,8 @@ const editBtn = (props) => {
     ])
   );
 };
+
+
 const viewBtn = (props) => {
   return h(
     "button",
@@ -747,6 +882,8 @@ const unlockBtn = (props) => {
     ])
   );
 };
+
+
 const central = (props) => {
   const publicUrl = `${location.origin}/public/${props.note.name}`;
 
@@ -813,6 +950,15 @@ note:
 const initState = {
   view: "VIEW",
   note: input,
+  controls: {
+    active: "",
+    SEARCH: {
+      inputValue: "",
+    },
+    ADD: {
+      inputValue: "",
+    }
+  },
   collapseLeft: false,
   collapseRight: false,
   collapseRecent: false,
@@ -823,9 +969,7 @@ const initState = {
   inputAdd: false,
   searchTerm: "",
   searchLinks: [],
-  newNoteName: "",
-  todos: [],
-  value: "",
+  newNoteName: ""
 };
 
 app({
