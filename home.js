@@ -1,5 +1,5 @@
 /** input in index.html by Jinja template
- import { h, app } from "https://unpkg.com/hyperapp@2.0.4/src/index.js";
+ import { h, app } from "https://unpkg.com/hyperapp";
  let base_url = {{base_url|tojson }};
  {{home_js}}
  */

@@ -1,8 +1,8 @@
 from deta import App
-from fastapi import FastAPI
-from fastapi import FastAPI, Response
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, Response, HTTPException
+from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from datetime import datetime, timezone
 from pydantic import BaseModel
 from jinja2 import Template
 from note import *
@@ -17,10 +17,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
 def html_handler():
-    home_template = Template((open("index.html").read()))
-    home_css = open("style.css").read()
-    home_hyper = open("home.js").read()
-    return HTMLResponse(home_template.render(home_js=home_hyper, base_url=base_url, css=home_css))
+    return RedirectResponse(url=f'/notes/{datetime.now().strftime("%Y-%m-%d")}')
 
 
 @app.get("/search/{search_term}")
@@ -41,10 +38,15 @@ async def read_note(note_name: str, json: bool = False):
       new_note = Note(name=note_name)
       note_dict = new_note.dict()
       note_key = urlsafe_key(note_name)
-      notes.put(note_dict, note_key)
+      drive_notes.put(note_name, note_dict["content"])
+      note_dict["last_modified"] = str(datetime.now(timezone.utc).isoformat())
+      note_meta = NoteMeta(name=note_dict["name"], links=note_dict["links"],
+                         backlinks=note_dict["backlinks"], last_modified=note_dict["last_modified"])
+      notes.put(note_meta.dict(), note_key)
 
     note_dict["base_url"] = base_url
-
+    note_dict["recent_notes"] = recent_notes()
+    
     if json:
         return note_dict
     
@@ -54,23 +56,58 @@ async def read_note(note_name: str, json: bool = False):
     return HTMLResponse(note_template.render(note_data=note_dict, note_js=note_js, css=note_css))
 
 
+@app.get("/public/{note_name}")
+async def read_public_note(note_name: str, json: bool = False):
+
+    note = get_note(note_name)
+    note_dict = {}
+
+    if note and note.is_public:
+      note_dict = note.dict()
+    
+    else:
+        return FileResponse("./404.html")
+
+    note_dict["base_url"] = base_url
+    if json:
+        return note_dict
+    
+    note_template = Template((open("public.html").read()))
+    note_css = open("style.css").read()
+    public_js = open("public.js").read()
+    return HTMLResponse(note_template.render(note_data=note_dict, public_js=public_js, css=note_css))
+
+
 @app.put("/{note_name}")
 async def add_note(new_note: Note):
     old_note = get_note(new_note.name)
     old_links = old_note.links if old_note else []
+
+
     removed_links = list_diff(old_links, new_note.links)
     added_links = list_diff(new_note.links, old_links)
-  
+
     for each in removed_links:
-        remove_backlink(each, new_note.name)
+        if each != '':
+            remove_backlink(each, new_note.name)
 
     db_update_note(new_note)
-    
+
     for each in added_links:
-        add_backlink_or_create(each, new_note.name)
+        if each != '':
+            add_backlink_or_create(each, new_note.name)
     
     return {"message": "success"}
-    
+
+@app.put("/public/{note_name}")
+async def modify_public(note_name: str, note_status: NoteStatus):
+    note = modify_public_status(note_name, note_status.is_public)
+
+    if note:
+        return {"message": "success"}
+    else:
+        return {"message":"failed"}
+
     
 @app.lib.run("del")
 def runner(event):
