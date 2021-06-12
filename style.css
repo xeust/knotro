@@ -51,10 +51,11 @@ body {
   border-right: 1px solid #eaeaea;
   box-sizing: border-box;
 }
+
 .side-pane-collapsed {
   display: flex;
   flex-direction: column;
-  width: 44px;
+  width: 48px;
   height: 100%;
   position: fixed;
   background-color: #f5f5f5;
@@ -68,31 +69,31 @@ body {
   left: 240px;
   height: 100%;
 }
-.icons-bar {
-  padding-left: 8px;
-  padding-right: 8px;
-}
-.icons-top {
-  padding-left: 8px;
-  padding-right: 8px;
-  margin-top: 22px;
-}
+
 
 .footer {
   display: flex;
   margin-top: auto;
   align-items: center;
-  padding-left: 8px;
-  padding-right: 8px;
   height: 40px;
   border-top: 1px solid #eaeaea;
   box-sizing: border-box;
+}
+
+/* /* control panel, Add, Search */
+
+.control-wrap {
+  display: flex;
+  flex-direction: column;
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 
 .icon-wrap {
   display: flex;
   width: 24px;
   height: 24px;
+  padding: 12px;
   color: #8f8f8f;
 }
 
@@ -101,13 +102,47 @@ body {
   cursor: pointer;
 }
 
-.search_icon {
-  padding-bottom: 24px;
+/* search, add */
+.input-wrap {
+  display: flex;
+  padding: 12px;
+  height: 24px;
+  align-items: center;
+}
+
+.input {
+  border-color: #000000 !important;
+  background-color: #f9f9f9;
+  border-color: #000000 !important;
+  background-color: #f5f5f5;
+  outline: 0;
+  font-family: "Menlo", "Monaco", courier, monospace;
+  font-size: 16px;
+  border-width: 0 0 1px;
+  max-width: calc(100% - 76px);
+  margin: 0 0 0 0;
+}
+
+.check:hover {
+  color: green;
+}
+
+.x:hover {
+  color:red
+}
+
+.x-icon {
+  padding-left: 0px !important;
+}
+
+.remove-marginbot {
+  margin-bottom: 0px;
 }
 
 .mlauto {
   margin-left: auto;
 }
+
 /* side panes */
 .toggle-list {
   box-sizing: border-box;
@@ -312,41 +347,6 @@ a {
   text-decoration: none;
   font-weight: 700;
   font-family: Roboto Mono, Courier, monospace;
-}
-
-/* search */
-.input {
-  border-color: #000000 !important;
-  background-color: #f9f9f9;
-  border-color: #000000 !important;
-  background-color: #f5f5f5;
-  outline: 0;
-  font-family: "Menlo", "Monaco", courier, monospace;
-  font-size: 16px;
-  border-width: 0 0 1px;
-  max-width: calc(100% - 90px);
-  margin: 0 0 0 0;
-}
-.check:hover {
-  color: green;
-}
-.x:hover {
-  color:red
-}
-
-.input-wrap {
-  display: flex;
-  padding-left: 12px;
-  margin-top: 18px;
-  height: 30px;
-  align-items: center;
-  margin-bottom: 18px;
-}
-.remove-marginbot {
-  margin-bottom: 0px;
-}
-.x-icon {
-  margin-right: 8px;
 }
 
 /* codemirror */

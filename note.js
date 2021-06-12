@@ -200,21 +200,7 @@ const DebounceSave = (dispatch, state, newContent) => {
   return [newState, [updateDatabase, { state: newState }], [renderIcons]];
 };
 
-const getNotes = async (dispatch, options) => {
-  const searchTerm = options.state.searchTerm;
-  let links = [];
 
-  const rawResponse = await fetch(`/search/${searchTerm}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-  if (rawResponse.status === 200) {
-    links = await rawResponse.json();
-  }
-  dispatch(options.addSearchNotes(options.state, links));
-};
 
 // actions
 const UpdateContent = (state, newContent) => {
@@ -271,11 +257,6 @@ const setStatus = (state, status) => {
 };
 
 // // actions
-
-const addSearchNotes = (state, notes) => ({
-  ...state,
-  searchLinks: notes,
-});
 
 const Edit = (state) => {
   const newState = {
@@ -450,6 +431,35 @@ const list = {
 
 
 
+// Logic related to the control panel, search and add
+
+const searchNotes = async (dispatch, options) => {
+  const searchTerm = options.state.controls.SEARCH.inputValue;
+  let links = [];
+
+  const rawResponse = await fetch(`/search/${searchTerm}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (rawResponse.status === 200) {
+    links = await rawResponse.json();
+  }
+
+  dispatch(options.UpdateSearchNotes(options.state, links));
+};
+
+const UpdateSearchNotes = (state, notes) => ({
+  ...state,
+  searchLinks: notes,
+});
+
+const GetSearchLinks = (state) => {
+  return [state, [searchNotes, { state, UpdateSearchNotes }]]
+}
+
 // toggle input OR icon
 
 // set some value for the input on input change
@@ -465,14 +475,16 @@ const ControlModule = (state, type) => {
           iconKey: "search",
           inputId: "search-input",
           placeholder: "Search...",
-          onConfirm: () => {},
+          onConfirm: GetSearchLinks,
       },
       ADD: {
           iconKey: "plus",
           inputId: "new-input",
           placeholder: "Add a Note",
           onConfirm: () => {
-            window.location.href = `${location.origin}/notes/${state.controls.ADD.inputValue}`
+            if (state.controls.ADD.inputValue !== "") {
+              window.location.href = `${location.origin}/notes/${state.controls.ADD.inputValue}`
+            };
           },
       },
   };
@@ -515,151 +527,38 @@ const ControlModule = (state, type) => {
 
   const isOpen = state.controls.active === type;
 
-    if (isOpen) {
-      return h("div", {}, [
-        h("div", { class: "input-wrap" }, [
-          h("input", {
-            class: "input",
-            id: types[type].inputId,
-            placeholder: types[type].placeholder,
-            oninput: inputHandler,
-          }),
-          h(
-            "a",
-            {
-              class: "icon-wrap mlauto check",
-              id: "check-search",
-              onclick: types[type].onConfirm,
-            },
-            [h("i", { "data-feather": "check", class: "icon" })]
-          ),
-          h(
-            "a",
-            {
-              class: "icon-wrap mlauto x-icon x",
-              onclick: close,
-            },
-            [h("i", { "data-feather": "x", class: "icon" })]
-          ),
-        ]),
+  if (isOpen) {
+    return h("div", { class: "input-wrap" }, [
+        h("input", {
+          class: "input",
+          id: types[type].inputId,
+          placeholder: types[type].placeholder,
+          oninput: inputHandler,
+        }),
+        h(
+          "a",
+          {
+            class: "icon-wrap check",
+            id: "check-search",
+            onclick: types[type].onConfirm,
+          },
+          [h("i", { "data-feather": "check", class: "icon" })]
+        ),
+        h(
+          "a",
+          {
+            class: "icon-wrap x-icon x",
+            onclick: close,
+          },
+          [h("i", { "data-feather": "x", class: "icon" })]
+        ),
       ]);
-    }
+  }
     return h(
       "a",
-      { class: "icon-wrap icons-top search_icon", onclick: open },
+      { class: "icon-wrap", onclick: open },
       [h("i", { "data-feather": types[type].iconKey, class: "icon" })]
     );
-};
-
-const searchModule = {
-  init: (x) => x,
-  toggle: (x) => !x,
-  model: ({ getter, setter, setSearch, setSearchLinks }) => {
-    const Toggle = (state) => setter(state, searchModule.toggle(getter(state)));
-
-    const SearchHandler = (state, event) =>
-      setSearch(state, event.target.value);
-
-    const SearchLinks = (state) => setSearchLinks(state);
-
-    return (state) => ({
-      value: getter(state),
-      Toggle,
-      _state: state,
-      SearchHandler,
-      SearchLinks,
-    });
-  },
-  view: (model) => {
-    if (model.value) {
-      return h("div", {}, [
-        h("div", { class: "input-wrap" }, [
-          h("input", {
-            class: "input",
-            id: "search-input",
-            placeholder: "Search",
-            oninput: model.SearchHandler,
-          }),
-          h(
-            "a",
-            {
-              class: "icon-wrap mlauto check",
-              id: "check-search",
-              onclick: model.SearchLinks,
-            },
-            [h("i", { "data-feather": "check", class: "icon" })]
-          ),
-          h(
-            "a",
-            {
-              class: "icon-wrap mlauto x-icon x",
-              onclick: model.Toggle,
-            },
-            [h("i", { "data-feather": "x", class: "icon" })]
-          ),
-        ]),
-        list.view(searchList(model._state)),
-      ]);
-    }
-    return h(
-      "a",
-      { class: "icon-wrap icons-top search_icon", onclick: model.Toggle },
-      [h("i", { "data-feather": "search", class: "icon" })]
-    );
-  },
-};
-
-const addModule = {
-  init: (x) => x,
-  toggle: (x) => !x,
-  model: ({ getter, setter, setNewNoteName }) => {
-    const Toggle = (state) => setter(state, addModule.toggle(getter(state)));
-
-    const AddHandler = (state, event) =>
-      setNewNoteName(state, event.target.value);
-
-    const redirectToPage = (state) => {
-      window.location.href = `${location.origin}/notes/${state.newNoteName}`;
-    };
-
-    return (state) => ({
-      value: getter(state),
-      Toggle,
-      _state: state,
-      AddHandler,
-      redirectToPage,
-    });
-  },
-  view: (model) => {
-    if (model.value) {
-      return h("div", {}, [
-        h("div", { class: "input-wrap remove-marginbot" }, [
-          h("input", {
-            class: "input",
-            id: "new-input",
-            placeholder: "Note name...",
-            oninput: model.AddHandler,
-          }),
-          h(
-            "a",
-            {
-              class: "icon-wrap mlauto check",
-              onclick: model.redirectToPage,
-            },
-            [h("i", { "data-feather": "check", class: "icon" })]
-          ),
-          h(
-            "a",
-            { class: "icon-wrap mlauto x-icon x", onclick: model.Toggle },
-            [h("i", { "data-feather": "x", class: "icon" })]
-          ),
-        ]),
-      ]);
-    }
-    return h("a", { class: "icon-wrap icons-top", onclick: model.Toggle }, [
-      h("i", { "data-feather": "plus", class: "icon" }),
-    ]);
-  },
 };
 
 // views
@@ -729,45 +628,6 @@ const searchList = list.model({
   ],
 });
 
-const searchInput = searchModule.model({
-  getter: (state) => state.inputSearch,
-  setter: (state, showSearch) => {
-    const newState = {
-      ...state,
-      inputSearch: showSearch,
-      inputAdd: showSearch === true ? false : state.inputAdd,
-    }
-    if (showSearch) {
-      return [newState, [renderIcons], [focusInput, {id:"search-input"}]]
-    }
-    return [newState, [renderIcons]]
-},
-  setSearch: (state, newSearchTerm) => [
-    { ...state, searchTerm: newSearchTerm },
-    [renderIcons],
-  ],
-  setSearchLinks: (state) => [state, [getNotes, { state, addSearchNotes }]],
-});
-
-const addInput = addModule.model({
-  getter: (state) => state.inputAdd,
-  setter: (state, showAdd) => {
-    const newState = {
-      ...state,
-      inputAdd: showAdd,
-      inputSearch: showAdd === true ? false : state.inputSearch,
-    };
-    if (showAdd){
-      return [newState, [renderIcons], [focusInput, { id: "new-input"}]];
-    } 
-    return [newState, [renderIcons]];
-  },
-  setNewNoteName: (state, newValue) => [
-    { ...state, newNoteName: newValue },
-    [renderIcons],
-  ],
-});
-
 // left section
 
 const left = (props) => {
@@ -792,12 +652,11 @@ const left = (props) => {
   }
 
   return h("div", { class: "side-pane left-pane" }, [
-    // addModule.view(addInput(props)),
-
-    // searchModule.view(searchInput(props)),
-    ControlModule(props, "ADD"),
-    ControlModule(props, "SEARCH"),
-
+    h("div", { class: "control-wrap"}, [
+      ControlModule(props, "ADD"),
+      ControlModule(props, "SEARCH")
+    ]),
+    h("div", { class: "list-border" }, [list.view(searchList(props))]),
     h("div", { class: "list-border" }, [list.view(recentList(props))]),
     h("div", { class: "footer" }, [
       h("a", { class: "icon-wrap mlauto", onclick: collapseLeft }, [
@@ -959,17 +818,12 @@ const initState = {
       inputValue: "",
     }
   },
+  searchLinks: [],
   collapseLeft: false,
   collapseRight: false,
   collapseRecent: false,
   collapseLinks: false,
   collapseBacklinks: false,
-  collapseSearch: false,
-  inputSearch: false,
-  inputAdd: false,
-  searchTerm: "",
-  searchLinks: [],
-  newNoteName: ""
 };
 
 app({
