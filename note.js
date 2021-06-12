@@ -333,33 +333,7 @@ const ToggleLeft = (state) => {
   return [newState, [renderIcons]];
 };
 
-const openSearchCollapse = (state) => {
-  const newState = {
-    ...state,
-    inputSearch: true,
-    inputAdd: false,
-    showLeft: !state.showLeft,
-    note: {
-      ...state.note,
-    },
-  };
-  return [newState, [renderIcons], [focusInput, {id: "search-input"}]];
-};
-
-const openAddCollapse = (state) => {
-  const newState = {
-    ...state,
-    inputAdd: true,
-    inputSearch: false,
-    showLeft: !state.showLeft,
-    note: {
-      ...state.note,
-    },
-  };
-  return [newState, [renderIcons],  [focusInput, {id: "new-input"}]];
-};
-
-const Uncollapse = (state, type = "") => {
+const UncollapseAndFocus = (state, type = "") => {
   const types = {
     ADD: {
       focusId: "new-input",
@@ -631,12 +605,12 @@ const left = (props) => {
     return h("div", { class: "side-pane-collapsed left-pane-collapsed" }, [
       h(
         "a",
-        { class: "icon-wrap mlauto icons-top", onclick: [Uncollapse, "ADD"] },
+        { class: "icon-wrap mlauto icons-top", onclick: [UncollapseAndFocus, "ADD"] },
         [h("i", { "data-feather": "plus", class: "icon" })]
       ),
       h(
         "a",
-        { class: "icon-wrap mlauto icons-top", onclick: [Uncollapse, "SEARCH"] },
+        { class: "icon-wrap mlauto icons-top", onclick: [UncollapseAndFocus, "SEARCH"] },
         [h("i", { "data-feather": "search", class: "icon" })]
       ),
       h("div", { class: "footer" }, [
