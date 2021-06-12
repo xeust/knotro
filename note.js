@@ -602,7 +602,7 @@ const LinkNumberDec = (length, backlinks = true, collapsed) => {
 // // left section
 const left = (props) => {
   if (!props.showLeft) {
-    return h("div", { class: "side-pane-collapsed left-pane-collapsed" }, [
+    return h("div", { class: "side-pane-collapsed left-pane" }, [
       h(
         "a",
         { class: "icon-wrap mlauto icons-top", onclick: [UncollapseAndFocus, "ADD"] },
@@ -640,14 +640,14 @@ const left = (props) => {
 
 const right = (props) => {
   if (!props.showRight) {
-    return h("div", { class: "side-pane-collapsed right-pane-collapsed" }, [
+    return h("div", { class: "side-pane-collapsed right-pane" }, [
       LinkNumberDec(props.note.links.length, false, true),
       h("div", { class: "list-border" }, [
         LinkNumberDec(props.note.backlinks.length, true, true),
       ]),
 
       h("div", { class: "footer" }, [
-        h("a", { class: "icon-wrap", onclick: showRight }, [
+        h("a", { class: "icon-wrap", onclick: ToggleRight }, [
           h("i", { "data-feather": "chevrons-left", class: "icon" }),
         ]),
       ]),
@@ -736,8 +736,22 @@ const central = (props) => {
   const shareButton =
     props.note.is_public === true ? unlockBtn(props) : lockBtn(props);
 
-  return h("div", { class: "central-pane" }, [
-    h("div", { class: "central-content-wrap" }, [
+  const oneExpandedSide = props.showLeft ? !props.showRight : props.showRight;
+  const bothExpandedSides = props.showLeft && props.showRight;
+
+  let centralWidth;
+  let panePadding = props.showLeft ? "pd-sm" : "pd-md";
+
+  if (oneExpandedSide) {
+    centralWidth = "cp-md"
+  } else if (bothExpandedSides) {
+    centralWidth = "cp-sm"
+  } else {
+    centralWidth = "cp-lg"
+  }
+
+  return h("div", { class: `central-pane  ${centralWidth}` }, [
+    h("div", { class: `central-content-wrap ${panePadding}` }, [
       h("div", { class: "title-bar" }, [
         h("div", { class: "titlebar-title" }, text(props.note.name)),
         h("div", { class: "titlebar-right" }, [viewButton, shareButton]),
@@ -746,13 +760,15 @@ const central = (props) => {
         h("div", { id: "container", class: "main" }),
       ]),
     ]),
-    h("div", { class: "footer" }, [
-      h(
-        "div",
-        { class: "last-modified" },
-        text(`${getlastEdited(props.note.last_modified)}`)
-      ),
-      publicContent,
+    h("div", { class: `footer` }, [
+      h("div", { class: `footer-content-wrap ${panePadding}` }, [
+        h(
+          "div",
+          { class: "last-modified" },
+          text(`${getlastEdited(props.note.last_modified)}`)
+        ),
+        publicContent
+      ])
     ]),
   ]);
 };
