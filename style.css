@@ -106,8 +106,8 @@ body {
 .control-wrap {
   display: flex;
   flex-direction: column;
-  padding-top: 8px;
-  padding-bottom: 8px;
+  padding-top: 12px;
+  padding-bottom: 12px;
 }
 
 .icon-wrap {
@@ -234,13 +234,15 @@ a.toggle-link:hover {
 .link-num-dec-collapsed {
   display: flex;
   align-items: center;
-  height: 24px;
-  font-size: 14px;
-  padding-left: 12px;
+  justify-content: center;
+  height: 40px;
+  width: 100%;
+  padding: 8px;
   color: #8f8f8f;
+  border-bottom: 1px solid #eaeaea;
   font-family: Roboto Mono, Courier, monospace;
   box-sizing: border-box;
-  margin-bottom: 22px;
+
 }
 
 /* /* note title bar */
