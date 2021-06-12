@@ -308,10 +308,11 @@ const Share = (state) => {
 
   return [newState, [modifyPublic, { note: newState.note }], [renderIcons]];
 };
-const collapseRight = (state) => {
+
+const ToggleRight = (state) => {
   const newState = {
     ...state,
-    collapseRight: !state.collapseRight,
+    showRight: !state.showRight,
     note: {
       ...state.note,
     },
@@ -320,10 +321,10 @@ const collapseRight = (state) => {
   return [newState, [renderIcons]];
 };
 
-const collapseLeft = (state) => {
+const ToggleLeft = (state) => {
   const newState = {
     ...state,
-    collapseLeft: !state.collapseLeft,
+    showLeft: !state.showLeft,
     note: {
       ...state.note,
     },
@@ -337,7 +338,7 @@ const openSearchCollapse = (state) => {
     ...state,
     inputSearch: true,
     inputAdd: false,
-    collapseLeft: !state.collapseLeft,
+    showLeft: !state.showLeft,
     note: {
       ...state.note,
     },
@@ -350,7 +351,7 @@ const openAddCollapse = (state) => {
     ...state,
     inputAdd: true,
     inputSearch: false,
-    collapseLeft: !state.collapseLeft,
+    showLeft: !state.showLeft,
     note: {
       ...state.note,
     },
@@ -369,7 +370,7 @@ const Uncollapse = (state, type = "") => {
   }
   const newState = {
     ...state,
-    collapseLeft: !state.collapseLeft,
+    showLeft: !state.showLeft,
     controls: {
       ...state.controls,
       active: type,
@@ -382,52 +383,7 @@ const Uncollapse = (state, type = "") => {
   return [newState, [renderIcons],  toFocus ? [focusInput, {id: toFocus}] : null];
 };
 
-// modules
-const list = {
-  init: (x) => x,
-  toggle: (x) => !x,
-  model: ({ getter, setter }) => {
-    const Toggle = (state) => setter(state, list.toggle(getter(state)[0]));
 
-    return (state) => ({
-      value: getter(state)[0],
-      tag: getter(state)[1],
-      links: getter(state)[2],
-      Toggle,
-    });
-  },
-  view: (model) => {
-    if (model.value || model.links.length === 0) {
-      return h("div", { class: "toggle-list" }, [
-        h("div", { class: "toggle-title collapsed" }, [
-          h(
-            "div",
-            { class: "title-tag", onclick: model.Toggle },
-            text(model.tag)
-          ),
-          h(
-            "div",
-            { class: "icon-wrap mlauto toggle-chevron", onclick: model.Toggle },
-            [h("i", { "data-feather": "chevron-down", class: "icon" })]
-          ),
-        ]),
-      ]);
-    }
-    return h("div", { class: "toggle-list" }, [
-      h("div", { class: "toggle-title" }, [
-        h("div", { class: "title-tag" }, text(model.tag)),
-        h(
-          "a",
-          { class: "icon-wrap mlauto toggle-chevron", onclick: model.Toggle },
-          [h("i", { "data-feather": "chevron-up", class: "icon" })]
-        ),
-      ]),
-      ...model.links.map((link) =>
-        h("a", { href: `/notes/${link}`, class: "toggle-link" }, text(link))
-      ),
-    ]);
-  },
-};
 
 
 
@@ -561,21 +517,97 @@ const ControlModule = (state, type) => {
     );
 };
 
-// views
 
-const ToggleList = (title, links) => {
-  return h("div", { class: "toggle-list" }, [
-    h("div", { class: "toggle-title" }, [
-      h("div", { class: "title-tag" }, title),
-      h("a", { class: "icon-wrap mlauto toggle-chevron" }, [
-        h("i", { "data-feather": "chevron-down", class: "icon" }),
+// Toggle List Module
+
+const ToggleList = {
+  init: (x) => x,
+  toggle: (x) => !x,
+  model: ({ getter, setter }) => {
+    const Toggle = (state) => setter(state, ToggleList.toggle(getter(state)[0]));
+
+    return (state) => ({
+      value: getter(state)[0],
+      tag: getter(state)[1],
+      links: getter(state)[2],
+      Toggle,
+    });
+  },
+  view: (model) => {
+    if (model.links.length === 0) {
+      return h("div", {}, []);
+    }
+    if (model.value) {
+      return h("div", { class: "toggle-list" }, [
+          h("a", { class: "toggle-title collapsed", onclick: model.Toggle }, [
+            h(
+              "div",
+              { class: "title-tag" },
+              text(model.tag)
+            ),
+            h(
+              "div",
+              { class: "icon-wrap mlauto" },
+              [h("i", { "data-feather": "chevron-down", class: "icon" })]
+            )
+          ])
+      ]);
+    }
+    return h("div", { class: "toggle-list" }, [
+      h("a", { class: "toggle-title", onclick: model.Toggle }, [
+        h("div", { class: "title-tag" }, text(model.tag)),
+        h(
+          "a",
+          { class: "icon-wrap mlauto toggle-chevron-active" },
+          [h("i", { "data-feather": "chevron-up", class: "icon" })]
+        ),
       ]),
-    ]),
-    links.map((link) =>
-      h("a", { href: `/notes/${link}`, class: "toggle-link" }, link)
-    ),
-  ]);
+      ...model.links.map((link) =>
+        h("a", { href: `/notes/${link}`, class: "toggle-link" }, text(link))
+      ),
+    ]);
+  },
 };
+
+const recentList = ToggleList.model({
+  getter: (state) => [state.collapseRecent, "Recent", state.note.recent_notes],
+  setter: (state, toggleRecent) => [
+    { ...state, collapseRecent: toggleRecent },
+    [renderIcons],
+  ],
+});
+
+const linksList = ToggleList.model({
+  getter: (state) => [state.collapseLinks, "Links", state.note.links],
+  setter: (state, toggleLinks) => [
+    { ...state, collapseLinks: toggleLinks },
+    [renderIcons],
+  ],
+});
+
+const backlinksList = ToggleList.model({
+  getter: (state) => [
+    state.collapseBacklinks,
+    "Backlinks",
+    state.note.backlinks,
+  ],
+  setter: (state, toggleBacklinks) => [
+    { ...state, collapseBacklinks: toggleBacklinks },
+    [renderIcons],
+  ],
+});
+
+const searchList = ToggleList.model({
+  getter: (state) => [state.collapseSearch, "Search", state.searchLinks],
+  setter: (state, toggleSearch) => [
+    { ...state, collapseSearch: toggleSearch },
+    [renderIcons],
+  ],
+});
+
+
+
+// views
 
 const LinkNumberDec = (length, backlinks = true, collapsed) => {
   if (collapsed) {
@@ -592,46 +624,10 @@ const LinkNumberDec = (length, backlinks = true, collapsed) => {
   );
 };
 
-const recentList = list.model({
-  getter: (state) => [state.collapseRecent, "Recent", state.note.recent_notes],
-  setter: (state, toggleRecent) => [
-    { ...state, collapseRecent: toggleRecent },
-    [renderIcons],
-  ],
-});
 
-const linksList = list.model({
-  getter: (state) => [state.collapseLinks, "Links", state.note.links],
-  setter: (state, toggleLinks) => [
-    { ...state, collapseLinks: toggleLinks },
-    [renderIcons],
-  ],
-});
-
-const backlinksList = list.model({
-  getter: (state) => [
-    state.collapseBacklinks,
-    "Backlinks",
-    state.note.backlinks,
-  ],
-  setter: (state, toggleBacklinks) => [
-    { ...state, collapseBacklinks: toggleBacklinks },
-    [renderIcons],
-  ],
-});
-
-const searchList = list.model({
-  getter: (state) => [state.collapseSearch, "Search", state.searchLinks],
-  setter: (state, toggleSearch) => [
-    { ...state, collapseSearch: toggleSearch },
-    [renderIcons],
-  ],
-});
-
-// left section
-
+// // left section
 const left = (props) => {
-  if (props.collapseLeft) {
+  if (!props.showLeft) {
     return h("div", { class: "side-pane-collapsed left-pane-collapsed" }, [
       h(
         "a",
@@ -644,7 +640,7 @@ const left = (props) => {
         [h("i", { "data-feather": "search", class: "icon" })]
       ),
       h("div", { class: "footer" }, [
-        h("a", { class: "icon-wrap", onclick: collapseLeft }, [
+        h("a", { class: "icon-wrap", onclick: ToggleLeft }, [
           h("i", { "data-feather": "chevrons-right", class: "icon" }),
         ]),
       ]),
@@ -656,10 +652,12 @@ const left = (props) => {
       ControlModule(props, "ADD"),
       ControlModule(props, "SEARCH")
     ]),
-    h("div", { class: "list-border" }, [list.view(searchList(props))]),
-    h("div", { class: "list-border" }, [list.view(recentList(props))]),
+    // needs to be wrapped otherwise hyperapp errors
+    h("div", {} , [ToggleList.view(searchList(props))]),
+    // needs to be wrapped otherwise hyperapp errors
+    h("div", {} , [ToggleList.view(recentList(props))]),
     h("div", { class: "footer" }, [
-      h("a", { class: "icon-wrap mlauto", onclick: collapseLeft }, [
+      h("a", { class: "icon-wrap mlauto", onclick: ToggleLeft }, [
         h("i", { "data-feather": "chevrons-left", class: "icon" }),
       ]),
     ]),
@@ -667,7 +665,7 @@ const left = (props) => {
 };
 
 const right = (props) => {
-  if (props.collapseRight) {
+  if (!props.showRight) {
     return h("div", { class: "side-pane-collapsed right-pane-collapsed" }, [
       LinkNumberDec(props.note.links.length, false, true),
       h("div", { class: "list-border" }, [
@@ -675,7 +673,7 @@ const right = (props) => {
       ]),
 
       h("div", { class: "footer" }, [
-        h("a", { class: "icon-wrap", onclick: collapseRight }, [
+        h("a", { class: "icon-wrap", onclick: showRight }, [
           h("i", { "data-feather": "chevrons-left", class: "icon" }),
         ]),
       ]),
@@ -684,13 +682,13 @@ const right = (props) => {
 
   return h("div", { class: "side-pane right-pane" }, [
     h("div", { class: "right-content-wrap" }, [
-      list.view(linksList(props)),
-      h("div", { class: "list-border" }, [list.view(backlinksList(props))]),
+      h("div", {} , [ToggleList.view(linksList(props))]),
+      h("div", {} , [ToggleList.view(backlinksList(props))]),
     ]),
     LinkNumberDec(props.note.links.length, false, false),
     LinkNumberDec(props.note.backlinks.length, true, false),
     h("div", { class: "footer" }, [
-      h("a", { class: "icon-wrap", onclick: collapseRight }, [
+      h("a", { class: "icon-wrap", onclick: ToggleRight }, [
         h("i", { "data-feather": "chevrons-right", class: "icon" }),
       ]),
     ]),
@@ -819,11 +817,12 @@ const initState = {
     }
   },
   searchLinks: [],
-  collapseLeft: false,
-  collapseRight: false,
+  showLeft: true,
+  showRight: true,
   collapseRecent: false,
   collapseLinks: false,
   collapseBacklinks: false,
+  collapseSearch: false,
 };
 
 app({

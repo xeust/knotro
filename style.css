@@ -150,23 +150,28 @@ body {
   flex-direction: column;
   padding-left: 12px;
   padding-bottom: 24px;
-  margin-top: 13px;
-}
-
-.toggle-chevron {
-  margin-right: 8px;
+  border-top: 1px solid #eaeaea;
 }
 
 .toggle-title {
   display: flex;
+  font-family: -apple-system, BlinkMacSystemFont, "avenir next", avenir,
+    helvetica, "helvetica neue", ubuntu, roboto, noto, "segoe ui", arial,
+    sans-serif;
   align-items: center;
   height: 50px;
   font-size: 24px;
+  padding-top: 8px;
   font-weight: bold;
 }
 
-.list-border {
-  border-top: 1px solid #eaeaea;
+a.toggle-title:hover {
+  cursor: pointer;
+  color: #313131 !important;
+}
+
+.toggle-chevron-active {
+  color: #313131 !important;
 }
 
 .collapsed {
@@ -342,12 +347,6 @@ a.toggle-link:hover {
   font-family: Roboto Mono, Courier, monospace;
 }
 /* link */
-a {
-  color: #98b9f9;
-  text-decoration: none;
-  font-weight: 700;
-  font-family: Roboto Mono, Courier, monospace;
-}
 
 /* codemirror */
 
