@@ -325,6 +325,7 @@ a.toggle-link:hover {
   height: 24px;
   font-size: 14px;
   display: inline-flex;
+  color: #8f8f8f;
   text-decoration: none;
   font-family: Roboto Mono, Courier, monospace;
 }
@@ -337,18 +338,20 @@ a.toggle-link:hover {
   padding-left: 96px;
   font-family: Roboto Mono, Courier, monospace;
 }
+
 /* public url */
 .url-content {
   display: inline-flex;
 }
+
 .url-tag {
   height: 24px;
   font-size: 14px;
-  font-weight: 700;
   color: #8f8f8f;
   font-family: Roboto Mono, Courier, monospace;
 }
-.url-wrapper {
+
+a.url-wrapper {
   height: 24px;
   font-size: 14px;
   font-weight: 700;
@@ -356,6 +359,11 @@ a.toggle-link:hover {
   text-decoration: none;
   font-family: Roboto Mono, Courier, monospace;
 }
+
+a.url-wrapper:hover {
+  text-decoration: underline !important;
+}
+
 /* link */
 
 /* codemirror */
