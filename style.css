@@ -340,7 +340,6 @@ a.toggle-link:hover {
 /* public url */
 .url-content {
   display: inline-flex;
-  padding-right: 88px;
 }
 .url-tag {
   height: 24px;
