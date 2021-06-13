@@ -76,14 +76,20 @@ body {
   width: calc(100% - 40px);
 }
 
-.pd-sm {
-  padding-left: 96px;
-  padding-right: 96px;
+.pd-l-sm {
+  padding-left: 240px;
 }
 
-.pd-md {
-  padding-left: 144px;
-  padding-right: 144px;
+.pd-l-md {
+  padding-left: 336px;
+}
+
+.pd-r-sm {
+  padding-right: 192px;
+}
+
+.pd-r-md {
+  padding-right: 336px;
 }
 
 .footer-content-wrap {

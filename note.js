@@ -115,12 +115,12 @@ const attachCodeJar = (dispatch, options) => {
 
     jar.on("change", function (cm, change) {
       dispatch(options.UpdateContent(options.state, cm.getValue()));
-      container.addEventListener("keyup", (event)=> {
-        if (event.keyCode === 13) {
+      container.addEventListener("keyup", (event) => {
+        if (event.key === "Enter" || event.key === "Backspace") {
           clearTimeout(timeout);
           timeout = setTimeout(function () {
-            dispatch(options.DebounceSave(dispatch, options.state, cm.getValue()));
-          }, 1000);
+            dispatch(options.DebounceSave(options.state, cm.getValue()));
+          }, 1500);
         }
 
       })
@@ -140,10 +140,11 @@ const updateDatabase = (dispatch, options) => {
     .then((res) => {
       if (res.status === 200) {
         console.log("saved");
-        dispatch(setStatus(options.state, new Date().toUTCString()));
+        dispatch(SetStatus(options.state, new Date().toUTCString()));
       }
     })
     .catch((err) => {
+      // case of an expired token, save it to local storage and load on boot
       console.log("error");
       const newState = {
         ...options.state,
@@ -156,7 +157,7 @@ const updateDatabase = (dispatch, options) => {
         options.state.note.name,
         JSON.stringify(newState.note)
       );
-      dispatch(setStatus(options.state, "failed to save"));
+      dispatch(SetStatus(options.state, "failed to save, please refresh."));
     });
 };
 
@@ -171,7 +172,8 @@ const modifyPublic = (dispatch, options) => {
 };
 
 const attachMarkdown = (dispatch, options) => {
-  const { content, uniqueLinks } = checkUnsaved({ note: options.state.note });
+  const { content } = options.state.note;
+  const { uniqueLinks } = options;
 
   const convertedMarkdown = linkSub(content, uniqueLinks);
   const html = converter.makeHtml(convertedMarkdown);
@@ -179,10 +181,9 @@ const attachMarkdown = (dispatch, options) => {
     const container = document.getElementById("container");
     container.innerHTML = html;
   });
-  dispatch(UpdateUnsaved(options.state, content));
 };
 
-const DebounceSave = (dispatch, state, newContent) => {
+const DebounceSave = (state, newContent) => {
   const bareLinks = getBareLinks(newContent);
   const newState = {
     ...state,
@@ -239,7 +240,8 @@ const UpdateUnsaved = (state, newContent) => {
 
   return [newState, [updateDatabase, { state: newState }], [renderIcons]];
 };
-const setStatus = (state, status) => {
+
+const SetStatus = (state, status) => {
   return [
     {
       ...state,
@@ -587,7 +589,7 @@ const LinkNumberDec = (length, backlinks = true, collapsed) => {
   if (collapsed) {
     return h(
       "div",
-      { class: "link-num-dec-collapsed icons-top" },
+      { class: "link-num-dec-collapsed" },
       text(`${length}`)
     );
   }
@@ -605,12 +607,12 @@ const left = (props) => {
     return h("div", { class: "side-pane-collapsed left-pane" }, [
       h(
         "a",
-        { class: "icon-wrap mlauto icons-top", onclick: [UncollapseAndFocus, "ADD"] },
+        { class: "icon-wrap mlauto", onclick: [UncollapseAndFocus, "ADD"] },
         [h("i", { "data-feather": "plus", class: "icon" })]
       ),
       h(
         "a",
-        { class: "icon-wrap mlauto icons-top", onclick: [UncollapseAndFocus, "SEARCH"] },
+        { class: "icon-wrap mlauto", onclick: [UncollapseAndFocus, "SEARCH"] },
         [h("i", { "data-feather": "search", class: "icon" })]
       ),
       h("div", { class: "footer" }, [
@@ -642,10 +644,7 @@ const right = (props) => {
   if (!props.showRight) {
     return h("div", { class: "side-pane-collapsed right-pane" }, [
       LinkNumberDec(props.note.links.length, false, true),
-      h("div", { class: "list-border" }, [
-        LinkNumberDec(props.note.backlinks.length, true, true),
-      ]),
-
+      LinkNumberDec(props.note.backlinks.length, true, true),
       h("div", { class: "footer" }, [
         h("a", { class: "icon-wrap", onclick: ToggleRight }, [
           h("i", { "data-feather": "chevrons-left", class: "icon" }),
@@ -670,48 +669,32 @@ const right = (props) => {
 };
 
 const editBtn = (props) => {
-  return h(
-    "button",
-    { onclick: View, class: "config-button" },
-    h("div", {}, [
-      h("a", { class: "icon-wrap" }, [
+  return h("div", {}, [
+      h("a", { class: "icon-wrap", onclick: View }, [
         h("i", { "data-feather": "eye", class: "icon" }),
-      ]),
-    ])
-  );
+      ])
+    ]);
 };
 
 
 const viewBtn = (props) => {
-  return h(
-    "button",
-    { onclick: Edit, class: "config-button" },
-    h("a", { class: "icon-wrap" }, [
+  return h("a", { class: "icon-wrap", onclick: Edit }, [
       h("i", { "data-feather": "edit-2", class: "icon" }),
-    ])
-  );
+    ]);
 };
 
 const lockBtn = (props) => {
-  return h(
-    "button",
-    { onclick: Share, class: "config-button" },
-    h("a", { class: "icon-wrap" }, [
+  return h("a", { class: "icon-wrap", onclick: Share }, [
       h("i", { "data-feather": "lock", class: "icon" }),
-    ])
-  );
+    ]);
 };
 
 const unlockBtn = (props) => {
-  return h(
-    "button",
-    { onclick: Share, class: "config-button" },
-    h("div", {}, [
-      h("a", { class: "icon-wrap" }, [
+  return h("div", {}, [
+      h("a", { class: "icon-wrap", onclick: Share }, [
         h("i", { "data-feather": "unlock", class: "icon" }),
       ]),
-    ])
-  );
+    ]);
 };
 
 
@@ -726,7 +709,7 @@ const central = (props) => {
   const publicContent =
     props.note.is_public === true
       ? h("div", { class: "url-content mlauto" }, [
-          h("div", { class: "url-tag " }, text("public url: ")),
+          h("div", { class: "url-tag" }, text(`public url:${" "}`)),
           h("a", { class: "url-wrapper ", href: publicUrl }, text(publicUrl)),
         ])
       : h("div", { class: "url-content mlauto" }, [
@@ -740,7 +723,8 @@ const central = (props) => {
   const bothExpandedSides = props.showLeft && props.showRight;
 
   let centralWidth;
-  let panePadding = props.showLeft ? "pd-sm" : "pd-md";
+  const leftPadding = props.showLeft ? "pd-l-sm" : "pd-l-md";
+  const rightPadding = props.showRight ? "pd-r-sm" : "pd-r-md";
 
   if (oneExpandedSide) {
     centralWidth = "cp-md"
@@ -751,7 +735,7 @@ const central = (props) => {
   }
 
   return h("div", { class: `central-pane  ${centralWidth}` }, [
-    h("div", { class: `central-content-wrap ${panePadding}` }, [
+    h("div", { class: `central-content-wrap ${leftPadding} ${rightPadding}` }, [
       h("div", { class: "title-bar" }, [
         h("div", { class: "titlebar-title" }, text(props.note.name)),
         h("div", { class: "titlebar-right" }, [viewButton, shareButton]),
@@ -761,7 +745,7 @@ const central = (props) => {
       ]),
     ]),
     h("div", { class: `footer` }, [
-      h("div", { class: `footer-content-wrap ${panePadding}` }, [
+      h("div", { class: `footer-content-wrap ${leftPadding} ${rightPadding}` }, [
         h(
           "div",
           { class: "last-modified" },
