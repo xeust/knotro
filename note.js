@@ -105,7 +105,7 @@ const attachCodeJar = (dispatch, options) => {
     var container = document.getElementById("container");
     container.innerHTML = "";
     jar = CodeMirror(container, {
-      value: options.state.note.content,
+      value: options.content,
       lineNumbers: false,
       lineWrapping: true,
       viewportMargin: Infinity,
@@ -114,12 +114,12 @@ const attachCodeJar = (dispatch, options) => {
     });
 
     jar.on("change", function (cm, change) {
-      dispatch(options.UpdateContent(options.state, cm.getValue()));
+      dispatch(UpdateContent, cm.getValue());
       container.addEventListener("keyup", (event) => {
         if (event.key === "Enter" || event.key === "Backspace") {
           clearTimeout(timeout);
           timeout = setTimeout(function () {
-            dispatch(options.DebounceSave(options.state, cm.getValue()));
+            dispatch(DebounceSave, cm.getValue());
           }, 1500);
         }
 
@@ -157,7 +157,7 @@ const updateDatabase = (dispatch, options) => {
         options.state.note.name,
         JSON.stringify(newState.note)
       );
-      dispatch(SetStatus(options.state, "failed to save, please refresh."));
+      dispatch(SetStatus, "failed to save, please refresh.");
     });
 };
 
@@ -172,10 +172,9 @@ const modifyPublic = (dispatch, options) => {
 };
 
 const attachMarkdown = (dispatch, options) => {
-  const { content } = options.state.note;
-  const { uniqueLinks } = options;
+  const { rawMD, uniqueLinks } = options;
 
-  const convertedMarkdown = linkSub(content, uniqueLinks);
+  const convertedMarkdown = linkSub(rawMD, uniqueLinks);
   const html = converter.makeHtml(convertedMarkdown);
   requestAnimationFrame(() => {
     const container = document.getElementById("container");
@@ -267,7 +266,7 @@ const Edit = (state) => {
   };
   return [
     newState,
-    [attachCodeJar, { state: newState, UpdateContent, DebounceSave }],
+    [attachCodeJar, { content: state.note.content }],
     [renderIcons],
   ];
 };
@@ -292,7 +291,7 @@ const View = (state) => {
   };
   return [
     newState,
-    [attachMarkdown, { state, uniqueLinks }],
+    [attachMarkdown, { rawMD, uniqueLinks }],
     [updateDatabase, { state: newState }],
     [renderIcons],
   ];
@@ -380,7 +379,7 @@ const searchNotes = async (dispatch, options) => {
     links = await rawResponse.json();
   }
 
-  dispatch(options.UpdateSearchNotes(options.state, links));
+  dispatch(UpdateSearchNotes, links);
 };
 
 const UpdateSearchNotes = (state, notes) => ({
@@ -701,11 +700,6 @@ const unlockBtn = (props) => {
 const central = (props) => {
   const publicUrl = `${location.origin}/public/${props.note.name}`;
 
-  const viewButton = props.view === "EDIT" ? editBtn(props) : viewBtn(props);
-  // const viewButton =
-  //   props.view === "EDIT"
-  //     ? h("button", { onclick: View, class: "config-button" }, text("edit"))
-  //     : h("button", { onclick: Edit, class: "config-button" }, text("view"));
   const publicContent =
     props.note.is_public === true
       ? h("div", { class: "url-content mlauto" }, [
@@ -715,9 +709,6 @@ const central = (props) => {
       : h("div", { class: "url-content mlauto" }, [
           h("div", { class: "url-tag " }, text("")),
         ]);
-
-  const shareButton =
-    props.note.is_public === true ? unlockBtn(props) : lockBtn(props);
 
   const oneExpandedSide = props.showLeft ? !props.showRight : props.showRight;
   const bothExpandedSides = props.showLeft && props.showRight;
@@ -738,7 +729,10 @@ const central = (props) => {
     h("div", { class: `central-content-wrap ${leftPadding} ${rightPadding}` }, [
       h("div", { class: "title-bar" }, [
         h("div", { class: "titlebar-title" }, text(props.note.name)),
-        h("div", { class: "titlebar-right" }, [viewButton, shareButton]),
+        h("div", { class: "titlebar-right" }, [
+          props.view === "EDIT" ? editBtn(props) : viewBtn(props),
+          props.note.is_public ? unlockBtn(props) : lockBtn(props),
+        ])
       ]),
       h("div", { class: "content-wrapper" }, [
         h("div", { id: "container", class: "main" }),
@@ -805,8 +799,8 @@ app({
     [
       attachMarkdown,
       {
-        state: initState,
-        uniqueLinks: getUniqueLinks(input.content),
+        rawMD: initState.note.content,
+        uniqueLinks: getUniqueLinks(initState.note.content),
       },
     ],
     [renderIcons],
