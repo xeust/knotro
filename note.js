@@ -499,12 +499,12 @@ const ToggleList = {
   init: (x) => x,
   toggle: (x) => !x,
   model: ({ getter, setter }) => {
-    const Toggle = (state) => setter(state, ToggleList.toggle(getter(state)[0]));
+    const Toggle = (state) => setter(state, ToggleList.toggle(getter(state).value));
 
     return (state) => ({
-      value: getter(state)[0],
-      tag: getter(state)[1],
-      links: getter(state)[2],
+      value: getter(state).value,
+      tag: getter(state).tag,
+      links: getter(state).links,
       Toggle,
     });
   },
@@ -545,7 +545,7 @@ const ToggleList = {
 };
 
 const recentList = ToggleList.model({
-  getter: (state) => [state.collapseRecent, "Recent", state.note.recent_notes],
+  getter: (state) => ({value: state.collapseRecent, tag: "Recent", links: state.note.recent_notes}),
   setter: (state, toggleRecent) => [
     { ...state, collapseRecent: toggleRecent },
     [renderIcons],
@@ -553,7 +553,7 @@ const recentList = ToggleList.model({
 });
 
 const linksList = ToggleList.model({
-  getter: (state) => [state.collapseLinks, "Links", state.note.links],
+  getter: (state) => ({value: state.collapseLinks, tag: "Links", links: state.note.links}),
   setter: (state, toggleLinks) => [
     { ...state, collapseLinks: toggleLinks },
     [renderIcons],
@@ -561,11 +561,7 @@ const linksList = ToggleList.model({
 });
 
 const backlinksList = ToggleList.model({
-  getter: (state) => [
-    state.collapseBacklinks,
-    "Backlinks",
-    state.note.backlinks,
-  ],
+  getter: (state) => ({value:state.collapseBacklinks, tag: "Backlinks", links: state.note.backlinks}),
   setter: (state, toggleBacklinks) => [
     { ...state, collapseBacklinks: toggleBacklinks },
     [renderIcons],
@@ -573,7 +569,7 @@ const backlinksList = ToggleList.model({
 });
 
 const searchList = ToggleList.model({
-  getter: (state) => [state.collapseSearch, "Search", state.searchLinks],
+  getter: (state) => ({value:state.collapseSearch, tag: "Search", links:state.searchLinks}),
   setter: (state, toggleSearch) => [
     { ...state, collapseSearch: toggleSearch },
     [renderIcons],
