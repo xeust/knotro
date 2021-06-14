@@ -91,7 +91,9 @@ body {
 .pd-r-md {
   padding-right: 336px;
 }
-
+.public-r-f {
+  width: 240px;
+}
 .footer-content-wrap {
   display: flex;
   width: 100%;
