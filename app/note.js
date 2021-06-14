@@ -115,15 +115,13 @@ const attachCodeJar = (dispatch, options) => {
 
     jar.on("change", function (cm, change) {
       dispatch(UpdateContent, cm.getValue());
-      container.addEventListener("keyup", (event) => {
-        if (event.key === "Enter" || event.key === "Backspace") {
-          clearTimeout(timeout);
-          timeout = setTimeout(function () {
-            dispatch(DebounceSave, cm.getValue());
-          }, 1500);
-        }
 
-      })
+      if(!(jar.getTokenTypeAt(jar.getCursor()) === "link")) {
+        clearTimeout(timeout);
+        timeout = setTimeout(function () {
+          dispatch(DebounceSave);
+        }, 1500)
+      }
     });
 
   });
@@ -182,14 +180,13 @@ const attachMarkdown = (dispatch, options) => {
   });
 };
 
-const DebounceSave = (state, newContent) => {
-  const bareLinks = getBareLinks(newContent);
+const DebounceSave = (state) => {
+  const bareLinks = getBareLinks(state.note.content);
   const newState = {
     ...state,
     note: {
       ...state.note,
       last_modified: "saving",
-      content: newContent,
       links: bareLinks,
       recent_notes: [
         state.note.name,

@@ -143,6 +143,7 @@ const getBareLinks = (rawMD) => {
     .filter((mappedEach) => mappedEach[0] !== "~");
   return bareLinks;
 };
+
 const getlastEdited = (lastModified) => {
   if (lastModified === "saving" || lastModified === "failed to save") {
     return lastModified;
@@ -206,6 +207,7 @@ const renderIcons = (dispatch, options) => {
     feather.replace();
   });
 };
+
 const focusInput = (dispatch, options) => {
   requestAnimationFrame(() => {
     document.getElementById(options.id).focus();
@@ -230,17 +232,12 @@ const attachCodeJar = (dispatch, options) => {
       dispatch(
         options.UpdateContent(options.state, cm.getValue(), options.state.route)
       );
-
-      container.addEventListener("keyup", (event) => {
-        if (event.key === "Enter" || event.key === "Backspace") {
-          clearTimeout(timeout);
-          timeout = setTimeout(function () {
-            dispatch(
-              SaveNote(options.state, cm.getValue(), options.state.route)
-            );
-          }, 1500);
-        }
-      });
+      if(!(jar.getTokenTypeAt(jar.getCursor()) === "link")) {
+        clearTimeout(timeout);
+        timeout = setTimeout(function () {
+          dispatch(DebounceSave);
+        }, 1500)
+      }
     });
   });
 };
@@ -257,13 +254,27 @@ const attachMarkdown = (dispatch, options) => {
   dispatch(UpdateContent(options.state, content, options.state.route));
 };
 
-const DebounceSave = (dispatch, options) => {
-  dispatch(
-    SaveNote(options.state, options.state.note.content, options.state.route)
-  );
-};
+const saveNote = (dispatch, options) => {
+    dispatch(DebounceSave);
+}
 
 // actions
+
+const DebounceSave = (state) => {
+    const bareLinks = getBareLinks(state.note.content);
+    const newState = {
+      ...state,
+      note: {
+        ...state.note,
+        last_modified: new Date().toISOString(),
+        links: bareLinks,
+      },
+    };
+    newState.note.backlinks = updateLinks(newState);
+    localStorage.setItem(newState.note.name, JSON.stringify(newState.note));
+    return [newState, [renderIcons]];
+};
+
 
 const UpdateContent = (state, newContent, newName) => {
   const bareLinks = getBareLinks(newContent);
@@ -283,27 +294,11 @@ const UpdateContent = (state, newContent, newName) => {
       recent_notes: [newName, ...recentLinks.filter((name) => name != newName)],
     },
   };
+  
   return [newState, [renderIcons]];
 };
 
-const SaveNote = (state, newContent, newName) => {
-  const bareLinks = getBareLinks(newContent);
 
-  const newState = {
-    ...state,
-    route: newName,
-    note: {
-      ...state.note,
-      name: newName,
-      content: newContent,
-      last_modified: new Date().toISOString(),
-      links: bareLinks,
-    },
-  };
-  newState.note.backlinks = updateLinks(newState);
-  localStorage.setItem(newState.note.name, JSON.stringify(newState.note));
-  return [newState, [renderIcons]];
-};
 
 const Edit = (state) => {
   const newState = {
@@ -341,7 +336,7 @@ const View = (state) => {
   return [
     newState,
     [attachMarkdown, { state: newState, uniqueLinks }],
-    [DebounceSave, { state: newState }],
+    [saveNote, { state: newState }],
     [renderIcons],
   ];
 };
