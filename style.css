@@ -322,6 +322,7 @@ a.toggle-link:hover {
 
 /* kntro.com tag */
 .knotro-wrap {
+  padding-left: 12px;
   height: 24px;
   font-size: 14px;
   font-family: Roboto Mono, Courier, monospace;
@@ -343,7 +344,6 @@ a.toggle-link:hover {
   font-size: 14px;
   display: inline-flex;
   text-decoration: none;
-  padding-left: 96px;
   font-family: Roboto Mono, Courier, monospace;
 }
 
