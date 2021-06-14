@@ -1,7 +1,7 @@
 ## yarc
 
 
-![yarc](assets/yarc_backlinks.png)
+![yarc](playground/assets/yarc_backlinks.png)
 
 ### General Info
 
