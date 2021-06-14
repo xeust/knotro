@@ -38,11 +38,8 @@ async def read_note(note_name: str, json: bool = False):
       new_note = Note(name=note_name)
       note_dict = new_note.dict()
       note_key = urlsafe_key(note_name)
-      drive_notes.put(note_name, note_dict["content"])
       note_dict["last_modified"] = str(datetime.now(timezone.utc).isoformat())
-      note_meta = NoteMeta(name=note_dict["name"], links=note_dict["links"],
-                         backlinks=note_dict["backlinks"], last_modified=note_dict["last_modified"])
-      notes.put(note_meta.dict(), note_key)
+      notes.put(note_dict, note_key)
 
     note_dict["base_url"] = base_url
     note_dict["recent_notes"] = recent_notes()
@@ -82,8 +79,6 @@ async def read_public_note(note_name: str, json: bool = False):
 async def add_note(new_note: Note):
     old_note = get_note(new_note.name)
     old_links = old_note.links if old_note else []
-
-
     removed_links = list_diff(old_links, new_note.links)
     added_links = list_diff(new_note.links, old_links)
 
