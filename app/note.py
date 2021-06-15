@@ -67,6 +67,7 @@ def recent_notes():
 # get note, transform if empty lists
 def get_note(note_name):
     note_key = urlsafe_key(note_name)
+    print(note_key)
     note_dict = notes.get(note_key)
 
     if not note_dict:

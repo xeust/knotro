@@ -37,7 +37,7 @@ def search_handler(search_term: str):
 async def read_note(note_name: str, json: bool = False):
     note = get_note(note_name)
     note_dict = {}
-
+    print(note_name)
     if note:
       note_dict = note.dict()
     

@@ -88,7 +88,8 @@ const checkUnsaved = (options) => {
 
 // note api
 const getNote = async (name) => {
-  const rawResponse = await fetch(`/notes/${name}/?json=true`, {
+
+  const rawResponse = await fetch(`/notes/${encodeURI(name)}?json=true`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -103,7 +104,9 @@ const getNote = async (name) => {
 };
 
 const getLocalNote = (name) => {
+  console.log(name);
   const note = JSON.parse(localStorage.getItem(name));
+  console.log()
   return note ? note : null;
 };
 
@@ -122,7 +125,7 @@ const fetchRelatedNotes = async (links, backlinks, recentLinks) => {
 };
 
 const updateDatabase = async (dispatch, options) => {
-  fetch(`/${options.state.note.name}`, {
+  fetch(`/${encodeURI(options.state.route)}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -156,7 +159,7 @@ const updateDatabase = async (dispatch, options) => {
 };
 
 const modifyPublic = (dispatch, options) => {
-  const response = fetch(`/public/${options.note.name}`, {
+  const response = fetch(`/public/${encodeURI(options.note.name)}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -178,7 +181,7 @@ const HashHandler = (state, hash) => {
   const newState = {
     ...state,
     route:
-      hash === "" ? new Date().toLocaleDateString("fr-CA") : hash.substring(1),
+      hash === "" ? new Date().toLocaleDateString("fr-CA") : decodeURI(hash.substring(1)),
   };
   return [
     newState,
@@ -316,10 +319,12 @@ const LazyUpdate = (state, note) => {
 };
 
 const NoteInit = (state, note) => {
+
   const newState = {
     ...state,
     note: note ? note : state.note,
   };
+
   return [
     newState,
     [LazyLoad, { state: newState, emptyNote: note ? false : true, LazyUpdate }],

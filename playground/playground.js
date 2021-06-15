@@ -187,7 +187,7 @@ const HashHandler = (state, hash) => {
   const newState = {
     ...state,
     route:
-      hash === "" ? new Date().toLocaleDateString("fr-CA") : hash.substring(1),
+      hash === "" ? new Date().toLocaleDateString("fr-CA") : decodeURI(hash.substring(1)),
   };
   return [
     newState,
@@ -230,7 +230,7 @@ const attachCodeJar = (dispatch, options) => {
 
     jar.on("change", function (cm, change) {
       dispatch(
-        options.UpdateContent(options.state, cm.getValue(), options.state.route)
+        UpdateContent, cm.getValue(), options.state.route
       );
       if(!(jar.getTokenTypeAt(jar.getCursor()) === "link")) {
         clearTimeout(timeout);
@@ -251,7 +251,7 @@ const attachMarkdown = (dispatch, options) => {
     const container = document.getElementById("container");
     container.innerHTML = html;
   });
-  dispatch(UpdateContent(options.state, content, options.state.route));
+  dispatch(UpdateContent, content, options.state.route);
 };
 
 const saveNote = (dispatch, options) => {
