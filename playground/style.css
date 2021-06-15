@@ -42,6 +42,13 @@ body {
   box-sizing: border-box;
 }
 
+.lc {
+  overflow-y: auto;
+}
+
+.rc {
+  overflow-y: auto;
+}
 .right-pane {
   border-left: 1px solid #eaeaea;
   box-sizing: border-box;

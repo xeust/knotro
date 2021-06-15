@@ -173,12 +173,14 @@ const left = (props) => {
   }
 
   return h("div", { class: "side-pane left-pane" }, [
-    h("div", { class: "right-content-wrap" }, [
-      h("div", {} , [ToggleList.view(linksList(props))]),
-      h("div", {} , [ToggleList.view(backlinksList(props))]),
+    h("div", {class:"lc"}, [
+      h("div", { class: "right-content-wrap" }, [
+        h("div", {} , [ToggleList.view(linksList(props))]),
+        h("div", {} , [ToggleList.view(backlinksList(props))]),
+      ]),
+      LinkNumberDec(props.note.links.length, false, false),
+      LinkNumberDec(props.note.backlinks.length, true, false),
     ]),
-    LinkNumberDec(props.note.links.length, false, false),
-    LinkNumberDec(props.note.backlinks.length, true, false),
     h("div", { class: "footer" }, [
       h("a", { class: "knotro-wrap" }, text("knotro.com")),
       h("a", { class: "icon-wrap mlauto", onclick: ToggleLeft }, [

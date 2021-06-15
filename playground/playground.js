@@ -187,7 +187,7 @@ const HashHandler = (state, hash) => {
   const newState = {
     ...state,
     route:
-      hash === "" ? new Date().toLocaleDateString("fr-CA") : decodeURI(hash.substring(1)),
+      hash === "" ? new Date().toLocaleDateString("fr-CA") : (hash.substring(1)),
   };
   return [
     newState,
@@ -647,7 +647,7 @@ const central = (props) => {
   return h("div", { class: `central-pane  ${centralWidth}` }, [
     h("div", { class: `central-content-wrap ${leftPadding} ${rightPadding}` }, [
       h("div", { class: "title-bar" }, [
-        h("div", { class: "titlebar-title" }, text(props.note.name)),
+        h("div", { class: "titlebar-title" }, text(props.route)),
         h("div", { class: "titlebar-right" }, [
           props.view === "EDIT" ? editBtn(props) : viewBtn(props),
         ]),
@@ -704,14 +704,17 @@ const left = (props) => {
   }
 
   return h("div", { class: "side-pane left-pane" }, [
-    h("div", { class: "control-wrap" }, [
-      ControlModule(props, "ADD"),
-      ControlModule(props, "SEARCH"),
+    h ("div", {class: "lc"}, [
+      h("div", { class: "control-wrap" }, [
+        ControlModule(props, "ADD"),
+        ControlModule(props, "SEARCH"),
+      ]),
+      // needs to be wrapped otherwise hyperapp errors
+      h("div", {}, [ToggleList.view(searchList(props))]),
+      // needs to be wrapped otherwise hyperapp errors
+      h("div", {}, [ToggleList.view(recentList(props))]),
     ]),
-    // needs to be wrapped otherwise hyperapp errors
-    h("div", {}, [ToggleList.view(searchList(props))]),
-    // needs to be wrapped otherwise hyperapp errors
-    h("div", {}, [ToggleList.view(recentList(props))]),
+
     h("div", { class: "footer" }, [
       h("a", { class: "icon-wrap mlauto", onclick: ToggleLeft }, [
         h("i", { "data-feather": "chevrons-left", class: "icon" }),
@@ -737,11 +740,12 @@ const right = (props) => {
   }
 
   return h("div", { class: "side-pane right-pane" }, [
-    h("div", { class: "right-content-wrap" }, [
-      ToggleList.view(linksList(props)),
-      h("div", { class: "list-border" }, [
-        ToggleList.view(backlinksList(props)),
+    h("div", {class: "rc"}, [
+      h("div", { class: "right-content-wrap" }, [
+        h("div", {}, [ToggleList.view(linksList(props))]),
+        h("div", {}, [ToggleList.view(backlinksList(props))]),
       ]),
+
     ]),
     LinkNumberDec(props.note.links.length, false, false),
     LinkNumberDec(props.note.backlinks.length, true, false),

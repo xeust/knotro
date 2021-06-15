@@ -9,6 +9,7 @@ const converter = new showdown.Converter();
 let jar;
 
 // helpers
+
 const linkSub = (rawMD, links) => {
   let newMD = rawMD;
   for (const each of links) {
@@ -88,7 +89,6 @@ const checkUnsaved = (options) => {
 
 // note api
 const getNote = async (name) => {
-
   const rawResponse = await fetch(`/notes/${encodeURI(name)}?json=true`, {
     method: "GET",
     headers: {
@@ -106,7 +106,7 @@ const getNote = async (name) => {
 const getLocalNote = (name) => {
   console.log(name);
   const note = JSON.parse(localStorage.getItem(name));
-  console.log()
+  console.log();
   return note ? note : null;
 };
 
@@ -181,7 +181,9 @@ const HashHandler = (state, hash) => {
   const newState = {
     ...state,
     route:
-      hash === "" ? new Date().toLocaleDateString("fr-CA") : decodeURI(hash.substring(1)),
+      hash === ""
+        ? new Date().toLocaleDateString("fr-CA")
+        : decodeURI(hash.substring(1)),
   };
   return [
     newState,
@@ -319,7 +321,6 @@ const LazyUpdate = (state, note) => {
 };
 
 const NoteInit = (state, note) => {
-
   const newState = {
     ...state,
     note: note ? note : state.note,
@@ -656,7 +657,11 @@ const ToggleList = {
         ]),
       ]),
       ...model.links.map((link) =>
-        h("a", { href: `#${link}`, class: "toggle-link" }, text(link))
+        h(
+          "a",
+          { href: `#${link}`, class: "toggle-link" },
+          text(link.length > 25 ? link.substring(0, 25) + "..." : link)
+        )
       ),
     ]);
   },
@@ -746,14 +751,17 @@ const left = (props) => {
   }
 
   return h("div", { class: "side-pane left-pane" }, [
-    h("div", { class: "control-wrap" }, [
-      ControlModule(props, "ADD"),
-      ControlModule(props, "SEARCH"),
+    h("div", {class:"lc"}, [
+      h("div", { class: "control-wrap" }, [
+        ControlModule(props, "ADD"),
+        ControlModule(props, "SEARCH"),
+      ]),
+      // needs to be wrapped otherwise hyperapp errors
+      h("div", {}, [ToggleList.view(searchList(props))]),
+      // needs to be wrapped otherwise hyperapp errors
+      h("div", {}, [ToggleList.view(recentList(props))]),
+
     ]),
-    // needs to be wrapped otherwise hyperapp errors
-    h("div", {}, [ToggleList.view(searchList(props))]),
-    // needs to be wrapped otherwise hyperapp errors
-    h("div", {}, [ToggleList.view(recentList(props))]),
     h("div", { class: "footer" }, [
       h("a", { class: "icon-wrap mlauto", onclick: ToggleLeft }, [
         h("i", { "data-feather": "chevrons-left", class: "icon" }),
@@ -776,9 +784,12 @@ const right = (props) => {
   }
 
   return h("div", { class: "side-pane right-pane" }, [
-    h("div", { class: "right-content-wrap" }, [
-      h("div", {}, [ToggleList.view(linksList(props))]),
-      h("div", {}, [ToggleList.view(backlinksList(props))]),
+    h("div", {class: "rc"}, [
+      h("div", { class: "right-content-wrap" }, [
+        h("div", {}, [ToggleList.view(linksList(props))]),
+        h("div", {}, [ToggleList.view(backlinksList(props))]),
+      ]),
+
     ]),
     LinkNumberDec(props.note.links.length, false, false),
     LinkNumberDec(props.note.backlinks.length, true, false),
@@ -825,7 +836,18 @@ const central = (props) => {
     props.note.is_public === true
       ? h("div", { class: "url-content mlauto" }, [
           h("div", { class: "url-tag" }, text(`public url:${" "}`)),
-          h("a", { class: "url-wrapper ", href: publicUrl }, text(publicUrl)),
+          h(
+            "a",
+            { class: "url-wrapper ", href: publicUrl },
+            text(
+              props.note.name.length > 25
+                ? `${location.origin}/public/${props.note.name.substring(
+                    0,
+                    4
+                  )}...`
+                : publicUrl
+            )
+          ),
         ])
       : h("div", { class: "url-content mlauto" }, [
           h("div", { class: "url-tag " }, text("")),
