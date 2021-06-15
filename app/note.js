@@ -15,7 +15,7 @@ const linkSub = (rawMD, links) => {
     let replacement;
     if (each[2] !== "~") {
       const bareName = each.substring(2, each.length - 2);
-      replacement = `[${bareName}](/notes/${encodeURI(bareName)})`;
+      replacement = `[${bareName}](#${encodeURI(bareName)})`;
     } else {
       // if the link is escaped with ~
       const bareName = each.substring(3, each.length - 2);
@@ -86,46 +86,39 @@ const checkUnsaved = (options) => {
   return { content: note.content, uniqueLinks: getUniqueLinks(note.content) };
 };
 
-// // effects
-const renderIcons = (dispatch, options) => {
-  requestAnimationFrame(() => {
-    feather.replace();
+// note api 
+const getNote = async (name) => {
+  const rawResponse = await fetch(`/notes/${name}/?json=true`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
   });
+
+  if (rawResponse.status === 200) {
+    const note = await rawResponse.json();
+    return note;
+  }
+  return null;
 };
 
-const focusInput = (dispatch, options) => {
-  requestAnimationFrame(() => {
-    document.getElementById(options.id).focus();
-  })
+const getLocalNote = (name) => {
+  const note = JSON.parse(localStorage.getItem(name));
+  return (note ? note : defaultNote);
 }
 
-const attachCodeJar = (dispatch, options) => {
-  requestAnimationFrame(() => {
-    let timeout = null;
-    var container = document.getElementById("container");
-    container.innerHTML = "";
-    jar = CodeMirror(container, {
-      value: options.content,
-      lineNumbers: false,
-      lineWrapping: true,
-      viewportMargin: Infinity,
-      autoCloseBrackets: true,
-      mode: "markdown",
-    });
+const fetchRelatedNotes = async (links, backlinks, recentLinks) => {
+  console.log("related notes...")
+  const relatedLinks = Array.from(new Set([...links, ...backlinks, ...recentLinks]))
+  for (const link of relatedLinks) {
+    const note = await getNote(link);
+    if (note) {
+      localStorage.setItem(link, JSON.stringify(note));
+    }
+  }
+  return;
+}
 
-    jar.on("change", function (cm, change) {
-      dispatch(UpdateContent, cm.getValue());
-
-      if(!(jar.getTokenTypeAt(jar.getCursor()) === "link")) {
-        clearTimeout(timeout);
-        timeout = setTimeout(function () {
-          dispatch(DebounceSave);
-        }, 1500)
-      }
-    });
-
-  });
-};
 
 const updateDatabase = (dispatch, options) => {
   fetch(`/${options.state.note.name}`, {
@@ -138,7 +131,7 @@ const updateDatabase = (dispatch, options) => {
     .then((res) => {
       if (res.status === 200) {
         console.log("saved");
-        dispatch(SetStatus(options.state, new Date().toUTCString()));
+        dispatch(SetStatus, new Date().toUTCString());
       }
     })
     .catch((err) => {
@@ -169,6 +162,74 @@ const modifyPublic = (dispatch, options) => {
   });
 };
 
+// routing 
+const _onhashchange = (dispatch, options) => {
+  const handler = () => dispatch(options.action, location.hash);
+  addEventListener("hashchange", handler);
+  requestAnimationFrame(handler);
+  return () => removeEventListener("hashchange", handler);
+};
+
+const onhashchange = (action) => [_onhashchange, { action }];
+const HashHandler = (state, hash) => {
+  const newState = {
+    ...state,
+    route:
+      hash === "" ? new Date().toLocaleDateString("fr-CA") : hash.substring(1),
+  };
+  return [
+    newState,
+    [
+      onEnter,
+      {
+        state: newState,
+        NoteInit,
+      },
+    ],
+  ];
+};
+
+
+// effects
+const renderIcons = (dispatch, options) => {
+  requestAnimationFrame(() => {
+    feather.replace();
+  });
+};
+
+const focusInput = (dispatch, options) => {
+  requestAnimationFrame(() => {
+    document.getElementById(options.id).focus();
+  })
+}
+
+const attachCodeJar = (dispatch, options) => {
+  requestAnimationFrame(() => {
+    let timeout = null;
+    var container = document.getElementById("container");
+    container.innerHTML = "";
+    jar = CodeMirror(container, {
+      value: options.content,
+      lineNumbers: false,
+      lineWrapping: true,
+      viewportMargin: Infinity,
+      autoCloseBrackets: true,
+      mode: "markdown",
+    });
+
+    jar.on("change", function (cm, change) {
+      dispatch(UpdateContent, cm.getValue());
+      if(!(jar.getTokenTypeAt(jar.getCursor()) === "link")) {
+        clearTimeout(timeout);
+        timeout = setTimeout(function () {
+          dispatch(DebounceSave);
+        }, 1500)
+      }
+    });
+
+  });
+};
+
 const attachMarkdown = (dispatch, options) => {
   const { rawMD, uniqueLinks } = options;
 
@@ -179,6 +240,38 @@ const attachMarkdown = (dispatch, options) => {
     container.innerHTML = html;
   });
 };
+
+const onEnter = (dispatch, options) => {
+  console.log(options.state);
+  const note = getLocalNote(options.state.route);
+
+  if (note) {
+    const content = note.content;
+    const uniqueLinks = getUniqueLinks(content);
+    const convertedMarkdown = linkSub(content, uniqueLinks);
+    const html = converter.makeHtml(convertedMarkdown);
+    requestAnimationFrame(() => {
+      const container = document.getElementById("container");
+      container.innerHTML = html;
+    });
+  }
+  dispatch(NoteInit, note ? note.content: null);
+}
+
+const LazyLoad = async (dispatch, options) => {
+  const name = options.state.route;
+  let note = options.state.note;
+
+  let rawResponse = await getNote(name);
+
+  if (rawResponse) {
+    note = rawResponse;
+    if (new Date(note.last_modified) > new Date(options.state.note.last_modified)) {
+      console.log("Lazy load init")
+      dispatch(LazyUpdate, note)
+    }
+  }
+}
 
 const DebounceSave = (state) => {
   const bareLinks = getBareLinks(state.note.content);
@@ -200,6 +293,39 @@ const DebounceSave = (state) => {
 
 
 // actions
+const LazyUpdate = (state, note) => {
+  const links = note.links;
+  const backlinks = note.backlinks;
+  const recentLinks = note.recent_notes;
+  const newState = {
+    ...state
+  }
+  newState.note = note;
+  const content = note.content;
+  const uniqueLinks = getUniqueLinks(content);
+  const convertedMarkdown = linkSub(content, uniqueLinks);
+  const html = converter.makeHtml(convertedMarkdown);
+  requestAnimationFrame(() => {
+    const container = document.getElementById("container");
+    container.innerHTML = html;
+  });
+  fetchRelatedNotes(links, backlinks, recentLinks);
+  localStorage.setItem(note.name, JSON.stringify(note));
+  return [newState, [renderIcons]]
+}
+const NoteInit = (state, note) => {
+  console.log()
+  const name = state.route;
+  const newState = {
+    ...state,
+    note: note ? note : state.note
+  }
+  return [
+    newState,
+    [LazyLoad, {state: newState, LazyUpdate}],
+    [renderIcons]
+  ]
+}
 const UpdateContent = (state, newContent) => {
   const bareLinks = getBareLinks(newContent);
   return [
@@ -411,7 +537,7 @@ const ControlModule = (state, type) => {
           placeholder: "Add a Note",
           onConfirm: () => {
             if (state.controls.ADD.inputValue !== "") {
-              window.location.href = `${location.origin}/notes/${state.controls.ADD.inputValue}`
+              window.location = `#${state.controls.ADD.inputValue}`
             };
           },
       },
@@ -535,7 +661,7 @@ const ToggleList = {
         ),
       ]),
       ...model.links.map((link) =>
-        h("a", { href: `/notes/${link}`, class: "toggle-link" }, text(link))
+        h("a", { href: `#${link}`, class: "toggle-link" }, text(link))
       ),
     ]);
   },
@@ -767,7 +893,15 @@ note:
 
 const initState = {
   view: "VIEW",
-  note: input,
+  note: {
+    name: "Loading",
+    content: "Loading...",
+    links: [],
+    backlinks: [],
+    is_public: false,
+    last_modified: new Date().toISOString(),
+    recent_notes: [],
+  },
   controls: {
     active: "",
     SEARCH: {
@@ -789,15 +923,16 @@ const initState = {
 app({
   init: [
     initState,
-    [
-      attachMarkdown,
-      {
-        rawMD: initState.note.content,
-        uniqueLinks: getUniqueLinks(initState.note.content),
-      },
-    ],
+    // [
+    //   attachMarkdown,
+    //   {
+    //     rawMD: initState.note.content,
+    //     uniqueLinks: getUniqueLinks(initState.note.content),
+    //   },
+    // ],
     [renderIcons],
   ],
   view: (state) => main(state),
+  subscriptions: (state) => [onhashchange(HashHandler)],
   node: document.getElementById("app"),
 });

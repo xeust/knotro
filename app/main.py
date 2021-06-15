@@ -18,11 +18,18 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.get("/")
 def html_handler():
     return RedirectResponse(url=f'/notes/{datetime.now().strftime("%Y-%m-%d")}')
-
+    
+@app.get("/notes")
+def notes_handler():
+    note_template = Template((open("note.html").read()))
+    note_css = open("style.css").read()
+    note_js = open("note.js").read()
+    return HTMLResponse(note_template.render(note_js=note_js, css=note_css))
 
 @app.get("/search/{search_term}")
 def search_handler(search_term: str):
     return fetch_notes(search_term)
+
 
 
 #create notes or update backlinks server side if diff in links
