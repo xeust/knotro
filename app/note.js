@@ -38,7 +38,7 @@ const getBareLinks = (rawMD) => {
     .map((each) => each.substring(2, each.length - 2))
     .filter((mappedEach) => mappedEach[0] !== "~");
   return bareLinks;
-}
+};
 
 const getlastEdited = (lastModified) => {
   if (lastModified === "saving" || lastModified === "failed to save") {
@@ -86,7 +86,7 @@ const checkUnsaved = (options) => {
   return { content: note.content, uniqueLinks: getUniqueLinks(note.content) };
 };
 
-// note api 
+// note api
 const getNote = async (name) => {
   const rawResponse = await fetch(`/notes/${name}/?json=true`, {
     method: "GET",
@@ -104,12 +104,14 @@ const getNote = async (name) => {
 
 const getLocalNote = (name) => {
   const note = JSON.parse(localStorage.getItem(name));
-  return (note ? note : defaultNote);
-}
+  return note ? note : null;
+};
 
 const fetchRelatedNotes = async (links, backlinks, recentLinks) => {
-  console.log("related notes...")
-  const relatedLinks = Array.from(new Set([...links, ...backlinks, ...recentLinks]))
+  console.log("related notes...");
+  const relatedLinks = Array.from(
+    new Set([...links, ...backlinks, ...recentLinks])
+  );
   for (const link of relatedLinks) {
     const note = await getNote(link);
     if (note) {
@@ -117,10 +119,9 @@ const fetchRelatedNotes = async (links, backlinks, recentLinks) => {
     }
   }
   return;
-}
+};
 
-
-const updateDatabase = (dispatch, options) => {
+const updateDatabase = async (dispatch, options) => {
   fetch(`/${options.state.note.name}`, {
     method: "PUT",
     headers: {
@@ -128,9 +129,11 @@ const updateDatabase = (dispatch, options) => {
     },
     body: JSON.stringify(options.state.note),
   })
-    .then((res) => {
+    .then(async (res) => {
       if (res.status === 200) {
         console.log("saved");
+        const note = await getNote(options.state.note.name);
+        localStorage.setItem(options.state.note.name, JSON.stringify(note));
         dispatch(SetStatus, new Date().toUTCString());
       }
     })
@@ -162,7 +165,7 @@ const modifyPublic = (dispatch, options) => {
   });
 };
 
-// routing 
+// routing
 const _onhashchange = (dispatch, options) => {
   const handler = () => dispatch(options.action, location.hash);
   addEventListener("hashchange", handler);
@@ -189,7 +192,6 @@ const HashHandler = (state, hash) => {
   ];
 };
 
-
 // effects
 const renderIcons = (dispatch, options) => {
   requestAnimationFrame(() => {
@@ -200,8 +202,8 @@ const renderIcons = (dispatch, options) => {
 const focusInput = (dispatch, options) => {
   requestAnimationFrame(() => {
     document.getElementById(options.id).focus();
-  })
-}
+  });
+};
 
 const attachCodeJar = (dispatch, options) => {
   requestAnimationFrame(() => {
@@ -219,14 +221,13 @@ const attachCodeJar = (dispatch, options) => {
 
     jar.on("change", function (cm, change) {
       dispatch(UpdateContent, cm.getValue());
-      if(!(jar.getTokenTypeAt(jar.getCursor()) === "link")) {
+      if (!(jar.getTokenTypeAt(jar.getCursor()) === "link")) {
         clearTimeout(timeout);
         timeout = setTimeout(function () {
           dispatch(DebounceSave);
-        }, 1500)
+        }, 1500);
       }
     });
-
   });
 };
 
@@ -242,7 +243,6 @@ const attachMarkdown = (dispatch, options) => {
 };
 
 const onEnter = (dispatch, options) => {
-  console.log(options.state);
   const note = getLocalNote(options.state.route);
 
   if (note) {
@@ -255,8 +255,8 @@ const onEnter = (dispatch, options) => {
       container.innerHTML = html;
     });
   }
-  dispatch(NoteInit, note ? note.content: null);
-}
+  dispatch(NoteInit, note ? note : null);
+};
 
 const LazyLoad = async (dispatch, options) => {
   const name = options.state.route;
@@ -266,12 +266,16 @@ const LazyLoad = async (dispatch, options) => {
 
   if (rawResponse) {
     note = rawResponse;
-    if (new Date(note.last_modified) > new Date(options.state.note.last_modified)) {
-      console.log("Lazy load init")
-      dispatch(LazyUpdate, note)
+    if (
+      new Date(note.last_modified) >
+        new Date(options.state.note.last_modified) ||
+      options.emptyNote
+    ) {
+      console.log("Lazy load init");
+      dispatch(LazyUpdate, note);
     }
   }
-}
+};
 
 const DebounceSave = (state) => {
   const bareLinks = getBareLinks(state.note.content);
@@ -290,42 +294,39 @@ const DebounceSave = (state) => {
   return [newState, [updateDatabase, { state: newState }], [renderIcons]];
 };
 
-
-
 // actions
 const LazyUpdate = (state, note) => {
   const links = note.links;
   const backlinks = note.backlinks;
   const recentLinks = note.recent_notes;
   const newState = {
-    ...state
-  }
+    ...state,
+  };
   newState.note = note;
   const content = note.content;
   const uniqueLinks = getUniqueLinks(content);
-  const convertedMarkdown = linkSub(content, uniqueLinks);
-  const html = converter.makeHtml(convertedMarkdown);
-  requestAnimationFrame(() => {
-    const container = document.getElementById("container");
-    container.innerHTML = html;
-  });
+
   fetchRelatedNotes(links, backlinks, recentLinks);
   localStorage.setItem(note.name, JSON.stringify(note));
-  return [newState, [renderIcons]]
-}
-const NoteInit = (state, note) => {
-  console.log()
-  const name = state.route;
-  const newState = {
-    ...state,
-    note: note ? note : state.note
-  }
   return [
     newState,
-    [LazyLoad, {state: newState, LazyUpdate}],
-    [renderIcons]
-  ]
-}
+    [attachMarkdown, { rawMD: content, uniqueLinks }],
+    [updateDatabase, { state: newState }][renderIcons],
+  ];
+};
+
+const NoteInit = (state, note) => {
+  const newState = {
+    ...state,
+    note: note ? note : state.note,
+  };
+  return [
+    newState,
+    [LazyLoad, { state: newState, emptyNote: note ? false : true, LazyUpdate }],
+    [renderIcons],
+  ];
+};
+
 const UpdateContent = (state, newContent) => {
   const bareLinks = getBareLinks(newContent);
   return [
@@ -464,8 +465,8 @@ const UncollapseAndFocus = (state, type = "") => {
     },
     SEARCH: {
       focusId: "search-input",
-    }
-  }
+    },
+  };
   const newState = {
     ...state,
     showLeft: !state.showLeft,
@@ -478,12 +479,12 @@ const UncollapseAndFocus = (state, type = "") => {
     },
   };
   const toFocus = types[type].focusId || "";
-  return [newState, [renderIcons],  toFocus ? [focusInput, {id: toFocus}] : null];
+  return [
+    newState,
+    [renderIcons],
+    toFocus ? [focusInput, { id: toFocus }] : null,
+  ];
 };
-
-
-
-
 
 // Logic related to the control panel, search and add
 
@@ -511,8 +512,8 @@ const UpdateSearchNotes = (state, notes) => ({
 });
 
 const GetSearchLinks = (state) => {
-  return [state, [searchNotes, { state, UpdateSearchNotes }]]
-}
+  return [state, [searchNotes, { state, UpdateSearchNotes }]];
+};
 
 // toggle input OR icon
 
@@ -525,22 +526,22 @@ const GetSearchLinks = (state) => {
 
 const ControlModule = (state, type) => {
   const types = {
-      SEARCH: {
-          iconKey: "search",
-          inputId: "search-input",
-          placeholder: "Search...",
-          onConfirm: GetSearchLinks,
+    SEARCH: {
+      iconKey: "search",
+      inputId: "search-input",
+      placeholder: "Search...",
+      onConfirm: GetSearchLinks,
+    },
+    ADD: {
+      iconKey: "plus",
+      inputId: "new-input",
+      placeholder: "Add a Note",
+      onConfirm: () => {
+        if (state.controls.ADD.inputValue !== "") {
+          window.location = `#${state.controls.ADD.inputValue}`;
+        }
       },
-      ADD: {
-          iconKey: "plus",
-          inputId: "new-input",
-          placeholder: "Add a Note",
-          onConfirm: () => {
-            if (state.controls.ADD.inputValue !== "") {
-              window.location = `#${state.controls.ADD.inputValue}`
-            };
-          },
-      },
+    },
   };
 
   const inputHandler = (state, event) => ({
@@ -548,24 +549,23 @@ const ControlModule = (state, type) => {
     controls: {
       ...state.controls,
       [type]: {
-        inputValue: event.target.value
-      }
-        
-    }
+        inputValue: event.target.value,
+      },
+    },
   });
 
   const open = (state) => {
-      const newState = {
-        ...state,
-        controls: {
-          ...state.controls,
-          active: type,
-          [type]: {
-            inputValue: ""
-          }
-        }
-      }
-      return [newState, [renderIcons], [focusInput, {id: types[type].inputId}]]
+    const newState = {
+      ...state,
+      controls: {
+        ...state.controls,
+        active: type,
+        [type]: {
+          inputValue: "",
+        },
+      },
+    };
+    return [newState, [renderIcons], [focusInput, { id: types[type].inputId }]];
   };
 
   const close = (state) => {
@@ -574,47 +574,44 @@ const ControlModule = (state, type) => {
       controls: {
         ...state.controls,
         active: "",
-      }
-    }
-    return [newState, [renderIcons]]
+      },
+    };
+    return [newState, [renderIcons]];
   };
 
   const isOpen = state.controls.active === type;
 
   if (isOpen) {
     return h("div", { class: "input-wrap" }, [
-        h("input", {
-          class: "input",
-          id: types[type].inputId,
-          placeholder: types[type].placeholder,
-          oninput: inputHandler,
-        }),
-        h(
-          "a",
-          {
-            class: "icon-wrap check",
-            id: "check-search",
-            onclick: types[type].onConfirm,
-          },
-          [h("i", { "data-feather": "check", class: "icon" })]
-        ),
-        h(
-          "a",
-          {
-            class: "icon-wrap x-icon x",
-            onclick: close,
-          },
-          [h("i", { "data-feather": "x", class: "icon" })]
-        ),
-      ]);
+      h("input", {
+        class: "input",
+        id: types[type].inputId,
+        placeholder: types[type].placeholder,
+        oninput: inputHandler,
+      }),
+      h(
+        "a",
+        {
+          class: "icon-wrap check",
+          id: "check-search",
+          onclick: types[type].onConfirm,
+        },
+        [h("i", { "data-feather": "check", class: "icon" })]
+      ),
+      h(
+        "a",
+        {
+          class: "icon-wrap x-icon x",
+          onclick: close,
+        },
+        [h("i", { "data-feather": "x", class: "icon" })]
+      ),
+    ]);
   }
-    return h(
-      "a",
-      { class: "icon-wrap", onclick: open },
-      [h("i", { "data-feather": types[type].iconKey, class: "icon" })]
-    );
+  return h("a", { class: "icon-wrap", onclick: open }, [
+    h("i", { "data-feather": types[type].iconKey, class: "icon" }),
+  ]);
 };
-
 
 // Toggle List Module
 
@@ -622,7 +619,8 @@ const ToggleList = {
   init: (x) => x,
   toggle: (x) => !x,
   model: ({ getter, setter }) => {
-    const Toggle = (state) => setter(state, ToggleList.toggle(getter(state).value));
+    const Toggle = (state) =>
+      setter(state, ToggleList.toggle(getter(state).value));
 
     return (state) => ({
       value: getter(state).value,
@@ -637,28 +635,20 @@ const ToggleList = {
     }
     if (model.value) {
       return h("div", { class: "toggle-list" }, [
-          h("a", { class: "toggle-title collapsed", onclick: model.Toggle }, [
-            h(
-              "div",
-              { class: "title-tag" },
-              text(model.tag)
-            ),
-            h(
-              "div",
-              { class: "icon-wrap mlauto" },
-              [h("i", { "data-feather": "chevron-down", class: "icon" })]
-            )
-          ])
+        h("a", { class: "toggle-title collapsed", onclick: model.Toggle }, [
+          h("div", { class: "title-tag" }, text(model.tag)),
+          h("div", { class: "icon-wrap mlauto" }, [
+            h("i", { "data-feather": "chevron-down", class: "icon" }),
+          ]),
+        ]),
       ]);
     }
     return h("div", { class: "toggle-list" }, [
       h("a", { class: "toggle-title", onclick: model.Toggle }, [
         h("div", { class: "title-tag" }, text(model.tag)),
-        h(
-          "a",
-          { class: "icon-wrap mlauto toggle-chevron-active" },
-          [h("i", { "data-feather": "chevron-up", class: "icon" })]
-        ),
+        h("a", { class: "icon-wrap mlauto toggle-chevron-active" }, [
+          h("i", { "data-feather": "chevron-up", class: "icon" }),
+        ]),
       ]),
       ...model.links.map((link) =>
         h("a", { href: `#${link}`, class: "toggle-link" }, text(link))
@@ -668,7 +658,11 @@ const ToggleList = {
 };
 
 const recentList = ToggleList.model({
-  getter: (state) => ({value: state.collapseRecent, tag: "Recent", links: state.note.recent_notes}),
+  getter: (state) => ({
+    value: state.collapseRecent,
+    tag: "Recent",
+    links: state.note.recent_notes,
+  }),
   setter: (state, toggleRecent) => [
     { ...state, collapseRecent: toggleRecent },
     [renderIcons],
@@ -676,7 +670,11 @@ const recentList = ToggleList.model({
 });
 
 const linksList = ToggleList.model({
-  getter: (state) => ({value: state.collapseLinks, tag: "Links", links: state.note.links}),
+  getter: (state) => ({
+    value: state.collapseLinks,
+    tag: "Links",
+    links: state.note.links,
+  }),
   setter: (state, toggleLinks) => [
     { ...state, collapseLinks: toggleLinks },
     [renderIcons],
@@ -684,7 +682,11 @@ const linksList = ToggleList.model({
 });
 
 const backlinksList = ToggleList.model({
-  getter: (state) => ({value:state.collapseBacklinks, tag: "Backlinks", links: state.note.backlinks}),
+  getter: (state) => ({
+    value: state.collapseBacklinks,
+    tag: "Backlinks",
+    links: state.note.backlinks,
+  }),
   setter: (state, toggleBacklinks) => [
     { ...state, collapseBacklinks: toggleBacklinks },
     [renderIcons],
@@ -692,24 +694,22 @@ const backlinksList = ToggleList.model({
 });
 
 const searchList = ToggleList.model({
-  getter: (state) => ({value:state.collapseSearch, tag: "Search", links:state.searchLinks}),
+  getter: (state) => ({
+    value: state.collapseSearch,
+    tag: "Search",
+    links: state.searchLinks,
+  }),
   setter: (state, toggleSearch) => [
     { ...state, collapseSearch: toggleSearch },
     [renderIcons],
   ],
 });
 
-
-
 // views
 
 const LinkNumberDec = (length, backlinks = true, collapsed) => {
   if (collapsed) {
-    return h(
-      "div",
-      { class: "link-num-dec-collapsed" },
-      text(`${length}`)
-    );
+    return h("div", { class: "link-num-dec-collapsed" }, text(`${length}`));
   }
   return h(
     "div",
@@ -717,7 +717,6 @@ const LinkNumberDec = (length, backlinks = true, collapsed) => {
     text(`${length} ${backlinks ? "back" : ""}link${length !== 1 ? "s" : ""}`)
   );
 };
-
 
 // // left section
 const left = (props) => {
@@ -742,14 +741,14 @@ const left = (props) => {
   }
 
   return h("div", { class: "side-pane left-pane" }, [
-    h("div", { class: "control-wrap"}, [
+    h("div", { class: "control-wrap" }, [
       ControlModule(props, "ADD"),
-      ControlModule(props, "SEARCH")
+      ControlModule(props, "SEARCH"),
     ]),
     // needs to be wrapped otherwise hyperapp errors
-    h("div", {} , [ToggleList.view(searchList(props))]),
+    h("div", {}, [ToggleList.view(searchList(props))]),
     // needs to be wrapped otherwise hyperapp errors
-    h("div", {} , [ToggleList.view(recentList(props))]),
+    h("div", {}, [ToggleList.view(recentList(props))]),
     h("div", { class: "footer" }, [
       h("a", { class: "icon-wrap mlauto", onclick: ToggleLeft }, [
         h("i", { "data-feather": "chevrons-left", class: "icon" }),
@@ -773,8 +772,8 @@ const right = (props) => {
 
   return h("div", { class: "side-pane right-pane" }, [
     h("div", { class: "right-content-wrap" }, [
-      h("div", {} , [ToggleList.view(linksList(props))]),
-      h("div", {} , [ToggleList.view(backlinksList(props))]),
+      h("div", {}, [ToggleList.view(linksList(props))]),
+      h("div", {}, [ToggleList.view(backlinksList(props))]),
     ]),
     LinkNumberDec(props.note.links.length, false, false),
     LinkNumberDec(props.note.backlinks.length, true, false),
@@ -788,33 +787,31 @@ const right = (props) => {
 
 const editBtn = (props) => {
   return h("div", {}, [
-      h("a", { class: "icon-wrap", onclick: View }, [
-        h("i", { "data-feather": "eye", class: "icon" }),
-      ])
-    ]);
+    h("a", { class: "icon-wrap", onclick: View }, [
+      h("i", { "data-feather": "eye", class: "icon" }),
+    ]),
+  ]);
 };
-
 
 const viewBtn = (props) => {
   return h("a", { class: "icon-wrap", onclick: Edit }, [
-      h("i", { "data-feather": "edit-2", class: "icon" }),
-    ]);
+    h("i", { "data-feather": "edit-2", class: "icon" }),
+  ]);
 };
 
 const lockBtn = (props) => {
   return h("a", { class: "icon-wrap", onclick: Share }, [
-      h("i", { "data-feather": "lock", class: "icon" }),
-    ]);
+    h("i", { "data-feather": "lock", class: "icon" }),
+  ]);
 };
 
 const unlockBtn = (props) => {
   return h("div", {}, [
-      h("a", { class: "icon-wrap", onclick: Share }, [
-        h("i", { "data-feather": "unlock", class: "icon" }),
-      ]),
-    ]);
+    h("a", { class: "icon-wrap", onclick: Share }, [
+      h("i", { "data-feather": "unlock", class: "icon" }),
+    ]),
+  ]);
 };
-
 
 const central = (props) => {
   const publicUrl = `${location.origin}/public/${props.note.name}`;
@@ -837,11 +834,11 @@ const central = (props) => {
   const rightPadding = props.showRight ? "pd-r-sm" : "pd-r-md";
 
   if (oneExpandedSide) {
-    centralWidth = "cp-md"
+    centralWidth = "cp-md";
   } else if (bothExpandedSides) {
-    centralWidth = "cp-sm"
+    centralWidth = "cp-sm";
   } else {
-    centralWidth = "cp-lg"
+    centralWidth = "cp-lg";
   }
 
   return h("div", { class: `central-pane  ${centralWidth}` }, [
@@ -851,21 +848,25 @@ const central = (props) => {
         h("div", { class: "titlebar-right" }, [
           props.view === "EDIT" ? editBtn(props) : viewBtn(props),
           props.note.is_public ? unlockBtn(props) : lockBtn(props),
-        ])
+        ]),
       ]),
       h("div", { class: "content-wrapper" }, [
         h("div", { id: "container", class: "main" }),
       ]),
     ]),
     h("div", { class: `footer` }, [
-      h("div", { class: `footer-content-wrap ${leftPadding} ${rightPadding}` }, [
-        h(
-          "div",
-          { class: "last-modified" },
-          text(`${getlastEdited(props.note.last_modified)}`)
-        ),
-        publicContent
-      ])
+      h(
+        "div",
+        { class: `footer-content-wrap ${leftPadding} ${rightPadding}` },
+        [
+          h(
+            "div",
+            { class: "last-modified" },
+            text(`${getlastEdited(props.note.last_modified)}`)
+          ),
+          publicContent,
+        ]
+      ),
     ]),
   ]);
 };
@@ -898,6 +899,8 @@ const initState = {
     content: "Loading...",
     links: [],
     backlinks: [],
+    base_url: `https://${window.location.host}/`,
+    recent_index: new Date().getTime(),
     is_public: false,
     last_modified: new Date().toISOString(),
     recent_notes: [],
@@ -909,7 +912,7 @@ const initState = {
     },
     ADD: {
       inputValue: "",
-    }
+    },
   },
   searchLinks: [],
   showLeft: true,

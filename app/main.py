@@ -53,11 +53,12 @@ async def read_note(note_name: str, json: bool = False):
     
     if json:
         return note_dict
-    
-    note_template = Template((open("note.html").read()))
-    note_css = open("style.css").read()
-    note_js = open("note.js").read()
-    return HTMLResponse(note_template.render(note_data=note_dict, note_js=note_js, css=note_css))
+
+    return note_dict    
+    # note_template = Template((open("note.html").read()))
+    # note_css = open("style.css").read()
+    # note_js = open("note.js").read()
+    # return HTMLResponse(note_template.render(note_data=note_dict, note_js=note_js, css=note_css))
 
 
 @app.get("/public/{note_name}")
