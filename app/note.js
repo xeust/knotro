@@ -791,8 +791,10 @@ const right = (props) => {
       ]),
 
     ]),
-    LinkNumberDec(props.note.links.length, false, false),
-    LinkNumberDec(props.note.backlinks.length, true, false),
+    h("div", {class:"link-desc"}, [
+      LinkNumberDec(props.note.links.length, false, false),
+      LinkNumberDec(props.note.backlinks.length, true, false),
+    ]),
     h("div", { class: "footer" }, [
       h("a", { class: "icon-wrap", onclick: ToggleRight }, [
         h("i", { "data-feather": "chevrons-right", class: "icon" }),

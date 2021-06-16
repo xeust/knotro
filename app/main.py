@@ -17,7 +17,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
 def html_handler():
-    return RedirectResponse(url=f'/notes/{datetime.now().strftime("%Y-%m-%d")}')
+    return RedirectResponse(url=f'/notes#{datetime.now().strftime("%Y-%m-%d")}')
     
 @app.get("/notes")
 def notes_handler():
@@ -51,14 +51,7 @@ async def read_note(note_name: str, json: bool = False):
     note_dict["base_url"] = base_url
     note_dict["recent_notes"] = recent_notes()
     
-    if json:
-        return note_dict
-
     return note_dict    
-    # note_template = Template((open("note.html").read()))
-    # note_css = open("style.css").read()
-    # note_js = open("note.js").read()
-    # return HTMLResponse(note_template.render(note_data=note_dict, note_js=note_js, css=note_css))
 
 
 @app.get("/public/{note_name}")
