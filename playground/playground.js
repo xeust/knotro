@@ -441,8 +441,8 @@ const ControlModule = (state, type) => {
       placeholder: "Add a Note",
       onConfirm: () => {
         if (state.controls.ADD.inputValue !== "") {
-          window.location.href = `#${state.controls.ADD.inputValue}`;
-          window.location.href = `${location.origin}/notes/${state.controls.ADD.inputValue}`;
+          window.location.replace(`${window.location.origin}/playground#${state.controls.ADD.inputValue}`);
+          window.location.reload();
         }
       },
     },
@@ -707,11 +707,12 @@ const left = (props) => {
   }
 
   return h("div", { class: "side-pane left-pane" }, [
+    h("div", { class: "control-wrap" }, [
+      ControlModule(props, "ADD"),
+      ControlModule(props, "SEARCH"),
+    ]),
     h ("div", {class: "lc"}, [
-      h("div", { class: "control-wrap" }, [
-        ControlModule(props, "ADD"),
-        ControlModule(props, "SEARCH"),
-      ]),
+
       // needs to be wrapped otherwise hyperapp errors
       h("div", {}, [ToggleList.view(searchList(props))]),
       // needs to be wrapped otherwise hyperapp errors
@@ -750,8 +751,10 @@ const right = (props) => {
       ]),
 
     ]),
-    LinkNumberDec(props.note.links.length, false, false),
-    LinkNumberDec(props.note.backlinks.length, true, false),
+    h("div", {class: "links-desc"}, [
+      LinkNumberDec(props.note.links.length, false, false),
+      LinkNumberDec(props.note.backlinks.length, true, false),
+    ]),
     h("div", { class: "footer" }, [
       h("a", { class: "icon-wrap", onclick: ToggleRight }, [
         h("i", { "data-feather": "chevrons-right", class: "icon" }),

@@ -46,6 +46,7 @@ body {
 }
 
 .rc {
+  height: calc(100% - 48px);
   overflow-y: auto;
 }
 .right-pane {

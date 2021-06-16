@@ -755,11 +755,12 @@ const left = (props) => {
   }
 
   return h("div", { class: "side-pane left-pane" }, [
+    h("div", { class: "control-wrap" }, [
+      ControlModule(props, "ADD"),
+      ControlModule(props, "SEARCH"),
+    ]),
     h("div", {class:"lc"}, [
-      h("div", { class: "control-wrap" }, [
-        ControlModule(props, "ADD"),
-        ControlModule(props, "SEARCH"),
-      ]),
+
       // needs to be wrapped otherwise hyperapp errors
       h("div", {}, [ToggleList.view(searchList(props))]),
       // needs to be wrapped otherwise hyperapp errors
