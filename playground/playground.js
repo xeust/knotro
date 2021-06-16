@@ -230,7 +230,7 @@ const attachCodeJar = (dispatch, options) => {
 
     jar.on("change", function (cm, change) {
       dispatch(
-        UpdateContent, cm.getValue(), options.state.route
+        UpdateContent, cm.getValue()
       );
       if(!(jar.getTokenTypeAt(jar.getCursor()) === "link")) {
         clearTimeout(timeout);
@@ -251,7 +251,7 @@ const attachMarkdown = (dispatch, options) => {
     const container = document.getElementById("container");
     container.innerHTML = html;
   });
-  dispatch(UpdateContent, content, options.state.route);
+  dispatch(UpdateContent, content);
 };
 
 const saveNote = (dispatch, options) => {
@@ -276,10 +276,13 @@ const DebounceSave = (state) => {
 };
 
 
-const UpdateContent = (state, newContent, newName) => {
+const UpdateContent = (state, newContent) => {
+
+  const newName = state.route;
   const bareLinks = getBareLinks(newContent);
   const note = JSON.parse(localStorage.getItem(newName));
   const recentLinks = recentNotes();
+
   const updatedBacklinks = note ? note.backlinks : [];
   const newState = {
     ...state,
@@ -288,14 +291,14 @@ const UpdateContent = (state, newContent, newName) => {
       ...state.note,
       name: newName,
       content: newContent,
-      last_modified: new Date().toISOString(),
+      last_modified: "saving",
       links: bareLinks,
       backlinks: updatedBacklinks,
       recent_notes: [newName, ...recentLinks.filter((name) => name != newName)],
     },
   };
   
-  return [newState, [renderIcons]];
+  return [newState, [saveNote, { state: newState }], [renderIcons]];
 };
 
 
@@ -402,7 +405,7 @@ const searchNotes = async (dispatch, options) => {
       links.push(note);
     }
   }
-  console.log(notes, links, searchTerm);
+
   dispatch(UpdateSearchNotes, links);
 };
 
