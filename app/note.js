@@ -104,9 +104,9 @@ const getNote = async (name) => {
 };
 
 const getLocalNote = (name) => {
-  console.log(name);
+
   const note = JSON.parse(localStorage.getItem(name));
-  console.log();
+
   return note ? note : null;
 };
 
@@ -178,6 +178,7 @@ const _onhashchange = (dispatch, options) => {
 
 const onhashchange = (action) => [_onhashchange, { action }];
 const HashHandler = (state, hash) => {
+
   const newState = {
     ...state,
     route:
@@ -537,14 +538,17 @@ const ControlModule = (state, type) => {
       inputId: "search-input",
       placeholder: "Search...",
       onConfirm: GetSearchLinks,
+
     },
     ADD: {
       iconKey: "plus",
       inputId: "new-input",
       placeholder: "Add a Note",
+
       onConfirm: () => {
         if (state.controls.ADD.inputValue !== "") {
-          window.location = `#${state.controls.ADD.inputValue}`;
+          window.location.replace(`${window.location.origin}/notes#${state.controls.ADD.inputValue}`);
+          window.location.reload();
         }
       },
     },
@@ -796,9 +800,12 @@ const right = (props) => {
       LinkNumberDec(props.note.backlinks.length, true, false),
     ]),
     h("div", { class: "footer" }, [
-      h("a", { class: "icon-wrap", onclick: ToggleRight }, [
-        h("i", { "data-feather": "chevrons-right", class: "icon" }),
+      h ("div", {}, [
+        h("a", { class: "icon-wrap", onclick: ToggleRight }, [
+          h("i", { "data-feather": "chevrons-right", class: "icon" }),
+        ]),
       ]),
+
     ]),
   ]);
 };

@@ -53,6 +53,9 @@ async def read_note(note_name: str, json: bool = False):
     
     return note_dict    
 
+@app.get("/recents")
+def read_recents():
+    return recent_notes()
 
 @app.get("/public/{note_name}")
 async def read_public_note(note_name: str, json: bool = False):

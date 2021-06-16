@@ -90,6 +90,7 @@ def db_update_note(note: Note):
     note_dict = note.dict()
     note_dict["content"] = bleach.clean(note_dict["content"])
     note_dict["last_modified"] = str(datetime.now(timezone.utc).isoformat())
+    note_dict["recent_index"] = datetime.utcnow().timestamp()
     notes.put(note_dict, urlsafe_key(note.name))
     return Note(**note_dict)
 
