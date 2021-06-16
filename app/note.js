@@ -104,7 +104,6 @@ const getNote = async (name) => {
 };
 
 const getLocalNote = (name) => {
-
   const note = JSON.parse(localStorage.getItem(name));
 
   return note ? note : null;
@@ -168,6 +167,25 @@ const modifyPublic = (dispatch, options) => {
   });
 };
 
+const _onresize = (dispatch, options) => {
+  const handler = () => dispatch(options.action);
+  addEventListener("resize", handler);
+  requestAnimationFrame(handler);
+  return () => removeEventListener("resize", handler);
+};
+
+const onresize = (action) => [_onresize, { action }];
+
+const ResizeHandler = (state) => {
+  console.log("Resize triggered...", window.screen.width, window.screen.height);
+  const newState = {
+    ...state,
+    isMobile: Math.min(window.screen.width, window.screen.height) < 768,
+    showLeft: false
+  };
+  return [newState];
+};
+
 // routing
 const _onhashchange = (dispatch, options) => {
   const handler = () => dispatch(options.action, location.hash);
@@ -175,10 +193,8 @@ const _onhashchange = (dispatch, options) => {
   requestAnimationFrame(handler);
   return () => removeEventListener("hashchange", handler);
 };
-
 const onhashchange = (action) => [_onhashchange, { action }];
 const HashHandler = (state, hash) => {
-
   const newState = {
     ...state,
     route:
@@ -250,7 +266,7 @@ const attachMarkdown = (dispatch, options) => {
 
 const onEnter = (dispatch, options) => {
   const note = getLocalNote(options.state.route);
-
+  console.log(note);
   if (note) {
     const content = note.content;
     const uniqueLinks = getUniqueLinks(content);
@@ -538,7 +554,6 @@ const ControlModule = (state, type) => {
       inputId: "search-input",
       placeholder: "Search...",
       onConfirm: GetSearchLinks,
-
     },
     ADD: {
       iconKey: "plus",
@@ -547,7 +562,9 @@ const ControlModule = (state, type) => {
 
       onConfirm: () => {
         if (state.controls.ADD.inputValue !== "") {
-          window.location.replace(`${window.location.origin}/notes#${state.controls.ADD.inputValue}`);
+          window.location.replace(
+            `${window.location.origin}/notes#${state.controls.ADD.inputValue}`
+          );
           window.location.reload();
         }
       },
@@ -734,6 +751,59 @@ const LinkNumberDec = (length, backlinks = true, collapsed) => {
 
 // // left section
 const left = (props) => {
+  const publicUrl = `${location.origin}/public/${props.note.name}`;
+
+  const publicContent =
+    props.note.is_public === true
+      ? h("div", { class: "url-content mlauto" }, [
+          h("div", { class: "url-tag" }, text(`public url:${" "}`)),
+          h(
+            "a",
+            { class: "url-wrapper ", href: publicUrl },
+            text(
+              props.note.name.length > 4
+                ? `/public/${props.note.name.substring(0, 4)}...`
+                : publicUrl
+            )
+          ),
+        ])
+      : h("div", { class: "url-content mlauto" }, [
+          h("div", { class: "url-tag " }, text("")),
+        ]);
+
+  if (props.isMobile) {
+    if (props.showLeft) {
+      
+      return h("div", { class: "side-pane left-pane side-pane-mb" }, [
+        h("div", { class: "control-wrap" }, [
+          ControlModule(props, "ADD"),
+          ControlModule(props, "SEARCH"),
+        ]),
+        h("div", { class: "lc" }, [
+          // needs to be wrapped otherwise hyperapp errors
+          h("div", {}, [ToggleList.view(searchList(props))]),
+          // needs to be wrapped otherwise hyperapp errors
+          h("div", {}, [ToggleList.view(recentList(props))]),
+          // needs to be wrapped otherwise hyperapp errors
+          h("div", {}, [ToggleList.view(linksList(props))]),
+          // needs to be wrapped otherwise hyperapp errors
+          h("div", {}, [ToggleList.view(backlinksList(props))]),
+        ]),
+        h("div", { class: "link-desc" }, [
+          LinkNumberDec(props.note.links.length, false, false),
+          LinkNumberDec(props.note.backlinks.length, true, false),
+        ]),
+        h("div", { class: "footer" }, [
+          h("a", { class: "icon-wrap", onclick: ToggleLeft }, [
+            h("i", { "data-feather": "chevrons-left", class: "icon" }),
+          ]),
+          publicContent,
+        ]),
+      ]);
+    }
+    return h("div", {}, text(""));
+  }
+
   if (!props.showLeft) {
     return h("div", { class: "side-pane-collapsed left-pane" }, [
       h(
@@ -759,13 +829,11 @@ const left = (props) => {
       ControlModule(props, "ADD"),
       ControlModule(props, "SEARCH"),
     ]),
-    h("div", {class:"lc"}, [
-
+    h("div", { class: "lc" }, [
       // needs to be wrapped otherwise hyperapp errors
       h("div", {}, [ToggleList.view(searchList(props))]),
       // needs to be wrapped otherwise hyperapp errors
       h("div", {}, [ToggleList.view(recentList(props))]),
-
     ]),
     h("div", { class: "footer" }, [
       h("a", { class: "icon-wrap mlauto", onclick: ToggleLeft }, [
@@ -776,6 +844,9 @@ const left = (props) => {
 };
 
 const right = (props) => {
+  if (props.isMobile) {
+    return h("div", {}, text(""));
+  }
   if (!props.showRight) {
     return h("div", { class: "side-pane-collapsed right-pane" }, [
       LinkNumberDec(props.note.links.length, false, true),
@@ -789,24 +860,22 @@ const right = (props) => {
   }
 
   return h("div", { class: "side-pane right-pane" }, [
-    h("div", {class: "rc"}, [
+    h("div", { class: "rc" }, [
       h("div", { class: "right-content-wrap" }, [
         h("div", {}, [ToggleList.view(linksList(props))]),
         h("div", {}, [ToggleList.view(backlinksList(props))]),
       ]),
-
     ]),
-    h("div", {class:"link-desc"}, [
+    h("div", { class: "link-desc" }, [
       LinkNumberDec(props.note.links.length, false, false),
       LinkNumberDec(props.note.backlinks.length, true, false),
     ]),
     h("div", { class: "footer" }, [
-      h ("div", {}, [
+      h("div", {}, [
         h("a", { class: "icon-wrap", onclick: ToggleRight }, [
           h("i", { "data-feather": "chevrons-right", class: "icon" }),
         ]),
       ]),
-
     ]),
   ]);
 };
@@ -877,7 +946,38 @@ const central = (props) => {
   } else {
     centralWidth = "cp-lg";
   }
-
+  if (props.isMobile) {
+    let showContent = "content-mb-open "
+    let contentMb;
+    if (props.showLeft) {
+      showContent = "content-mb-closed";
+      contentMb = "footer-mb";
+    }
+    return h("div", {class: `${showContent}`}, [
+      h("div", { class: `central-mb ` }, [
+        h("div", { class: "title-bar title-bar-mb" }, [
+          h("div", { class: "titlebar-title" }, text(props.note.name)),
+          h("div", { class: "titlebar-right" }, [
+            props.view === "EDIT" ? editBtn(props) : viewBtn(props),
+            props.note.is_public ? unlockBtn(props) : lockBtn(props),
+          ]),
+        ]),
+        h("div", { class: "content-wrapper" }, [
+          h("div", { id: "container", class: "main" }),
+        ]),
+      ]),
+      h("div", { class: `footer footer-mb` }, [
+        h("a", { class: "icon-wrap", onclick: ToggleLeft }, [
+          h("i", { "data-feather": "chevrons-right", class: "icon" }),
+        ]),
+        h(
+          "div",
+          { class: "last-modified mlauto last-modified-mb " },
+          text(`${getlastEdited(props.note.last_modified)}`)
+        ),
+      ]),
+    ]);
+  }
   return h("div", { class: `central-pane  ${centralWidth}` }, [
     h("div", { class: `central-content-wrap ${leftPadding} ${rightPadding}` }, [
       h("div", { class: "title-bar" }, [
@@ -958,6 +1058,7 @@ const initState = {
   collapseLinks: false,
   collapseBacklinks: false,
   collapseSearch: false,
+  isMobile: Math.min(window.screen.width, window.screen.height) < 768,
 };
 
 app({
@@ -973,6 +1074,9 @@ app({
     [renderIcons],
   ],
   view: (state) => main(state),
-  subscriptions: (state) => [onhashchange(HashHandler)],
+  subscriptions: (state) => [
+    onhashchange(HashHandler),
+    onresize(ResizeHandler),
+  ],
   node: document.getElementById("app"),
 });
