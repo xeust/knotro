@@ -216,7 +216,6 @@ a.toggle-title:hover {
 }
 
 a.toggle-link {
-  display: flex;
   align-items: center;
   height: 30px;
   padding-left: 12px;
@@ -376,6 +375,10 @@ a.url-wrapper {
   color: #98b9f9;
   text-decoration: none;
   font-family: Roboto Mono, Courier, monospace;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 80%;
 }
 
 a.url-wrapper:hover {
@@ -466,12 +469,15 @@ ul {
 }
 .title-bar-mb {
   width: 90vw;
+  padding-left: 5vw;
+  padding-right: 5vw;
 }
+
 .central-mb {
   padding-left: 5vw;
   padding-right: 5vw;
   overflow-y: auto;
-  max-height: calc(100% - 40px);
+  max-height: calc(100% - 120px);
 }
 .content-mb-open {
   max-height: 100vh;
@@ -489,4 +495,28 @@ ul {
 }
 .last-modified-mb {
   padding-right: 5vw;
+}
+.url-tag-mb {
+  max-width: 100%;
+}
+.url-content-mb {
+  max-width: 60%;
+}
+a.url-wrapper-mb {
+  height: 24px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #98b9f9;
+  text-decoration: none;
+  font-family: Roboto Mono, Courier, monospace;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 50%;
+}
+.ellipsis {
+  max-width: 90%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }

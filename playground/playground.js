@@ -174,6 +174,25 @@ const getlastEdited = (lastModified) => {
   }
 };
 
+const _onresize = (dispatch, options) => {
+  const handler = () => dispatch(options.action);
+  addEventListener("resize", handler);
+  requestAnimationFrame(handler);
+  return () => removeEventListener("resize", handler);
+};
+
+const onresize = (action) => [_onresize, { action }];
+
+const ResizeHandler = (state) => {
+  console.log("Resize triggered...");
+  const newState = {
+    ...state,
+    isMobile: Math.min(window.innerWidth, window.innerHeight) < 768,
+    showLeft: false
+  };
+  return [newState];
+};
+
 // routing
 const _onhashchange = (dispatch, options) => {
   const handler = () => dispatch(options.action, location.hash);
@@ -764,6 +783,7 @@ const right = (props) => {
 };
 
 const main = (props) => {
+  console.log(props.showLeft, props.isMobile)
   return h("div", { class: "wrapper" }, [
     left(props),
     central(props),
@@ -803,7 +823,7 @@ const initState = {
       inputValue: "",
     },
   },
-  showLeft: true,
+  showLeft: false,
   showRight: true,
   collapseRecent: false,
   collapseLinks: false,
@@ -812,11 +832,12 @@ const initState = {
   searchTerm: "",
   searchLinks: [],
   route: "",
+  isMobile: Math.min(window.screen.width, window.screen.height) < 768,
 };
 
 app({
   init: [initState],
   view: (state) => main(state),
-  subscriptions: (state) => [onhashchange(HashHandler)],
+  subscriptions: (state) => [onhashchange(HashHandler), onresize(ResizeHandler)],
   node: document.getElementById("app"),
 });

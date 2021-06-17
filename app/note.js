@@ -180,7 +180,7 @@ const ResizeHandler = (state) => {
   console.log("Resize triggered...", window.screen.width, window.screen.height);
   const newState = {
     ...state,
-    isMobile: Math.min(window.screen.width, window.screen.height) < 768,
+    isMobile: Math.min(window.innerWidth, window.innerHeight) < 768,
     showLeft: false
   };
   return [newState];
@@ -680,8 +680,8 @@ const ToggleList = {
       ...model.links.map((link) =>
         h(
           "a",
-          { href: `#${link}`, class: "toggle-link" },
-          text(link.length > 25 ? link.substring(0, 25) + "..." : link)
+          { href: `#${link}`, class: "toggle-link ellipsis" },
+          text(link)
         )
       ),
     ]);
@@ -755,15 +755,13 @@ const left = (props) => {
 
   const publicContent =
     props.note.is_public === true
-      ? h("div", { class: "url-content mlauto" }, [
-          h("div", { class: "url-tag" }, text(`public url:${" "}`)),
+      ? h("div", { class: "url-content mlauto url-content-mb" }, [
+          h("div", { class: "url-tag url-tag-mb" }, text(`public url:${" "}`)),
           h(
             "a",
-            { class: "url-wrapper ", href: publicUrl },
+            { class: "url-wrapper url-wrapper-mb", href: publicUrl },
             text(
-              props.note.name.length > 4
-                ? `/public/${props.note.name.substring(0, 4)}...`
-                : publicUrl
+              publicUrl
             )
           ),
         ])
@@ -919,12 +917,7 @@ const central = (props) => {
             "a",
             { class: "url-wrapper ", href: publicUrl },
             text(
-              props.note.name.length > 25
-                ? `${location.origin}/public/${props.note.name.substring(
-                    0,
-                    4
-                  )}...`
-                : publicUrl
+              publicUrl
             )
           ),
         ])
@@ -954,14 +947,14 @@ const central = (props) => {
       contentMb = "footer-mb";
     }
     return h("div", {class: `${showContent}`}, [
-      h("div", { class: `central-mb ` }, [
-        h("div", { class: "title-bar title-bar-mb" }, [
-          h("div", { class: "titlebar-title" }, text(props.note.name)),
-          h("div", { class: "titlebar-right" }, [
-            props.view === "EDIT" ? editBtn(props) : viewBtn(props),
-            props.note.is_public ? unlockBtn(props) : lockBtn(props),
-          ]),
+      h("div", { class: "title-bar title-bar-mb" }, [
+        h("div", { class: "titlebar-title" }, text(props.note.name)),
+        h("div", { class: "titlebar-right" }, [
+          props.view === "EDIT" ? editBtn(props) : viewBtn(props),
+          props.note.is_public ? unlockBtn(props) : lockBtn(props),
         ]),
+      ]),
+      h("div", { class: `central-mb ` }, [
         h("div", { class: "content-wrapper" }, [
           h("div", { id: "container", class: "main" }),
         ]),

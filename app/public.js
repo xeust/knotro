@@ -118,7 +118,7 @@ const ToggleList = {
         ),
       ]),
       ...model.links.map((link) =>
-        h("a", { href: `/public/${link}`, class: "toggle-link" }, text(link))
+        h("a", { href: `/public/${link}`, class: "toggle-link ellipsis" }, text(link))
       ),
     ]);
   },
@@ -178,6 +178,9 @@ const left = (props) => {
         h("div", {} , [ToggleList.view(linksList(props))]),
         h("div", {} , [ToggleList.view(backlinksList(props))]),
       ]),
+
+    ]),
+    h("div", {class:"link-desc"}, [
       LinkNumberDec(props.note.links.length, false, false),
       LinkNumberDec(props.note.backlinks.length, true, false),
     ]),
