@@ -520,3 +520,6 @@ a.url-wrapper-mb {
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+.sponsor-mb {
+  padding-right: 5vw;
+}

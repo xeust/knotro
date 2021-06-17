@@ -58,6 +58,24 @@ const attachMarkdown = (dispatch, options) => {
   });
 };
 
+const _onresize = (dispatch, options) => {
+  const handler = () => dispatch(options.action);
+  addEventListener("resize", handler);
+  requestAnimationFrame(handler);
+  return () => removeEventListener("resize", handler);
+};
+
+const onresize = (action) => [_onresize, { action }];
+
+const ResizeHandler = (state) => {
+  console.log("Resize triggered...", window.screen.width, window.screen.height);
+  const newState = {
+    ...state,
+    isMobile: Math.min(window.innerWidth, window.innerHeight) < 768,
+    showLeft: false
+  };
+  return [newState];
+};
 
 
 // actions
@@ -72,6 +90,8 @@ const ToggleLeft = (state) => {
 
   return [newState, [renderIcons]];
 }
+
+
 
 // Toggle List Module
 
@@ -159,6 +179,28 @@ const LinkNumberDec = (length, backlinks = true, collapsed) => {
 // left section
 
 const left = (props) => {
+  if (props.isMobile) {
+    if (props.showLeft) {
+      return h("div", { class: "side-pane left-pane side-pane-mb" }, [
+        h("div", { class: "lc" }, [
+          // needs to be wrapped otherwise hyperapp errors
+          h("div", {}, [ToggleList.view(linksList(props))]),
+          // needs to be wrapped otherwise hyperapp errors
+          h("div", {}, [ToggleList.view(backlinksList(props))]),
+        ]),
+        h("div", { class: "link-desc" }, [
+          LinkNumberDec(props.note.links.length, false, false),
+          LinkNumberDec(props.note.backlinks.length, true, false),
+        ]),
+        h("div", { class: "footer" }, [
+          h("a", { class: "icon-wrap", onclick: ToggleLeft }, [
+            h("i", { "data-feather": "chevrons-left", class: "icon" }),
+          ]),
+        ]),
+      ]);
+    }
+    return h("div", {}, text(""))
+  }
   if (!props.showLeft) {
     return h("div", { class: "side-pane-collapsed left-pane" }, [
       LinkNumberDec(props.note.links.length, false, true),
@@ -194,6 +236,9 @@ const left = (props) => {
 };
 
 const right = (props) => {
+  if (props.isMobile) {
+    return h("div", {}, text(""))
+  }
   return h("div", { class: `footer public-r-f` }, [
     h("div", { class: `footer-content-wrap` }, [
     ])
@@ -221,6 +266,30 @@ const central = (props) => {
     centralWidth = "cp-sm"
   } else {
     centralWidth = "cp-lg"
+  }
+
+  if (props.isMobile) {
+    let showContent = "content-mb-open"
+    let contentMb;
+    if (props.showLeft) {
+      showContent = "content-mb-closed";
+      contentMb = "footer-mb";
+    }
+    return h("div", {class: `${showContent}`}, [
+      h("div", { class: "title-bar title-bar-mb" }, [
+        h("div", { class: "titlebar-title" }, text(props.note.name)),
+      ]),
+      h("div", { class: `central-mb ` }, [
+        h("div", { class: "content-wrapper" }, [
+          h("div", { id: "container", class: "main" }),
+        ]),
+      ]),
+      h("div", { class: `footer footer-mb` }, [
+        h("a", { class: "icon-wrap", onclick: ToggleLeft }, [
+          h("i", { "data-feather": "chevrons-right", class: "icon" }),
+        ]),
+      ]),
+    ]);
   }
 
   return h("div", { class: `central-pane  ${centralWidth}` }, [
@@ -264,6 +333,7 @@ const initState = {
   showRight: true,
   collapseLinks: false,
   collapseBacklinks: false,
+  isMobile: Math.min(window.screen.width, window.screen.height) < 768,
 };
 
 app({
@@ -279,5 +349,8 @@ app({
     [renderIcons],
   ],
   view: (state) => main(state),
+  subscriptions: (state) => [
+    onresize(ResizeHandler),
+  ],
   node: document.getElementById("app"),
 });
