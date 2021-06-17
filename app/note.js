@@ -181,7 +181,7 @@ const ResizeHandler = (state) => {
   const newState = {
     ...state,
     isMobile: Math.min(window.innerWidth, window.innerHeight) < 768,
-    showLeft: false
+    showLeft: false,
   };
   return [newState];
 };
@@ -231,6 +231,7 @@ const attachCodeJar = (dispatch, options) => {
   requestAnimationFrame(() => {
     let timeout = null;
     var container = document.getElementById("container");
+
     container.innerHTML = "";
     jar = CodeMirror(container, {
       value: options.content,
@@ -238,11 +239,18 @@ const attachCodeJar = (dispatch, options) => {
       lineWrapping: true,
       viewportMargin: Infinity,
       autoCloseBrackets: true,
+      autofocus: true,
       mode: "markdown",
     });
+    if (options.cursorPos) {
+      jar.setSelection(options.cursorPos, options.cursorPos, { scroll: true });
+    }
 
     jar.on("change", function (cm, change) {
-      dispatch(UpdateContent, cm.getValue());
+      dispatch(UpdateContent, {
+        newContent: cm.getValue(),
+        cursorPos: jar.getCursor(),
+      });
       if (!(jar.getTokenTypeAt(jar.getCursor()) === "link")) {
         clearTimeout(timeout);
         timeout = setTimeout(function () {
@@ -350,8 +358,9 @@ const NoteInit = (state, note) => {
   ];
 };
 
-const UpdateContent = (state, newContent) => {
+const UpdateContent = (state, { newContent, cursorPos }) => {
   const bareLinks = getBareLinks(newContent);
+
   return [
     {
       ...state,
@@ -365,6 +374,7 @@ const UpdateContent = (state, newContent) => {
           ...state.note.recent_notes.filter((name) => name != state.note.name),
         ],
       },
+      cursorPos,
     },
     [renderIcons],
   ];
@@ -413,7 +423,10 @@ const Edit = (state) => {
   };
   return [
     newState,
-    [attachCodeJar, { content: state.note.content }],
+    [
+      attachCodeJar,
+      { content: state.note.content, cursorPos: state.cursorPos },
+    ],
     [renderIcons],
   ];
 };
@@ -678,11 +691,7 @@ const ToggleList = {
         ]),
       ]),
       ...model.links.map((link) =>
-        h(
-          "a",
-          { href: `#${link}`, class: "toggle-link ellipsis" },
-          text(link)
-        )
+        h("a", { href: `#${link}`, class: "toggle-link ellipsis" }, text(link))
       ),
     ]);
   },
@@ -760,9 +769,7 @@ const left = (props) => {
           h(
             "a",
             { class: "url-wrapper url-wrapper-mb", href: publicUrl },
-            text(
-              publicUrl
-            )
+            text(publicUrl)
           ),
         ])
       : h("div", { class: "url-content mlauto" }, [
@@ -771,7 +778,6 @@ const left = (props) => {
 
   if (props.isMobile) {
     if (props.showLeft) {
-      
       return h("div", { class: "side-pane left-pane side-pane-mb" }, [
         h("div", { class: "control-wrap" }, [
           ControlModule(props, "ADD"),
@@ -913,13 +919,7 @@ const central = (props) => {
     props.note.is_public === true
       ? h("div", { class: "url-content mlauto" }, [
           h("div", { class: "url-tag" }, text(`public url:${" "}`)),
-          h(
-            "a",
-            { class: "url-wrapper ", href: publicUrl },
-            text(
-              publicUrl
-            )
-          ),
+          h("a", { class: "url-wrapper ", href: publicUrl }, text(publicUrl)),
         ])
       : h("div", { class: "url-content mlauto" }, [
           h("div", { class: "url-tag " }, text("")),
@@ -940,13 +940,13 @@ const central = (props) => {
     centralWidth = "cp-lg";
   }
   if (props.isMobile) {
-    let showContent = "content-mb-open "
+    let showContent = "content-mb-open ";
     let contentMb;
     if (props.showLeft) {
       showContent = "content-mb-closed";
       contentMb = "footer-mb";
     }
-    return h("div", {class: `${showContent}`}, [
+    return h("div", { class: `${showContent}` }, [
       h("div", { class: "title-bar title-bar-mb" }, [
         h("div", { class: "titlebar-title" }, text(props.note.name)),
         h("div", { class: "titlebar-right" }, [
@@ -1035,6 +1035,7 @@ const initState = {
     last_modified: new Date().toISOString(),
     recent_notes: [],
   },
+  cursorPos: null,
   controls: {
     active: "",
     SEARCH: {

@@ -246,12 +246,17 @@ const attachCodeJar = (dispatch, options) => {
       lineWrapping: true,
       viewportMargin: Infinity,
       autoCloseBrackets: true,
+      autofocus: true,
       mode: "markdown",
+
     });
+    if (options.state.cursorPos) {
+      jar.setSelection(options.state.cursorPos, options.state.cursorPos, { scroll: true });
+    }
 
     jar.on("change", function (cm, change) {
       dispatch(
-        UpdateContent, cm.getValue()
+        UpdateContent, {newContent: cm.getValue(), cursorPos: jar.getCursor()}
       );
       if(!(jar.getTokenTypeAt(jar.getCursor()) === "link")) {
         clearTimeout(timeout);
@@ -272,7 +277,7 @@ const attachMarkdown = (dispatch, options) => {
     const container = document.getElementById("container");
     container.innerHTML = html;
   });
-  dispatch(UpdateContent, content);
+  dispatch(UpdateContent, {newContent: content, cursorPos: options.state.cursorPos});
 };
 
 const saveNote = (dispatch, options) => {
@@ -297,8 +302,8 @@ const DebounceSave = (state) => {
 };
 
 
-const UpdateContent = (state, newContent) => {
-
+const UpdateContent = (state,  { newContent, cursorPos }) => {
+  console.log(cursorPos)
   const newName = state.route;
   const bareLinks = getBareLinks(newContent);
   const note = JSON.parse(localStorage.getItem(newName));
@@ -317,6 +322,7 @@ const UpdateContent = (state, newContent) => {
       backlinks: updatedBacklinks,
       recent_notes: [newName, ...recentLinks.filter((name) => name != newName)],
     },
+    cursorPos
   };
   
   return [newState, [saveNote, { state: newState }], [renderIcons]];
@@ -907,6 +913,7 @@ const initState = {
   searchLinks: [],
   route: "",
   isMobile: Math.min(window.screen.width, window.screen.height) < 768,
+  cursorPos: null
 };
 
 app({
