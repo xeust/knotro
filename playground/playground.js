@@ -3,6 +3,7 @@ let jar;
 const svg = `<svg width="32" height="32" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g clip-path="url(#deta_new_svg__clip0)"><path d="M111.14 0c61.38 0 111.139 49.705 111.139 111.02S172.52 222.04 111.14 222.04C49.759 222.04 0 172.335 0 111.02S49.759 0 111.14 0z" fill="#EF39A8"></path><path d="M111.404 21.676c49.689 0 89.97 40.237 89.97 89.873s-40.281 89.873-89.97 89.873-89.97-40.237-89.97-89.873 40.281-89.873 89.97-89.873z" fill="#BD399C"></path><path d="M111.404 45.465c36.536 0 66.154 29.586 66.154 66.084 0 36.497-29.618 66.083-66.154 66.083S45.25 148.046 45.25 111.549c0-36.498 29.618-66.084 66.154-66.084z" fill="#93388E"></path><path d="M110.874 65.555c24.844 0 44.985 20.119 44.985 44.937 0 24.817-20.141 44.936-44.985 44.936s-44.985-20.119-44.985-44.936c0-24.818 20.141-44.937 44.985-44.937z" fill="#6030A2"></path><path d="M339 170.836h49.915c23.004 0 40.365-5.842 51.867-17.745 11.719-11.902 17.579-25.752 17.579-41.983 0-16.23-5.86-30.296-17.579-42.199-11.502-11.902-28.863-17.745-51.867-17.745H339v119.672zm96.574-59.728c0 11.686-3.907 21.641-11.719 29.864-7.596 8.007-19.315 12.119-34.94 12.119h-27.779V68.909h27.779c15.625 0 27.344 4.112 34.94 12.119 7.812 8.223 11.719 18.178 11.719 30.08zm40.582 10.388c0 30.08 19.098 51.504 52.302 51.504 22.136 0 39.931-10.604 47.744-30.513h-24.523c-5.426 8.44-13.022 12.768-23.221 12.768-16.928 0-27.778-10.82-29.732-27.7h79.212v-6.059c0-29.648-19.966-51.505-50.782-51.505-31.034 0-51 21.208-51 51.505zm78.995-8.224h-56.208c2.388-14.932 11.936-25.535 28.213-25.535 15.843 0 25.608 10.387 27.995 25.535zm73.353 20.992V88.386h24.957v-16.23h-24.957V49h-21.702v23.155h-16.06v16.23h16.06v45.879c0 14.499 3.038 24.237 9.332 29.431 6.293 5.193 15.191 7.79 26.693 7.79 3.69 0 6.944-.216 9.766-.865l4.123-.866v-17.096l-4.123.433c-2.822.433-6.076.649-9.766.649-11.719 0-14.323-6.059-14.323-19.476zm93.101-63.624c-14.54 0-25.825 3.03-33.638 9.306-8.029 6.276-11.936 13.85-11.936 22.723h22.136c0-10.388 11.719-14.283 23.438-14.283 14.757 0 23.872 5.193 23.872 18.827v6.059h-26.693c-26.259 0-46.659 6.709-46.659 28.782 0 20.342 15.625 30.946 38.847 30.946 14.973 0 25.607-3.679 31.901-11.037l3.039-3.678c0 4.111 1.735 10.387 2.386 12.551H770v-1.731l-1.519-4.761c-.868-3.246-1.302-8.223-1.302-15.148v-38.088c0-28.998-16.493-40.468-45.574-40.468zm23.872 57.131c0 19.693-9.982 29.864-28.863 29.864-12.37 0-22.354-4.111-22.354-14.499 0-11.902 10.852-15.365 24.524-15.581l26.693.216z" fill="#000"></path></g><defs><clipPath id="deta_new_svg__clip0"><path fill="#fff" d="M0 0h770v222.04H0z"></path></clipPath></defs>
 </svg>`;
+
 // default values
 const defaultContent =
   '## Info:\n\nThis is a "box" of notes. \n\nEvery note has a  url at: `https://zzygen.deta.dev/notes/:note_name`\n\nThe notes are also accessible via API:\n\n`GET https://zzygen.deta.dev/notes/:note_name?json=true`\n\nAnyone with **run access** can edit and view the note.\n\nYou can edit notes using the **edit** button, writing regular markdown.\n\nYou can [[link]] to any note in your box using the convention **[[~note_name]]**.\n- This creates bi-directional links. \n\nA list of all notes that link to the present note are under a header **Backlinks**.';
@@ -176,6 +177,7 @@ const getlastEdited = (lastModified) => {
   }
 };
 
+// resize subscription
 const _onresize = (dispatch, options) => {
   const handler = () => dispatch(options.action);
   addEventListener("resize", handler);
@@ -190,7 +192,7 @@ const ResizeHandler = (state) => {
   const newState = {
     ...state,
     isMobile: Math.min(window.innerWidth, window.innerHeight) < 768,
-    showLeft: false
+    showLeft: false,
   };
   return [newState];
 };
@@ -208,7 +210,7 @@ const HashHandler = (state, hash) => {
   const newState = {
     ...state,
     route:
-      hash === "" ? new Date().toLocaleDateString("fr-CA") : (hash.substring(1)),
+      hash === "" ? new Date().toLocaleDateString("fr-CA") : hash.substring(1),
   };
   return [
     newState,
@@ -248,21 +250,23 @@ const attachCodeJar = (dispatch, options) => {
       autoCloseBrackets: true,
       autofocus: true,
       mode: "markdown",
-
     });
     if (options.state.cursorPos) {
-      jar.setSelection(options.state.cursorPos, options.state.cursorPos, { scroll: true });
+      jar.setSelection(options.state.cursorPos, options.state.cursorPos, {
+        scroll: true,
+      });
     }
 
     jar.on("change", function (cm, change) {
-      dispatch(
-        UpdateContent, {newContent: cm.getValue(), cursorPos: jar.getCursor()}
-      );
-      if(!(jar.getTokenTypeAt(jar.getCursor()) === "link")) {
+      dispatch(UpdateContent, {
+        newContent: cm.getValue(),
+        cursorPos: jar.getCursor(),
+      });
+      if (!(jar.getTokenTypeAt(jar.getCursor()) === "link")) {
         clearTimeout(timeout);
         timeout = setTimeout(function () {
           dispatch(DebounceSave);
-        }, 1500)
+        }, 1500);
       }
     });
   });
@@ -277,33 +281,35 @@ const attachMarkdown = (dispatch, options) => {
     const container = document.getElementById("container");
     container.innerHTML = html;
   });
-  dispatch(UpdateContent, {newContent: content, cursorPos: options.state.cursorPos});
+  dispatch(UpdateContent, {
+    newContent: content,
+    cursorPos: options.state.cursorPos,
+  });
 };
 
 const saveNote = (dispatch, options) => {
-    dispatch(DebounceSave);
-}
+  dispatch(DebounceSave);
+};
 
 // actions
 
 const DebounceSave = (state) => {
-    const bareLinks = getBareLinks(state.note.content);
-    const newState = {
-      ...state,
-      note: {
-        ...state.note,
-        last_modified: new Date().toISOString(),
-        links: bareLinks,
-      },
-    };
-    newState.note.backlinks = updateLinks(newState);
-    localStorage.setItem(newState.note.name, JSON.stringify(newState.note));
-    return [newState, [renderIcons]];
+  const bareLinks = getBareLinks(state.note.content);
+  const newState = {
+    ...state,
+    note: {
+      ...state.note,
+      last_modified: new Date().toISOString(),
+      links: bareLinks,
+    },
+  };
+  newState.note.backlinks = updateLinks(newState);
+  localStorage.setItem(newState.note.name, JSON.stringify(newState.note));
+  return [newState, [renderIcons]];
 };
 
-
-const UpdateContent = (state,  { newContent, cursorPos }) => {
-  console.log(cursorPos)
+const UpdateContent = (state, { newContent, cursorPos }) => {
+  console.log(cursorPos);
   const newName = state.route;
   const bareLinks = getBareLinks(newContent);
   const note = JSON.parse(localStorage.getItem(newName));
@@ -322,13 +328,11 @@ const UpdateContent = (state,  { newContent, cursorPos }) => {
       backlinks: updatedBacklinks,
       recent_notes: [newName, ...recentLinks.filter((name) => name != newName)],
     },
-    cursorPos
+    cursorPos,
   };
-  
+
   return [newState, [saveNote, { state: newState }], [renderIcons]];
 };
-
-
 
 const Edit = (state) => {
   const newState = {
@@ -468,7 +472,9 @@ const ControlModule = (state, type) => {
       placeholder: "Add a Note",
       onConfirm: () => {
         if (state.controls.ADD.inputValue !== "") {
-          window.location.replace(`${window.location.origin}/playground#${state.controls.ADD.inputValue}`);
+          window.location.replace(
+            `${window.location.origin}/playground#${state.controls.ADD.inputValue}`
+          );
           window.location.reload();
         }
       },
@@ -588,6 +594,7 @@ const ToggleList = {
   },
 };
 
+// list views
 const recentList = ToggleList.model({
   getter: (state) => [state.collapseRecent, "Recent", state.note.recent_notes],
   setter: (state, toggleRecent) => [
@@ -654,9 +661,34 @@ const viewBtn = (props) => {
   ]);
 };
 
+const centralMb = (props) => {
+  const showContent = props.showLeft ? "content-mb-closed" : "content-mb-open";
+  return h("div", { class: `${showContent}` }, [
+    h("div", { class: "title-bar title-bar-mb" }, [
+      h("div", { class: "titlebar-title" }, text(props.note.name)),
+      h("div", { class: "titlebar-right" }, [
+        props.view === "EDIT" ? editBtn(props) : viewBtn(props),
+      ]),
+    ]),
+    h("div", { class: `central-mb ` }, [
+      h("div", { class: "content-wrapper" }, [
+        h("div", { id: "container", class: "main" }),
+      ]),
+    ]),
+    h("div", { class: `footer footer-mb` }, [
+      h("a", { class: "icon-wrap", onclick: ToggleLeft }, [
+        h("i", { "data-feather": "chevrons-right", class: "icon" }),
+      ]),
+      h(
+        "div",
+        { class: "last-modified mlauto last-modified-mb " },
+        text(`${getlastEdited(props.note.last_modified)}`)
+      ),
+    ]),
+  ]);
+};
+
 const central = (props) => {
-
-
   const oneExpandedSide = props.showLeft ? !props.showRight : props.showRight;
   const bothExpandedSides = props.showLeft && props.showRight;
 
@@ -672,35 +704,7 @@ const central = (props) => {
     centralWidth = "cp-lg";
   }
   if (props.isMobile) {
-    let showContent = "content-mb-open"
-    let contentMb;
-    if (props.showLeft) {
-      showContent = "content-mb-closed";
-      contentMb = "footer-mb";
-    }
-    return h("div", {class: `${showContent}`}, [
-      h("div", { class: "title-bar title-bar-mb" }, [
-        h("div", { class: "titlebar-title" }, text(props.note.name)),
-        h("div", { class: "titlebar-right" }, [
-          props.view === "EDIT" ? editBtn(props) : viewBtn(props),
-        ]),
-      ]),
-      h("div", { class: `central-mb ` }, [
-        h("div", { class: "content-wrapper" }, [
-          h("div", { id: "container", class: "main" }),
-        ]),
-      ]),
-      h("div", { class: `footer footer-mb` }, [
-        h("a", { class: "icon-wrap", onclick: ToggleLeft }, [
-          h("i", { "data-feather": "chevrons-right", class: "icon" }),
-        ]),
-        h(
-          "div",
-          { class: "last-modified mlauto last-modified-mb " },
-          text(`${getlastEdited(props.note.last_modified)}`)
-        ),
-      ]),
-    ]);
+    return centralMb(props);
   }
   return h("div", { class: `central-pane  ${centralWidth}` }, [
     h("div", { class: `central-content-wrap ${leftPadding} ${rightPadding}` }, [
@@ -740,75 +744,73 @@ const central = (props) => {
     ]),
   ]);
 };
-const left = (props) => {
-  if (props.isMobile) {
-    if (props.showLeft){
-      return h("div", { class: "side-pane left-pane side-pane-mb" }, [
-        h("div", { class: "control-wrap" }, [
-          ControlModule(props, "ADD"),
-          ControlModule(props, "SEARCH"),
-        ]),
-        h("div", { class: "lc" }, [
-          // needs to be wrapped otherwise hyperapp errors
-          h("div", {}, [ToggleList.view(searchList(props))]),
-          // needs to be wrapped otherwise hyperapp errors
-          h("div", {}, [ToggleList.view(recentList(props))]),
-          // needs to be wrapped otherwise hyperapp errors
-          h("div", {}, [ToggleList.view(linksList(props))]),
-          // needs to be wrapped otherwise hyperapp errors
-          h("div", {}, [ToggleList.view(backlinksList(props))]),
-        ]),
-        h("div", { class: "link-desc" }, [
-          LinkNumberDec(props.note.links.length, false, false),
-          LinkNumberDec(props.note.backlinks.length, true, false),
-        ]),
-        h("div", { class: "footer" }, [
-          h("a", { class: "icon-wrap", onclick: ToggleLeft }, [
-            h("i", { "data-feather": "chevrons-left", class: "icon" }),
-          ]),
-          h(
-            "a",
-            {
-              class: "sponsor mlauto sponsor-mb",
-              href: "https://deta.space/discovery/yarc",
-            },
-            [
-              h("div", { innerHTML: svg, class: "sponsor-svg" }),
-              h("div", { class: "sponsor-message" }, text("Install on Deta")),
-            ]
-          ),
-        ]),
-      ]);
-    }
-    return h("div", {}, text(""))
-  }
-  if (!props.showLeft) {
-    return h("div", { class: "side-pane-collapsed left-pane" }, [
-      h(
-        "a",
-        { class: "icon-wrap mlauto", onclick: [UncollapseAndFocus, "ADD"] },
-        [h("i", { "data-feather": "plus", class: "icon" })]
-      ),
-      h(
-        "a",
-        { class: "icon-wrap mlauto", onclick: [UncollapseAndFocus, "SEARCH"] },
-        [h("i", { "data-feather": "search", class: "icon" })]
-      ),
-      h("div", { class: "footer" }, [
-        h("a", { class: "icon-wrap", onclick: ToggleLeft }, [
-          h("i", { "data-feather": "chevrons-right", class: "icon" }),
-        ]),
-      ]),
-    ]);
-  }
 
+const leftOpenMb = (props) => {
+  return h("div", { class: "side-pane left-pane side-pane-mb" }, [
+    h("div", { class: "control-wrap" }, [
+      ControlModule(props, "ADD"),
+      ControlModule(props, "SEARCH"),
+    ]),
+    h("div", { class: "lc" }, [
+      // needs to be wrapped otherwise hyperapp errors
+      h("div", {}, [ToggleList.view(searchList(props))]),
+      // needs to be wrapped otherwise hyperapp errors
+      h("div", {}, [ToggleList.view(recentList(props))]),
+      // needs to be wrapped otherwise hyperapp errors
+      h("div", {}, [ToggleList.view(linksList(props))]),
+      // needs to be wrapped otherwise hyperapp errors
+      h("div", {}, [ToggleList.view(backlinksList(props))]),
+    ]),
+    h("div", { class: "link-desc" }, [
+      LinkNumberDec(props.note.links.length, false, false),
+      LinkNumberDec(props.note.backlinks.length, true, false),
+    ]),
+    h("div", { class: "footer" }, [
+      h("a", { class: "icon-wrap", onclick: ToggleLeft }, [
+        h("i", { "data-feather": "chevrons-left", class: "icon" }),
+      ]),
+      h(
+        "a",
+        {
+          class: "sponsor mlauto sponsor-mb",
+          href: "https://deta.space/discovery/yarc",
+        },
+        [
+          h("div", { innerHTML: svg, class: "sponsor-svg" }),
+          h("div", { class: "sponsor-message" }, text("Install on Deta")),
+        ]
+      ),
+    ]),
+  ]);
+};
+
+const leftClose = (props) => {
+  return h("div", { class: "side-pane-collapsed left-pane" }, [
+    h(
+      "a",
+      { class: "icon-wrap mlauto", onclick: [UncollapseAndFocus, "ADD"] },
+      [h("i", { "data-feather": "plus", class: "icon" })]
+    ),
+    h(
+      "a",
+      { class: "icon-wrap mlauto", onclick: [UncollapseAndFocus, "SEARCH"] },
+      [h("i", { "data-feather": "search", class: "icon" })]
+    ),
+    h("div", { class: "footer" }, [
+      h("a", { class: "icon-wrap mlauto", onclick: ToggleLeft }, [
+        h("i", { "data-feather": "chevrons-right", class: "icon" }),
+      ]),
+    ]),
+  ]);
+};
+
+const leftOpen = (props) => {
   return h("div", { class: "side-pane left-pane" }, [
     h("div", { class: "control-wrap" }, [
       ControlModule(props, "ADD"),
       ControlModule(props, "SEARCH"),
     ]),
-    h ("div", {class: "lc"}, [
-
+    h("div", { class: "lc" }, [
       // needs to be wrapped otherwise hyperapp errors
       h("div", {}, [ToggleList.view(searchList(props))]),
       // needs to be wrapped otherwise hyperapp errors
@@ -816,8 +818,60 @@ const left = (props) => {
     ]),
 
     h("div", { class: "footer" }, [
-      h("a", { class: "icon-wrap mlauto", onclick: ToggleLeft }, [
+      h("div", {class: "mlauto"}, [
+        h("a", { class: "icon-wrap", onclick: ToggleLeft }, [
+          h("i", { "data-feather": "chevrons-left", class: "icon" }),
+        ]),
+      ]),
+    ]),
+  ]);
+};
+
+const left = (props) => {
+  if (props.isMobile) {
+    if (props.showLeft) {
+      return leftOpenMb(props);
+    }
+    return h("div", { class: "empty" });
+  }
+  if (!props.showLeft) {
+    return leftClose(props);
+  }
+  return leftOpen(props);
+};
+
+const rightClose = (props) => {
+  return h("div", { class: "side-pane-collapsed right-pane-collapsed" }, [
+    LinkNumberDec(props.note.links.length, false, true),
+    h("div", { class: "list-border" }, [
+      LinkNumberDec(props.note.backlinks.length, true, true),
+    ]),
+
+    h("div", { class: "footer" }, [
+      h("a", { class: "icon-wrap", onclick: ToggleRight }, [
         h("i", { "data-feather": "chevrons-left", class: "icon" }),
+      ]),
+    ]),
+  ]);
+};
+
+const rightOpen = (props) => {
+  return h("div", { class: "side-pane right-pane" }, [
+    h("div", { class: "rc" }, [
+      h("div", { class: "right-content-wrap" }, [
+        h("div", {}, [ToggleList.view(linksList(props))]),
+        h("div", {}, [ToggleList.view(backlinksList(props))]),
+      ]),
+    ]),
+    h("div", { class: "links-desc" }, [
+      LinkNumberDec(props.note.links.length, false, false),
+      LinkNumberDec(props.note.backlinks.length, true, false),
+    ]),
+    h("div", { class: "footer" }, [
+      h("div", {}, [
+        h("a", { class: "icon-wrap", onclick: ToggleRight }, [
+          h("i", { "data-feather": "chevrons-right", class: "icon" }),
+        ]),
       ]),
     ]),
   ]);
@@ -825,45 +879,16 @@ const left = (props) => {
 
 const right = (props) => {
   if (props.isMobile) {
-    return h("div", {}, text(""))
+    return h("div", { class: "empty" });
   }
   if (!props.showRight) {
-    return h("div", { class: "side-pane-collapsed right-pane-collapsed" }, [
-      LinkNumberDec(props.note.links.length, false, true),
-      h("div", { class: "list-border" }, [
-        LinkNumberDec(props.note.backlinks.length, true, true),
-      ]),
-
-      h("div", { class: "footer" }, [
-        h("a", { class: "icon-wrap", onclick: ToggleRight }, [
-          h("i", { "data-feather": "chevrons-left", class: "icon" }),
-        ]),
-      ]),
-    ]);
+    return rightClose(props);
   }
-
-  return h("div", { class: "side-pane right-pane" }, [
-    h("div", {class: "rc"}, [
-      h("div", { class: "right-content-wrap" }, [
-        h("div", {}, [ToggleList.view(linksList(props))]),
-        h("div", {}, [ToggleList.view(backlinksList(props))]),
-      ]),
-
-    ]),
-    h("div", {class: "links-desc"}, [
-      LinkNumberDec(props.note.links.length, false, false),
-      LinkNumberDec(props.note.backlinks.length, true, false),
-    ]),
-    h("div", { class: "footer" }, [
-      h("a", { class: "icon-wrap", onclick: ToggleRight }, [
-        h("i", { "data-feather": "chevrons-right", class: "icon" }),
-      ]),
-    ]),
-  ]);
+  return rightOpen(props);
 };
 
 const main = (props) => {
-  console.log(props.showLeft, props.isMobile)
+  console.log(props.showLeft, props.isMobile);
   return h("div", { class: "wrapper" }, [
     left(props),
     central(props),
@@ -912,13 +937,16 @@ const initState = {
   searchTerm: "",
   searchLinks: [],
   route: "",
-  isMobile: Math.min(window.screen.width, window.screen.height) < 768,
-  cursorPos: null
+  isMobile: Math.min(window.innerWidth, window.innerHeight) < 768,
+  cursorPos: null,
 };
 
 app({
   init: [initState],
   view: (state) => main(state),
-  subscriptions: (state) => [onhashchange(HashHandler), onresize(ResizeHandler)],
+  subscriptions: (state) => [
+    onhashchange(HashHandler),
+    onresize(ResizeHandler),
+  ],
   node: document.getElementById("app"),
 });
