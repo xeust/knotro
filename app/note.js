@@ -71,6 +71,7 @@ const getlastEdited = (lastModified) => {
   }
 };
 
+// note api
 const checkUnsaved = (options) => {
   const note = options.note;
   const name = note.name;
@@ -87,7 +88,6 @@ const checkUnsaved = (options) => {
   return { content: note.content, uniqueLinks: getUniqueLinks(note.content) };
 };
 
-// note api
 const getNote = async (name) => {
   const rawResponse = await fetch(`/notes/${encodeURI(name)}?json=true`, {
     method: "GET",
@@ -307,23 +307,6 @@ const LazyLoad = async (dispatch, options) => {
   }
 };
 
-const DebounceSave = (state) => {
-  const bareLinks = getBareLinks(state.note.content);
-  const newState = {
-    ...state,
-    note: {
-      ...state.note,
-      last_modified: "saving",
-      links: bareLinks,
-      recent_notes: [
-        state.note.name,
-        ...state.note.recent_notes.filter((name) => name != state.note.name),
-      ],
-    },
-  };
-  return [newState, [updateDatabase, { state: newState }], [renderIcons]];
-};
-
 // actions
 const LazyUpdate = (state, note) => {
   const links = note.links;
@@ -343,6 +326,23 @@ const LazyUpdate = (state, note) => {
     [attachMarkdown, { rawMD: content, uniqueLinks }],
     [updateDatabase, { state: newState }][renderIcons],
   ];
+};
+
+const DebounceSave = (state) => {
+  const bareLinks = getBareLinks(state.note.content);
+  const newState = {
+    ...state,
+    note: {
+      ...state.note,
+      last_modified: "saving",
+      links: bareLinks,
+      recent_notes: [
+        state.note.name,
+        ...state.note.recent_notes.filter((name) => name != state.note.name),
+      ],
+    },
+  };
+  return [newState, [updateDatabase, { state: newState }], [renderIcons]];
 };
 
 const NoteInit = (state, note) => {
@@ -414,7 +414,7 @@ const SetStatus = (state, status) => {
   ];
 };
 
-// // actions
+// View actions
 
 const Edit = (state) => {
   const newState = {
@@ -654,7 +654,6 @@ const ControlModule = (state, type) => {
 };
 
 // Toggle List Module
-
 const ToggleList = {
   init: (x) => x,
   toggle: (x) => !x,
@@ -697,6 +696,7 @@ const ToggleList = {
   },
 };
 
+// List views
 const recentList = ToggleList.model({
   getter: (state) => ({
     value: state.collapseRecent,
@@ -746,7 +746,6 @@ const searchList = ToggleList.model({
 });
 
 // views
-
 const LinkNumberDec = (length, backlinks = true, collapsed) => {
   if (collapsed) {
     return h("div", { class: "link-num-dec-collapsed" }, text(`${length}`));
@@ -758,12 +757,10 @@ const LinkNumberDec = (length, backlinks = true, collapsed) => {
   );
 };
 
-// // left section
-const left = (props) => {
+// public url
+const publicContent = (props) => {
   const publicUrl = `${location.origin}/public/${props.note.name}`;
-
-  const publicContent =
-    props.note.is_public === true
+  return props.note.is_public === true
       ? h("div", { class: "url-content mlauto url-content-mb" }, [
           h("div", { class: "url-tag url-tag-mb" }, text(`public url:${" "}`)),
           h(
@@ -775,59 +772,63 @@ const left = (props) => {
       : h("div", { class: "url-content mlauto" }, [
           h("div", { class: "url-tag " }, text("")),
         ]);
+};
 
-  if (props.isMobile) {
-    if (props.showLeft) {
-      return h("div", { class: "side-pane left-pane side-pane-mb" }, [
-        h("div", { class: "control-wrap" }, [
-          ControlModule(props, "ADD"),
-          ControlModule(props, "SEARCH"),
-        ]),
-        h("div", { class: "lc" }, [
-          // needs to be wrapped otherwise hyperapp errors
-          h("div", {}, [ToggleList.view(searchList(props))]),
-          // needs to be wrapped otherwise hyperapp errors
-          h("div", {}, [ToggleList.view(recentList(props))]),
-          // needs to be wrapped otherwise hyperapp errors
-          h("div", {}, [ToggleList.view(linksList(props))]),
-          // needs to be wrapped otherwise hyperapp errors
-          h("div", {}, [ToggleList.view(backlinksList(props))]),
-        ]),
-        h("div", { class: "link-desc" }, [
-          LinkNumberDec(props.note.links.length, false, false),
-          LinkNumberDec(props.note.backlinks.length, true, false),
-        ]),
-        h("div", { class: "footer" }, [
-          h("a", { class: "icon-wrap", onclick: ToggleLeft }, [
-            h("i", { "data-feather": "chevrons-left", class: "icon" }),
-          ]),
-          publicContent,
-        ]),
-      ]);
-    }
-    return h("div", {}, text(""));
-  }
+// left mobile showLeft
+const leftOpenMb = (props) => {
+  return h("div", { class: "side-pane left-pane side-pane-mb" }, [
+    h("div", { class: "control-wrap" }, [
+      ControlModule(props, "ADD"),
+      ControlModule(props, "SEARCH"),
+    ]),
+    h("div", { class: "lc" }, [
+      // needs to be wrapped otherwise hyperapp errors
+      h("div", {}, [ToggleList.view(searchList(props))]),
+      // needs to be wrapped otherwise hyperapp errors
+      h("div", {}, [ToggleList.view(recentList(props))]),
+      // needs to be wrapped otherwise hyperapp errors
+      h("div", {}, [ToggleList.view(linksList(props))]),
+      // needs to be wrapped otherwise hyperapp errors
+      h("div", {}, [ToggleList.view(backlinksList(props))]),
+    ]),
+    h("div", { class: "link-desc" }, [
+      LinkNumberDec(props.note.links.length, false, false),
+      LinkNumberDec(props.note.backlinks.length, true, false),
+    ]),
+    h("div", { class: "footer" }, [
+      h("a", { class: "icon-wrap", onclick: ToggleLeft }, [
+        h("i", { "data-feather": "chevrons-left", class: "icon" }),
+      ]),
+      publicContent(props),
+    ]),
+  ]);
+};
 
-  if (!props.showLeft) {
-    return h("div", { class: "side-pane-collapsed left-pane" }, [
-      h(
-        "a",
-        { class: "icon-wrap mlauto", onclick: [UncollapseAndFocus, "ADD"] },
-        [h("i", { "data-feather": "plus", class: "icon" })]
-      ),
-      h(
-        "a",
-        { class: "icon-wrap mlauto", onclick: [UncollapseAndFocus, "SEARCH"] },
-        [h("i", { "data-feather": "search", class: "icon" })]
-      ),
-      h("div", { class: "footer" }, [
+// left close !showLeft
+const leftClose = (props) => {
+  return h("div", { class: "side-pane-collapsed left-pane" }, [
+    h(
+      "a",
+      { class: "icon-wrap mlauto", onclick: [UncollapseAndFocus, "ADD"] },
+      [h("i", { "data-feather": "plus", class: "icon" })]
+    ),
+    h(
+      "a",
+      { class: "icon-wrap mlauto", onclick: [UncollapseAndFocus, "SEARCH"] },
+      [h("i", { "data-feather": "search", class: "icon" })]
+    ),
+    h("div", { class: "footer" }, [
+      h("div", {}, [
         h("a", { class: "icon-wrap", onclick: ToggleLeft }, [
           h("i", { "data-feather": "chevrons-right", class: "icon" }),
         ]),
       ]),
-    ]);
-  }
+    ]),
+  ]);
+}
 
+// left open showLeft
+const leftOpen = (props) => {
   return h("div", { class: "side-pane left-pane" }, [
     h("div", { class: "control-wrap" }, [
       ControlModule(props, "ADD"),
@@ -845,24 +846,38 @@ const left = (props) => {
       ]),
     ]),
   ]);
+}
+
+// left section
+const left = (props) => {
+  if (props.isMobile) {
+    if (props.showLeft) {
+      return leftOpenMb(props);
+    }
+    return h("div", {class: "empty"});
+  } else if (!props.showLeft) {
+    return leftClose(props);
+  } else {
+    return leftOpen(props);
+  }
 };
 
-const right = (props) => {
-  if (props.isMobile) {
-    return h("div", {}, text(""));
-  }
-  if (!props.showRight) {
-    return h("div", { class: "side-pane-collapsed right-pane" }, [
-      LinkNumberDec(props.note.links.length, false, true),
-      LinkNumberDec(props.note.backlinks.length, true, true),
-      h("div", { class: "footer" }, [
-        h("a", { class: "icon-wrap", onclick: ToggleRight }, [
-          h("i", { "data-feather": "chevrons-left", class: "icon" }),
-        ]),
-      ]),
-    ]);
-  }
 
+// rightClose 
+const rightClose = (props) => {
+  return h("div", { class: "side-pane-collapsed right-pane" }, [
+    LinkNumberDec(props.note.links.length, false, true),
+    LinkNumberDec(props.note.backlinks.length, true, true),
+    h("div", { class: "footer" }, [
+      h("a", { class: "icon-wrap", onclick: ToggleRight }, [
+        h("i", { "data-feather": "chevrons-left", class: "icon" }),
+      ]),
+    ]),
+  ]);
+}
+
+// rightOpen 
+const rightOpen = (props) => {
   return h("div", { class: "side-pane right-pane" }, [
     h("div", { class: "rc" }, [
       h("div", { class: "right-content-wrap" }, [
@@ -882,6 +897,16 @@ const right = (props) => {
       ]),
     ]),
   ]);
+}
+
+const right = (props) => {
+  if (props.isMobile) {
+    return h("div", {class: "empty"});
+  }
+  if (!props.showRight) {
+    return rightClose(props);
+  }
+  return rightOpen(props);
 };
 
 const editBtn = (props) => {
@@ -912,19 +937,36 @@ const unlockBtn = (props) => {
   ]);
 };
 
+// centralMb 
+const centralMb = (props) => {
+  const showContent = props.showLeft ? "content-mb-closed" : "content-mb-open";
+  return h("div", { class: `${showContent}` }, [
+    h("div", { class: "title-bar title-bar-mb" }, [
+      h("div", { class: "titlebar-title" }, text(props.note.name)),
+      h("div", { class: "titlebar-right" }, [
+        props.view === "EDIT" ? editBtn(props) : viewBtn(props),
+        props.note.is_public ? unlockBtn(props) : lockBtn(props),
+      ]),
+    ]),
+    h("div", { class: `central-mb ` }, [
+      h("div", { class: "content-wrapper" }, [
+        h("div", { id: "container", class: "main" }),
+      ]),
+    ]),
+    h("div", { class: `footer footer-mb` }, [
+      h("a", { class: "icon-wrap", onclick: ToggleLeft }, [
+        h("i", { "data-feather": "chevrons-right", class: "icon" }),
+      ]),
+      h(
+        "div",
+        { class: "last-modified mlauto last-modified-mb " },
+        text(`${getlastEdited(props.note.last_modified)}`)
+      ),
+    ]),
+  ]);
+}
+
 const central = (props) => {
-  const publicUrl = `${location.origin}/public/${props.note.name}`;
-
-  const publicContent =
-    props.note.is_public === true
-      ? h("div", { class: "url-content mlauto" }, [
-          h("div", { class: "url-tag" }, text(`public url:${" "}`)),
-          h("a", { class: "url-wrapper ", href: publicUrl }, text(publicUrl)),
-        ])
-      : h("div", { class: "url-content mlauto" }, [
-          h("div", { class: "url-tag " }, text("")),
-        ]);
-
   const oneExpandedSide = props.showLeft ? !props.showRight : props.showRight;
   const bothExpandedSides = props.showLeft && props.showRight;
 
@@ -940,36 +982,7 @@ const central = (props) => {
     centralWidth = "cp-lg";
   }
   if (props.isMobile) {
-    let showContent = "content-mb-open ";
-    let contentMb;
-    if (props.showLeft) {
-      showContent = "content-mb-closed";
-      contentMb = "footer-mb";
-    }
-    return h("div", { class: `${showContent}` }, [
-      h("div", { class: "title-bar title-bar-mb" }, [
-        h("div", { class: "titlebar-title" }, text(props.note.name)),
-        h("div", { class: "titlebar-right" }, [
-          props.view === "EDIT" ? editBtn(props) : viewBtn(props),
-          props.note.is_public ? unlockBtn(props) : lockBtn(props),
-        ]),
-      ]),
-      h("div", { class: `central-mb ` }, [
-        h("div", { class: "content-wrapper" }, [
-          h("div", { id: "container", class: "main" }),
-        ]),
-      ]),
-      h("div", { class: `footer footer-mb` }, [
-        h("a", { class: "icon-wrap", onclick: ToggleLeft }, [
-          h("i", { "data-feather": "chevrons-right", class: "icon" }),
-        ]),
-        h(
-          "div",
-          { class: "last-modified mlauto last-modified-mb " },
-          text(`${getlastEdited(props.note.last_modified)}`)
-        ),
-      ]),
-    ]);
+    return centralMb(props)
   }
   return h("div", { class: `central-pane  ${centralWidth}` }, [
     h("div", { class: `central-content-wrap ${leftPadding} ${rightPadding}` }, [
@@ -994,7 +1007,7 @@ const central = (props) => {
             { class: "last-modified" },
             text(`${getlastEdited(props.note.last_modified)}`)
           ),
-          publicContent,
+          publicContent(props),
         ]
       ),
     ]),
@@ -1009,18 +1022,6 @@ const main = (props) => {
   ]);
 };
 
-/*
-note:
-{
-    name: str,
-    content: str,
-    links: [],
-    backlinks: [],
-    base_url: str,
-    last_modified: str,
-    recent_notes: []
-}
-*/
 
 const initState = {
   view: "VIEW",
@@ -1056,17 +1057,7 @@ const initState = {
 };
 
 app({
-  init: [
-    initState,
-    // [
-    //   attachMarkdown,
-    //   {
-    //     rawMD: initState.note.content,
-    //     uniqueLinks: getUniqueLinks(initState.note.content),
-    //   },
-    // ],
-    [renderIcons],
-  ],
+  init: [initState, [renderIcons]],
   view: (state) => main(state),
   subscriptions: (state) => [
     onhashchange(HashHandler),
@@ -1074,3 +1065,17 @@ app({
   ],
   node: document.getElementById("app"),
 });
+
+/*
+note:
+{
+    name: str,
+    content: str,
+    links: [],
+    backlinks: [],
+    base_url: str,
+    last_modified: str,
+    is_public: bool,
+    recent_notes: []
+}
+*/
