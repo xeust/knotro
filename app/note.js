@@ -177,7 +177,7 @@ const _onresize = (dispatch, options) => {
 const onresize = (action) => [_onresize, { action }];
 
 const ResizeHandler = (state) => {
-  console.log("Resize triggered...", window.screen.width, window.screen.height);
+  console.log("Resize triggered...", window.innerWidth, window.innerHeight);
   const newState = {
     ...state,
     isMobile: Math.min(window.innerWidth, window.innerHeight) < 768,
@@ -937,7 +937,7 @@ const unlockBtn = (props) => {
   ]);
 };
 
-// centralMb 
+// central mb 
 const centralMb = (props) => {
   const showContent = props.showLeft ? "content-mb-closed" : "content-mb-open";
   return h("div", { class: `${showContent}` }, [
@@ -1053,7 +1053,7 @@ const initState = {
   collapseLinks: false,
   collapseBacklinks: false,
   collapseSearch: false,
-  isMobile: Math.min(window.screen.width, window.screen.height) < 768,
+  isMobile: Math.min(window.innerWidth, window.innerHeight) < 768,
 };
 
 app({
