@@ -179,11 +179,19 @@ const onresize = (action) => [_onresize, { action }];
 const ResizeHandler = (state) => {
   console.log("Resize triggered...", window.innerWidth, window.innerHeight);
   const newState = {
+
     ...state,
+    view: "VIEW",
     isMobile: Math.min(window.innerWidth, window.innerHeight) < 768,
     showLeft: false,
   };
-  return [newState];
+  const rawMD = newState.note.content;
+  const uniqueLinks = getUniqueLinks(rawMD);
+  const lastEdited = newState.note.last_modified;
+  requestAnimationFrame(() => {
+    document.getElementById("container").innerHTML = "";
+  })
+  return [newState,     [attachMarkdown, { rawMD, uniqueLinks }],[renderIcons]];
 };
 
 // routing
@@ -231,7 +239,9 @@ const attachCodeJar = (dispatch, options) => {
   requestAnimationFrame(() => {
     let timeout = null;
     var container = document.getElementById("container");
-
+    var contentDiv = document.querySelector(".content-wrapper");
+    const scrollTop = contentDiv.scrollTop;
+    console.log(scrollTop);
     container.innerHTML = "";
     jar = CodeMirror(container, {
       value: options.content,
@@ -245,7 +255,7 @@ const attachCodeJar = (dispatch, options) => {
     if (options.cursorPos) {
       jar.setSelection(options.cursorPos, options.cursorPos, { scroll: true });
     }
-
+    contentDiv.scrollTop = scrollTop;
     jar.on("change", function (cm, change) {
       dispatch(UpdateContent, {
         newContent: cm.getValue(),
@@ -421,6 +431,7 @@ const Edit = (state) => {
     ...state,
     view: "EDIT",
   };
+
   return [
     newState,
     [
@@ -760,12 +771,15 @@ const LinkNumberDec = (length, backlinks = true, collapsed) => {
 // public url
 const publicContent = (props) => {
   const publicUrl = `${location.origin}/public/${props.note.name}`;
+  const urlMb = props.isMobile ? "url-wrapper-mb" : ""
+  const tagMb = props.isMobile ? "url-tag-mb" : ""
+  const contentMb = props.isMobile ? "url-content-mb" : ""
   return props.note.is_public === true
-      ? h("div", { class: "url-content mlauto url-content-mb" }, [
-          h("div", { class: "url-tag url-tag-mb" }, text(`public url:${" "}`)),
+      ? h("div", { class: `url-content mlauto ${contentMb}` }, [
+          h("div", { class: `url-tag ${tagMb}`}, text(`public url:${" "}`)),
           h(
             "a",
-            { class: "url-wrapper url-wrapper-mb", href: publicUrl },
+            { class: `url-wrapper ${urlMb}`, href: publicUrl },
             text(publicUrl)
           ),
         ])
@@ -939,6 +953,7 @@ const unlockBtn = (props) => {
 
 // central mb 
 const centralMb = (props) => {
+
   const showContent = props.showLeft ? "content-mb-closed" : "content-mb-open";
   return h("div", { class: `${showContent}` }, [
     h("div", { class: "title-bar title-bar-mb" }, [
@@ -948,7 +963,7 @@ const centralMb = (props) => {
         props.note.is_public ? unlockBtn(props) : lockBtn(props),
       ]),
     ]),
-    h("div", { class: `central-mb ` }, [
+    h("div", { class: `central-mb` }, [
       h("div", { class: "content-wrapper" }, [
         h("div", { id: "container", class: "main" }),
       ]),
@@ -984,6 +999,7 @@ const central = (props) => {
   if (props.isMobile) {
     return centralMb(props)
   }
+  console.log("not mobile triggered!")
   return h("div", { class: `central-pane  ${centralWidth}` }, [
     h("div", { class: `central-content-wrap ${leftPadding} ${rightPadding}` }, [
       h("div", { class: "title-bar" }, [

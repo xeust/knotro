@@ -191,10 +191,20 @@ const ResizeHandler = (state) => {
   console.log("Resize triggered...");
   const newState = {
     ...state,
+    view: "VIEW",
     isMobile: Math.min(window.innerWidth, window.innerHeight) < 768,
     showLeft: false,
   };
-  return [newState];
+  requestAnimationFrame(() => {
+    document.getElementById("container").innerHTML = "";
+  })
+  return [newState,     [
+    attachMarkdown,
+    {
+      state: newState,
+      uniqueLinks: getUniqueLinks(newState.note.content),
+    },
+  ], [renderIcons]];
 };
 
 // routing
@@ -241,7 +251,11 @@ const attachCodeJar = (dispatch, options) => {
   requestAnimationFrame(() => {
     let timeout = null;
     var container = document.getElementById("container");
+    var contentDiv = document.querySelector(".content-wrapper");
+    const scrollTop = contentDiv.scrollTop;
+    console.log(scrollTop);
     container.innerHTML = "";
+
     jar = CodeMirror(container, {
       value: options.state.note.content,
       lineNumbers: false,
@@ -256,7 +270,7 @@ const attachCodeJar = (dispatch, options) => {
         scroll: true,
       });
     }
-
+    contentDiv.scrollTop = scrollTop;
     jar.on("change", function (cm, change) {
       dispatch(UpdateContent, {
         newContent: cm.getValue(),
