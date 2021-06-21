@@ -179,9 +179,7 @@ const onresize = (action) => [_onresize, { action }];
 const ResizeHandler = (state) => {
   console.log("Resize triggered...", window.innerWidth, window.innerHeight);
   const newState = {
-
     ...state,
-    view: "VIEW",
     isMobile: Math.min(window.innerWidth, window.innerHeight) < 768,
     showLeft: false,
   };
@@ -191,7 +189,17 @@ const ResizeHandler = (state) => {
   requestAnimationFrame(() => {
     document.getElementById("container").innerHTML = "";
   })
-  return [newState,     [attachMarkdown, { rawMD, uniqueLinks }],[renderIcons]];
+  if (newState.view === "VIEW") {
+    return [newState, [attachMarkdown, { rawMD, uniqueLinks }],[renderIcons]];
+  } 
+  return [
+    newState,
+    [
+      attachCodeJar,
+      { content: newState.note.content, cursorPos: newState.cursorPos },
+    ],
+    [renderIcons],
+  ];
 };
 
 // routing
