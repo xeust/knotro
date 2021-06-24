@@ -41,11 +41,19 @@ body {
   border-right: 1px solid #eaeaea;
   box-sizing: border-box;
 }
+.lc {
+  overflow-y: auto;
+}
 
+.rc {
+  height: calc(100% - 48px);
+  overflow-y: auto;
+}
 .right-pane {
   border-left: 1px solid #eaeaea;
   box-sizing: border-box;
 }
+
 
 /* central pane */
 
@@ -91,7 +99,9 @@ body {
 .pd-r-md {
   padding-right: 336px;
 }
-
+.public-r-f {
+  width: 240px;
+}
 .footer-content-wrap {
   display: flex;
   width: 100%;
@@ -206,7 +216,6 @@ a.toggle-title:hover {
 }
 
 a.toggle-link {
-  display: flex;
   align-items: center;
   height: 30px;
   padding-left: 12px;
@@ -322,6 +331,7 @@ a.toggle-link:hover {
 
 /* kntro.com tag */
 .knotro-wrap {
+  padding-left: 12px;
   height: 24px;
   font-size: 14px;
   font-family: Roboto Mono, Courier, monospace;
@@ -343,7 +353,6 @@ a.toggle-link:hover {
   font-size: 14px;
   display: inline-flex;
   text-decoration: none;
-  padding-left: 96px;
   font-family: Roboto Mono, Courier, monospace;
 }
 
@@ -366,6 +375,10 @@ a.url-wrapper {
   color: #98b9f9;
   text-decoration: none;
   font-family: Roboto Mono, Courier, monospace;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 80%;
 }
 
 a.url-wrapper:hover {
@@ -440,4 +453,70 @@ ul {
 
 #mr10 {
   margin-right: 10px;
+}
+
+
+/* mobile styles */
+.side-pane-mb-closed {
+  display: none;
+}
+.side-pane-mb {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background-color: #f7f7f7;
+  max-height: calc(100vh);
+}
+.title-bar-mb {
+  width: 90vw;
+  padding-left: 5vw;
+  padding-right: 5vw;
+}
+
+.central-mb {
+  padding-left: 5vw;
+  padding-right: 5vw;
+  overflow-y: auto;
+  max-height: calc(100% - 120px);
+}
+.content-mb-open {
+  max-height: 100vh;
+  max-width: 100vw;
+}
+.content-mb-closed {
+  display: none;
+}
+.content-mb {
+  padding-top: 0px;
+  padding-bottom: 0px;
+}
+.footer-mb {
+  width: 100vw;
+}
+.last-modified-mb {
+  padding-right: 5vw;
+}
+.url-tag-mb {
+  max-width: 100%;
+}
+.url-content-mb {
+  max-width: 60%;
+}
+a.url-wrapper-mb {
+  height: 24px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #98b9f9;
+  text-decoration: none;
+  font-family: Roboto Mono, Courier, monospace;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 50%;
+}
+.ellipsis {
+  max-width: 90%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
