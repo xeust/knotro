@@ -191,20 +191,28 @@ const ResizeHandler = (state) => {
   console.log("Resize triggered...");
   const newState = {
     ...state,
-    view: "VIEW",
     isMobile: Math.min(window.innerWidth, window.innerHeight) < 768,
     showLeft: false,
   };
   requestAnimationFrame(() => {
     document.getElementById("container").innerHTML = "";
   })
-  return [newState,     [
-    attachMarkdown,
-    {
-      state: newState,
-      uniqueLinks: getUniqueLinks(newState.note.content),
-    },
-  ], [renderIcons]];
+
+  if (newState.view === "VIEW") {
+    return [newState,     [
+      attachMarkdown,
+      {
+        state: newState,
+        uniqueLinks: getUniqueLinks(newState.note.content),
+      },
+    ], [renderIcons]];
+  } 
+  return [
+    newState,
+    [attachCodeJar, { state: newState, updateContent: newState.note.content }],
+    [renderIcons],
+  ];
+
 };
 
 // routing
