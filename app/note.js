@@ -71,10 +71,11 @@ const getlastEdited = (lastModified) => {
   }
 };
 
-// note api
+// checks if localStorage has a note that didn't save to the server
+// should happen when a note is opened
 const checkUnsaved = (options) => {
-  const note = options.note;
-  const name = note.name;
+  const { note } = options;
+  const { name } = note;
   const localNote = JSON.parse(localStorage.getItem(name));
   if (
     localNote &&
@@ -103,24 +104,22 @@ const getNote = async (name) => {
   return null;
 };
 
-const getLocalNote = (name) => {
-  const note = JSON.parse(localStorage.getItem(name));
-
-  return note ? note : null;
-};
-
-const fetchRelatedNotes = async (links, backlinks, recentLinks) => {
-  console.log("related notes...");
+const fetchRelatedNotes = async (dispatch, options) => {
+  const  { links, backlinks, recentLinks } = options;
+  console.log("caching related notes...");
   const relatedLinks = Array.from(
     new Set([...links, ...backlinks, ...recentLinks])
   );
   for (const link of relatedLinks) {
-    const note = await getNote(link);
-    if (note) {
-      localStorage.setItem(link, JSON.stringify(note));
+    // only fetch if no version in localStorage
+    if (!getLocalNote(link)) {
+      getNote(link).then(note => {
+        if (note) {
+          localStorage.setItem(link, JSON.stringify(note));
+        }
+      });
     }
   }
-  return;
 };
 
 const updateDatabase = async (dispatch, options) => {
@@ -134,8 +133,6 @@ const updateDatabase = async (dispatch, options) => {
     .then(async (res) => {
       if (res.status === 200) {
         console.log("saved");
-        const note = await getNote(options.state.note.name);
-        localStorage.setItem(options.state.note.name, JSON.stringify(note));
         dispatch(SetStatus, new Date().toUTCString());
       }
     })
@@ -165,69 +162,6 @@ const modifyPublic = (dispatch, options) => {
     },
     body: JSON.stringify({ is_public: options.note.is_public }),
   });
-};
-
-const _onresize = (dispatch, options) => {
-  const handler = () => dispatch(options.action);
-  addEventListener("resize", handler);
-  requestAnimationFrame(handler);
-  return () => removeEventListener("resize", handler);
-};
-
-const onresize = (action) => [_onresize, { action }];
-
-const ResizeHandler = (state) => {
-  console.log("Resize triggered...", window.innerWidth, window.innerHeight);
-  const newState = {
-    ...state,
-    isMobile: Math.min(window.innerWidth, window.innerHeight) < 768,
-    showLeft: false,
-  };
-  const rawMD = newState.note.content;
-  const uniqueLinks = getUniqueLinks(rawMD);
-  const lastEdited = newState.note.last_modified;
-  requestAnimationFrame(() => {
-    document.getElementById("container").innerHTML = "";
-  })
-  if (newState.view === "VIEW") {
-    return [newState, [attachMarkdown, { rawMD, uniqueLinks }],[renderIcons]];
-  } 
-  return [
-    newState,
-    [
-      attachCodeJar,
-      { content: newState.note.content, cursorPos: newState.cursorPos },
-    ],
-    [renderIcons],
-  ];
-};
-
-// routing
-const _onhashchange = (dispatch, options) => {
-  const handler = () => dispatch(options.action, location.hash);
-  addEventListener("hashchange", handler);
-  requestAnimationFrame(handler);
-  return () => removeEventListener("hashchange", handler);
-};
-const onhashchange = (action) => [_onhashchange, { action }];
-const HashHandler = (state, hash) => {
-  const newState = {
-    ...state,
-    route:
-      hash === ""
-        ? new Date().toLocaleDateString("fr-CA")
-        : decodeURI(hash.substring(1)),
-  };
-  return [
-    newState,
-    [
-      onEnter,
-      {
-        state: newState,
-        NoteInit,
-      },
-    ],
-  ];
 };
 
 // effects
@@ -290,59 +224,64 @@ const attachMarkdown = (dispatch, options) => {
   });
 };
 
-const onEnter = (dispatch, options) => {
+const getLocalNote = (name) => {
+  const note = JSON.parse(localStorage.getItem(name));
+  return note ? note : null;
+};
+
+const lazyLoadNote = (dispatch, options) => {
+  // check if there is a local version of the note
   const note = getLocalNote(options.state.route);
   console.log(note);
   if (note) {
     const content = note.content;
     const uniqueLinks = getUniqueLinks(content);
-    const convertedMarkdown = linkSub(content, uniqueLinks);
-    const html = converter.makeHtml(convertedMarkdown);
-    requestAnimationFrame(() => {
-      const container = document.getElementById("container");
-      container.innerHTML = html;
-    });
+    attachMarkdown(dispatch, {rawMD: content, uniqueLinks});
   }
-  dispatch(NoteInit, note ? note : null);
+  // update state with local note, then
+  dispatch(UpdateAndRevalidate, note ? note : null);
 };
 
-const LazyLoad = async (dispatch, options) => {
+
+// actions
+const getNoteFromServer = async (dispatch, options) => {
   const name = options.state.route;
   let note = options.state.note;
-
   let rawResponse = await getNote(name);
-
   if (rawResponse) {
     note = rawResponse;
     if (
+      !options.useCaching ||
+      options.nothingCached ||
       new Date(note.last_modified) >
-        new Date(options.state.note.last_modified) ||
-      options.emptyNote
+      new Date(options.state.note.last_modified) 
     ) {
       console.log("Lazy load init");
-      dispatch(LazyUpdate, note);
+      dispatch(UpdateNote, note);
     }
+  }
+
+  if (options.useCaching) {
+    // caching logic
+    localStorage.setItem(note.name, JSON.stringify(note));
+    const { links, backlinks } = note;
+    const recentLinks = note.recent_notes;
+    fetchRelatedNotes(dispatch, {links, backlinks, recentLinks});
   }
 };
 
-// actions
-const LazyUpdate = (state, note) => {
-  const links = note.links;
-  const backlinks = note.backlinks;
-  const recentLinks = note.recent_notes;
+
+const UpdateNote = (state, note) => {
   const newState = {
     ...state,
+    note
   };
-  newState.note = note;
   const content = note.content;
   const uniqueLinks = getUniqueLinks(content);
-
-  fetchRelatedNotes(links, backlinks, recentLinks);
-  localStorage.setItem(note.name, JSON.stringify(note));
   return [
     newState,
     [attachMarkdown, { rawMD: content, uniqueLinks }],
-    [updateDatabase, { state: newState }][renderIcons],
+    [renderIcons]
   ];
 };
 
@@ -363,7 +302,7 @@ const DebounceSave = (state) => {
   return [newState, [updateDatabase, { state: newState }], [renderIcons]];
 };
 
-const NoteInit = (state, note) => {
+const UpdateAndRevalidate = (state, note) => {
   const newState = {
     ...state,
     note: note ? note : state.note,
@@ -371,7 +310,7 @@ const NoteInit = (state, note) => {
 
   return [
     newState,
-    [LazyLoad, { state: newState, emptyNote: note ? false : true, LazyUpdate }],
+    [getNoteFromServer, { state: newState, nothingCached: note ? false : true, useCaching: true}],
     [renderIcons],
   ];
 };
@@ -398,23 +337,6 @@ const UpdateContent = (state, { newContent, cursorPos }) => {
   ];
 };
 
-const UpdateUnsaved = (state, newContent) => {
-  const newState = {
-    ...state,
-    note: {
-      ...state.note,
-      content: newContent,
-      last_modified: "saving",
-      recent_notes: [
-        state.note.name,
-        ...state.note.recent_notes.filter((name) => name != state.note.name),
-      ],
-    },
-  };
-
-  return [newState, [updateDatabase, { state: newState }], [renderIcons]];
-};
-
 const SetStatus = (state, status) => {
   return [
     {
@@ -432,7 +354,7 @@ const SetStatus = (state, status) => {
   ];
 };
 
-// View actions
+// View
 
 const Edit = (state) => {
   const newState = {
@@ -1044,6 +966,74 @@ const main = (props) => {
     central(props),
     right(props),
   ]);
+};
+
+// subscriptions
+
+const _onresize = (dispatch, options) => {
+  const handler = () => dispatch(options.action);
+  addEventListener("resize", handler);
+  requestAnimationFrame(handler);
+  return () => removeEventListener("resize", handler);
+};
+
+const onresize = (action) => [_onresize, { action }];
+
+const ResizeHandler = (state) => {
+  console.log("Resize triggered...", window.innerWidth, window.innerHeight);
+  const newState = {
+    ...state,
+    isMobile: window.innerWidth < 768,
+    showLeft: false,
+  };
+  const rawMD = newState.note.content;
+  const uniqueLinks = getUniqueLinks(rawMD);
+  const lastEdited = newState.note.last_modified;
+  requestAnimationFrame(() => {
+    document.getElementById("container").innerHTML = "";
+  })
+  if (newState.view === "VIEW") {
+    return [newState, [attachMarkdown, { rawMD, uniqueLinks }],[renderIcons]];
+  } 
+  return [
+    newState,
+    [
+      attachCodeJar,
+      { content: newState.note.content, cursorPos: newState.cursorPos },
+    ],
+    [renderIcons],
+  ];
+};
+
+// routing
+const _onhashchange = (dispatch, options) => {
+  const handler = () => dispatch(options.action, location.hash);
+  addEventListener("hashchange", handler);
+  requestAnimationFrame(handler);
+  return () => removeEventListener("hashchange", handler);
+};
+
+const onhashchange = (action) => [_onhashchange, { action }];
+
+const HashHandler = (state, hash) => {
+  const newState = {
+    ...state,
+    route:
+      hash === ""
+        ? new Date().toLocaleDateString("fr-CA")
+        : decodeURI(hash.substring(1)),
+  };
+  const useCaching = false;
+  return [
+    newState,
+    useCaching ? [
+      lazyLoadNote,
+      {
+        state: newState,
+      },
+    ] : [getNoteFromServer, { state: newState, useCaching}],
+    [renderIcons]
+  ];
 };
 
 

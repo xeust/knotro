@@ -8,7 +8,7 @@ from deta import Deta
 
 deta = Deta()
 
-notes = deta.Base("deta_notes")
+notes = deta.Base("knotro_notes")
 
 
 base_url = "/"
