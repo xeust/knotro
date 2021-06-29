@@ -71,6 +71,8 @@ const getlastEdited = (lastModified) => {
   }
 };
 
+// EFFECTS
+
 // checks if localStorage has a note that didn't save to the server
 // should happen when a note is opened
 const checkUnsaved = (options) => {
@@ -164,7 +166,6 @@ const modifyPublic = (dispatch, options) => {
   });
 };
 
-// effects
 const renderIcons = (dispatch, options) => {
   requestAnimationFrame(() => {
     feather.replace();
@@ -242,8 +243,6 @@ const lazyLoadNote = (dispatch, options) => {
   dispatch(UpdateAndRevalidate, note ? note : null);
 };
 
-
-// actions
 const getNoteFromServer = async (dispatch, options) => {
   const name = options.state.route;
   let note = options.state.note;
@@ -270,7 +269,7 @@ const getNoteFromServer = async (dispatch, options) => {
   }
 };
 
-
+// actions
 const UpdateNote = (state, note) => {
   const newState = {
     ...state,
@@ -353,8 +352,6 @@ const SetStatus = (state, status) => {
     [renderIcons],
   ];
 };
-
-// View
 
 const Edit = (state) => {
   const newState = {
@@ -463,6 +460,20 @@ const UncollapseAndFocus = (state, type = "") => {
   ];
 };
 
+
+// VIEWS
+
+// 0. Re-usable Modules
+
+// toggle input OR icon
+
+// set some value for the input on input change
+
+// add event handlers to
+// onchange
+// check
+// confirm
+
 // Logic related to the control panel, search and add
 
 const searchNotes = async (dispatch, options) => {
@@ -491,15 +502,6 @@ const UpdateSearchNotes = (state, notes) => ({
 const GetSearchLinks = (state) => {
   return [state, [searchNotes, { state, UpdateSearchNotes }]];
 };
-
-// toggle input OR icon
-
-// set some value for the input on input change
-
-// add event handlers to
-// onchange
-// check
-// confirm
 
 const ControlModule = (state, type) => {
   const types = {
@@ -638,6 +640,7 @@ const ToggleList = {
 };
 
 // List views
+// do the border lines here.
 const recentList = ToggleList.model({
   getter: (state) => ({
     value: state.collapseRecent,
@@ -686,67 +689,92 @@ const searchList = ToggleList.model({
   ],
 });
 
-// views
-const LinkNumberDec = (length, backlinks = true, collapsed) => {
-  if (collapsed) {
-    return h("div", { class: "link-num-dec-collapsed" }, text(`${length}`));
-  }
-  return h(
-    "div",
-    { class: "link-num-dec" },
-    text(`${length} ${backlinks ? "back" : ""}link${length !== 1 ? "s" : ""}`)
-  );
-};
+// 1. Central Section
 
-// public url
-const publicContent = (props) => {
-  const publicUrl = `${location.origin}/public/${props.note.name}`;
-  const urlMb = props.isMobile ? "url-wrapper-mb" : ""
-  const tagMb = props.isMobile ? "url-tag-mb" : ""
-  const contentMb = props.isMobile ? "url-content-mb" : ""
-  return props.note.is_public === true
-      ? h("div", { class: `url-content mlauto ${contentMb}` }, [
-          h("div", { class: `url-tag ${tagMb}`}, text(`public url:${" "}`)),
-          h(
-            "a",
-            { class: `url-wrapper ${urlMb}`, href: publicUrl },
-            text(publicUrl)
-          ),
-        ])
-      : h("div", { class: "url-content mlauto" }, [
-          h("div", { class: "url-tag " }, text("")),
-        ]);
-};
-
-// left mobile showLeft
-const leftOpenMb = (props) => {
-  return h("div", { class: "side-pane left-pane side-pane-mb" }, [
-    h("div", { class: "control-wrap" }, [
-      ControlModule(props, "ADD"),
-      ControlModule(props, "SEARCH"),
-    ]),
-    h("div", { class: "lc" }, [
-      // needs to be wrapped otherwise hyperapp errors
-      h("div", {}, [ToggleList.view(searchList(props))]),
-      // needs to be wrapped otherwise hyperapp errors
-      h("div", {}, [ToggleList.view(recentList(props))]),
-      // needs to be wrapped otherwise hyperapp errors
-      h("div", {}, [ToggleList.view(linksList(props))]),
-      // needs to be wrapped otherwise hyperapp errors
-      h("div", {}, [ToggleList.view(backlinksList(props))]),
-    ]),
-    h("div", { class: "link-desc" }, [
-      LinkNumberDec(props.note.links.length, false, false),
-      LinkNumberDec(props.note.backlinks.length, true, false),
-    ]),
-    h("div", { class: "footer" }, [
-      h("a", { class: "icon-wrap", onclick: ToggleLeft }, [
-        h("i", { "data-feather": "chevrons-left", class: "icon" }),
-      ]),
-      publicContent(props),
+const editBtn = (props) => {
+  return h("div", {}, [
+    h("a", { class: "icon-wrap", onclick: View }, [
+      h("i", { "data-feather": "eye", class: "icon" }),
     ]),
   ]);
 };
+
+const viewBtn = (props) => {
+  return h("a", { class: "icon-wrap", onclick: Edit }, [
+    h("i", { "data-feather": "edit-2", class: "icon" }),
+  ]);
+};
+
+const lockBtn = (props) => {
+  return h("a", { class: "icon-wrap", onclick: Share }, [
+    h("i", { "data-feather": "lock", class: "icon" }),
+  ]);
+};
+
+const unlockBtn = (props) => {
+  return h("div", {}, [
+    h("a", { class: "icon-wrap", onclick: Share }, [
+      h("i", { "data-feather": "unlock", class: "icon" }),
+    ]),
+  ]);
+};
+
+const central = (props) => {
+  const oneExpandedSide = props.showLeft ? !props.showRight : props.showRight;
+  const bothExpandedSides = props.showLeft && props.showRight;
+
+  let centralWidth;
+  const leftPadding = props.showLeft ? "pd-l-sm" : "pd-l-md";
+  const rightPadding = props.showRight ? "pd-r-sm" : "pd-r-md";
+
+  if (oneExpandedSide) {
+    centralWidth = "cp-md";
+  } else if (bothExpandedSides) {
+    centralWidth = "cp-sm";
+  } else {
+    centralWidth = "cp-lg";
+  }
+  return h("div", { class: `central-pane  ${centralWidth}` }, [
+    h("div", { class: `central-content-wrap ${leftPadding} ${rightPadding}` }, [
+      h("div", { class: "title-bar" }, [
+        h("div", { class: "titlebar-title" }, text(props.note.name)),
+        h("div", { class: "titlebar-right" }, [
+          props.view === "EDIT" ? editBtn(props) : viewBtn(props),
+          props.note.is_public ? unlockBtn(props) : lockBtn(props),
+        ]),
+      ]),
+      h("div", { class: "content-wrapper" }, [
+        h("div", { id: "container", class: "main" }),
+      ]),
+    ]),
+    h("div", { class: `footer` }, [
+      h(
+        "div",
+        { class: `footer-content-wrap ${leftPadding} ${rightPadding}` },
+        [
+          h(
+            "div",
+            { class: "last-modified" },
+            text(`${getlastEdited(props.note.last_modified)}`)
+          ),
+          publicContent(props),
+        ]
+      ),
+    ]),
+  ]);
+};
+
+// 2. Left Section
+
+// left section
+const left = (props) => {
+  if (!props.showLeft) {
+    return leftClose(props);
+  } else {
+    return leftOpen(props);
+  }
+};
+
 
 // left close !showLeft
 const leftClose = (props) => {
@@ -792,18 +820,13 @@ const leftOpen = (props) => {
   ]);
 }
 
-// left section
-const left = (props) => {
-  if (props.isMobile) {
-    if (props.showLeft) {
-      return leftOpenMb(props);
-    }
-    return h("div", {class: "empty"});
-  } else if (!props.showLeft) {
-    return leftClose(props);
-  } else {
-    return leftOpen(props);
+// 3. Right Section
+
+const right = (props) => {
+  if (!props.showRight) {
+    return rightClose(props);
   }
+  return rightOpen(props);
 };
 
 
@@ -843,47 +866,42 @@ const rightOpen = (props) => {
   ]);
 }
 
-const right = (props) => {
-  if (props.isMobile) {
+// 4. Mobile Views
+
+const mobileNav = (props) => {
+  if (!props.showLeft) {
     return h("div", {class: "empty"});
   }
-  if (!props.showRight) {
-    return rightClose(props);
-  }
-  return rightOpen(props);
-};
-
-const editBtn = (props) => {
-  return h("div", {}, [
-    h("a", { class: "icon-wrap", onclick: View }, [
-      h("i", { "data-feather": "eye", class: "icon" }),
+  return h("div", { class: "side-pane left-pane side-pane-mb" }, [
+    h("div", { class: "control-wrap" }, [
+      ControlModule(props, "ADD"),
+      ControlModule(props, "SEARCH"),
+    ]),
+    h("div", { class: "lc" }, [
+      // needs to be wrapped otherwise hyperapp errors
+      h("div", {}, [ToggleList.view(searchList(props))]),
+      // needs to be wrapped otherwise hyperapp errors
+      h("div", {}, [ToggleList.view(recentList(props))]),
+      // needs to be wrapped otherwise hyperapp errors
+      h("div", {}, [ToggleList.view(linksList(props))]),
+      // needs to be wrapped otherwise hyperapp errors
+      h("div", {}, [ToggleList.view(backlinksList(props))]),
+    ]),
+    h("div", { class: "link-desc" }, [
+      LinkNumberDec(props.note.links.length, false, false),
+      LinkNumberDec(props.note.backlinks.length, true, false),
+    ]),
+    h("div", { class: "footer" }, [
+      h("a", { class: "icon-wrap", onclick: ToggleLeft }, [
+        h("i", { "data-feather": "chevrons-left", class: "icon" }),
+      ]),
+      publicContent(props),
     ]),
   ]);
 };
 
-const viewBtn = (props) => {
-  return h("a", { class: "icon-wrap", onclick: Edit }, [
-    h("i", { "data-feather": "edit-2", class: "icon" }),
-  ]);
-};
-
-const lockBtn = (props) => {
-  return h("a", { class: "icon-wrap", onclick: Share }, [
-    h("i", { "data-feather": "lock", class: "icon" }),
-  ]);
-};
-
-const unlockBtn = (props) => {
-  return h("div", {}, [
-    h("a", { class: "icon-wrap", onclick: Share }, [
-      h("i", { "data-feather": "unlock", class: "icon" }),
-    ]),
-  ]);
-};
-
-// central mb 
-const centralMb = (props) => {
-
+// main mb 
+const mobileMain = (props) => {
   const showContent = props.showLeft ? "content-mb-closed" : "content-mb-open";
   return h("div", { class: `${showContent}` }, [
     h("div", { class: "title-bar title-bar-mb" }, [
@@ -911,64 +929,51 @@ const centralMb = (props) => {
   ]);
 }
 
-const central = (props) => {
-  const oneExpandedSide = props.showLeft ? !props.showRight : props.showRight;
-  const bothExpandedSides = props.showLeft && props.showRight;
+// 5. Misc Component Views
 
-  let centralWidth;
-  const leftPadding = props.showLeft ? "pd-l-sm" : "pd-l-md";
-  const rightPadding = props.showRight ? "pd-r-sm" : "pd-r-md";
-
-  if (oneExpandedSide) {
-    centralWidth = "cp-md";
-  } else if (bothExpandedSides) {
-    centralWidth = "cp-sm";
-  } else {
-    centralWidth = "cp-lg";
+const LinkNumberDec = (length, backlinks = true, collapsed) => {
+  if (collapsed) {
+    return h("div", { class: "link-num-dec-collapsed" }, text(`${length}`));
   }
-  if (props.isMobile) {
-    return centralMb(props)
-  }
-  console.log("not mobile triggered!")
-  return h("div", { class: `central-pane  ${centralWidth}` }, [
-    h("div", { class: `central-content-wrap ${leftPadding} ${rightPadding}` }, [
-      h("div", { class: "title-bar" }, [
-        h("div", { class: "titlebar-title" }, text(props.note.name)),
-        h("div", { class: "titlebar-right" }, [
-          props.view === "EDIT" ? editBtn(props) : viewBtn(props),
-          props.note.is_public ? unlockBtn(props) : lockBtn(props),
-        ]),
-      ]),
-      h("div", { class: "content-wrapper" }, [
-        h("div", { id: "container", class: "main" }),
-      ]),
-    ]),
-    h("div", { class: `footer` }, [
-      h(
-        "div",
-        { class: `footer-content-wrap ${leftPadding} ${rightPadding}` },
-        [
-          h(
-            "div",
-            { class: "last-modified" },
-            text(`${getlastEdited(props.note.last_modified)}`)
-          ),
-          publicContent(props),
-        ]
-      ),
-    ]),
-  ]);
+  return h(
+    "div",
+    { class: "link-num-dec" },
+    text(`${length} ${backlinks ? "back" : ""}link${length !== 1 ? "s" : ""}`)
+  );
 };
 
+const publicContent = (props) => {
+  const publicUrl = `${location.origin}/public/${props.note.name}`;
+  const urlMb = props.isMobile ? "url-wrapper-mb" : ""
+  const tagMb = props.isMobile ? "url-tag-mb" : ""
+  const contentMb = props.isMobile ? "url-content-mb" : ""
+  return props.note.is_public === true
+      ? h("div", { class: `url-content mlauto ${contentMb}` }, [
+          h("div", { class: `url-tag ${tagMb}`}, text(`public url:${" "}`)),
+          h(
+            "a",
+            { class: `url-wrapper ${urlMb}`, href: publicUrl },
+            text(publicUrl)
+          ),
+        ])
+      : h("div", { class: "url-content mlauto" }, [
+          h("div", { class: "url-tag " }, text("")),
+        ]);
+};
+
+
 const main = (props) => {
-  return h("div", { class: "wrapper" }, [
+  return h("div", { class: "wrapper" }, 
+  props.isMobile ? [mobileNav(props), mobileMain(props)] : [
     left(props),
     central(props),
     right(props),
   ]);
 };
 
-// subscriptions
+// SUBSCRIPTIONS
+
+// S1. mobile switch handlers
 
 const _onresize = (dispatch, options) => {
   const handler = () => dispatch(options.action);
@@ -984,7 +989,7 @@ const ResizeHandler = (state) => {
   const newState = {
     ...state,
     isMobile: window.innerWidth < 768,
-    showLeft: false,
+    showLeft: window.innerWidth < 768 ? false : state.showLeft,
   };
   const rawMD = newState.note.content;
   const uniqueLinks = getUniqueLinks(rawMD);
@@ -1005,7 +1010,7 @@ const ResizeHandler = (state) => {
   ];
 };
 
-// routing
+// S2. hash routing handlers
 const _onhashchange = (dispatch, options) => {
   const handler = () => dispatch(options.action, location.hash);
   addEventListener("hashchange", handler);
@@ -1035,7 +1040,6 @@ const HashHandler = (state, hash) => {
     [renderIcons]
   ];
 };
-
 
 const initState = {
   view: "VIEW",

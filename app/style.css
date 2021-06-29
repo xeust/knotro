@@ -41,8 +41,10 @@ body {
   border-right: 1px solid #eaeaea;
   box-sizing: border-box;
 }
+
 .lc {
-  overflow-y: auto;
+  height: calc(100% - 144px);
+  overflow-y: scroll;
 }
 
 .rc {
@@ -124,6 +126,7 @@ body {
   flex-direction: column;
   padding-top: 12px;
   padding-bottom: 12px;
+  border-bottom: 1px solid #eaeaea;
 }
 
 .icon-wrap {
@@ -318,16 +321,12 @@ a.toggle-link:hover {
   flex-direction: column;
   padding-bottom: 16px;
   padding-top: 16px;
+  height: calc(100% - 76px);
+  margin-bottom: 4px;
   width: 100%;
-  height: calc(100% - 120px);
   overflow-y: auto;
 }
 
-.main {
-  display: inline-block;
-  padding-bottom: 15px;
-  overflow-y: visible !important;
-}
 
 /* kntro.com tag */
 .knotro-wrap {
@@ -460,6 +459,7 @@ ul {
 .side-pane-mb-closed {
   display: none;
 }
+
 .side-pane-mb {
   display: flex;
   flex-direction: column;
@@ -467,6 +467,7 @@ ul {
   background-color: #f7f7f7;
   max-height: calc(100vh);
 }
+
 .title-bar-mb {
   width: 90vw;
   padding-left: 5vw;
@@ -477,31 +478,42 @@ ul {
   padding-left: 5vw;
   padding-right: 5vw;
   overflow-y: auto;
-  max-height: calc(100% - 120px);
+  height: calc(100% - 116px);
+  margin-bottom: 4px;
 }
+
 .content-mb-open {
   max-height: 100vh;
   max-width: 100vw;
+  display: flex;
+  flex-direction: column;
 }
+
 .content-mb-closed {
   display: none;
 }
+
 .content-mb {
   padding-top: 0px;
   padding-bottom: 0px;
 }
+
 .footer-mb {
   width: 100vw;
 }
+
 .last-modified-mb {
   padding-right: 5vw;
 }
+
 .url-tag-mb {
   max-width: 100%;
 }
+
 .url-content-mb {
   max-width: 60%;
 }
+
 a.url-wrapper-mb {
   height: 24px;
   font-size: 14px;
@@ -514,6 +526,7 @@ a.url-wrapper-mb {
   white-space: nowrap;
   max-width: 50%;
 }
+
 .ellipsis {
   max-width: 90%;
   overflow: hidden;
