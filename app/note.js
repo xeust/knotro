@@ -62,12 +62,12 @@ const getlastEdited = (lastModified) => {
 
   if (days < 1 || days === NaN) {
     if (hours < 1 || hours === NaN) {
-      return `last edited: ${minutes} minutes ago`;
+      return `edited: ${minutes} minutes ago`;
     } else {
-      return `last edited: ${hours} hours ago`;
+      return `edited: ${hours} hours ago`;
     }
   } else {
-    return `last edited: ${days} days ago`;
+    return `edited: ${days} days ago`;
   }
 };
 
@@ -398,7 +398,6 @@ const View = (state) => {
 const Share = (state) => {
   const newState = {
     ...state,
-    view: "VIEW",
     note: {
       ...state.note,
       is_public: !state.note.is_public,
@@ -693,27 +692,27 @@ const searchList = ToggleList.model({
 
 const editBtn = (props) => {
   return h("div", {}, [
-    h("a", { class: "icon-wrap", onclick: View }, [
+    h("a", { class: "icon-wrap", onclick: View, alt: "View Note", title: "View Note" }, [
       h("i", { "data-feather": "eye", class: "icon" }),
     ]),
   ]);
 };
 
 const viewBtn = (props) => {
-  return h("a", { class: "icon-wrap", onclick: Edit }, [
+  return h("a", { class: "icon-wrap", onclick: Edit, alt: "Edit Note", title: "Edit Note" }, [
     h("i", { "data-feather": "edit-2", class: "icon" }),
   ]);
 };
 
 const lockBtn = (props) => {
-  return h("a", { class: "icon-wrap", onclick: Share }, [
+  return h("a", { class: "icon-wrap", onclick: Share, alt: "Make Note Public", title: "Make Note Public" }, [
     h("i", { "data-feather": "lock", class: "icon" }),
   ]);
 };
 
 const unlockBtn = (props) => {
   return h("div", {}, [
-    h("a", { class: "icon-wrap", onclick: Share }, [
+    h("a", { class: "icon-wrap", onclick: Share, alt: "Make Note Private", title: "Make Note Private" }, [
       h("i", { "data-feather": "unlock", class: "icon" }),
     ]),
   ]);
@@ -747,14 +746,14 @@ const central = (props) => {
         h("div", { id: "container", class: "main" }),
       ]),
     ]),
-    h("div", { class: `footer` }, [
+    h("div", { class: `footer  ${leftPadding} ${rightPadding}` }, [
       h(
         "div",
-        { class: `footer-content-wrap ${leftPadding} ${rightPadding}` },
-        [
+        { class: `footer-content-wrap` },
+        [  
           h(
             "div",
-            { class: "last-modified" },
+            { class: "last-modified truncated" },
             text(`${getlastEdited(props.note.last_modified)}`)
           ),
           publicContent(props),
@@ -952,7 +951,7 @@ const publicContent = (props) => {
           h("div", { class: `url-tag ${tagMb}`}, text(`public url:${" "}`)),
           h(
             "a",
-            { class: `url-wrapper ${urlMb}`, href: publicUrl },
+            { class: `url-wrapper ${urlMb} truncated`, href: publicUrl },
             text(publicUrl)
           ),
         ])

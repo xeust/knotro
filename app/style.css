@@ -71,6 +71,7 @@ body {
   display: flex;
   flex-direction: column;
   height: calc(100% - 40px);
+  
 }
 
 .cp-sm {
@@ -83,7 +84,7 @@ body {
 }
 
 .cp-lg {
-  width: calc(100% - 40px);
+  width: calc(100% - 80px);
 }
 
 .pd-l-sm {
@@ -338,12 +339,17 @@ a.toggle-link:hover {
 
 /* last edited */
 
+.truncated {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
 .last-modified {
   height: 24px;
   font-size: 14px;
-  display: inline-flex;
+  max-width: 35%;
   color: #8f8f8f;
-  text-decoration: none;
   font-family: Roboto Mono, Courier, monospace;
 }
 
@@ -357,13 +363,16 @@ a.toggle-link:hover {
 
 /* public url */
 .url-content {
-  display: inline-flex;
+  max-width: 65%;
+  display: flex;
 }
 
 .url-tag {
   height: 24px;
   font-size: 14px;
   color: #8f8f8f;
+  white-space: nowrap;
+  margin-left: 1em;
   font-family: Roboto Mono, Courier, monospace;
 }
 
@@ -372,12 +381,10 @@ a.url-wrapper {
   font-size: 14px;
   font-weight: 700;
   color: #98b9f9;
+  max-width: 80%;
   text-decoration: none;
   font-family: Roboto Mono, Courier, monospace;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
-  max-width: 80%;
+
 }
 
 a.url-wrapper:hover {
