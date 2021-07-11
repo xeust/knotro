@@ -723,18 +723,24 @@ const central = (props) => {
   const bothExpandedSides = props.showLeft && props.showRight;
 
   let centralWidth;
-  const leftPadding = props.showLeft ? "pd-l-sm" : "pd-l-md";
-  const rightPadding = props.showRight ? "pd-r-sm" : "pd-r-md";
+  let contentWidth;
 
   if (oneExpandedSide) {
-    centralWidth = "cp-md";
+    centralWidth = window.innerWidth - 280;
   } else if (bothExpandedSides) {
-    centralWidth = "cp-sm";
+    centralWidth = window.innerWidth - 480;
   } else {
-    centralWidth = "cp-lg";
+    centralWidth = window.innerWidth - 80;
   }
-  return h("div", { class: `central-pane  ${centralWidth}` }, [
-    h("div", { class: `central-content-wrap ${leftPadding} ${rightPadding}` }, [
+
+  contentWidth = centralWidth > 1182 ? 882 : centralWidth - 300;
+
+  // shrink the content-wrap divs based on central width
+  // 886, 768, 480, 288
+  console.log(centralWidth);
+
+  return h("div", { class: `central-pane`, style: { "width": `${centralWidth}px` } }, [
+    h("div", { class: `central-content-wrap`, style: { "width": `${contentWidth}px` } }, [
       h("div", { class: "title-bar" }, [
         h("div", { class: "titlebar-title" }, text(props.note.name)),
         h("div", { class: "titlebar-right" }, [
@@ -746,10 +752,10 @@ const central = (props) => {
         h("div", { id: "container", class: "main" }),
       ]),
     ]),
-    h("div", { class: `footer  ${leftPadding} ${rightPadding}` }, [
+    h("div", { class: `footer`, style: { "width": `${centralWidth}px` } }, [
       h(
         "div",
-        { class: `footer-content-wrap` },
+        { class: `footer-content-wrap`, style: { "width": `${contentWidth}px` } },
         [  
           h(
             "div",
@@ -988,7 +994,7 @@ const ResizeHandler = (state) => {
   const newState = {
     ...state,
     isMobile: window.innerWidth < 768,
-    showLeft: window.innerWidth < 768 ? false : state.showLeft,
+    showLeft: state.showLeft,
   };
   const rawMD = newState.note.content;
   const uniqueLinks = getUniqueLinks(rawMD);
