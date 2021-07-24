@@ -47,6 +47,12 @@ body {
   overflow-y: scroll;
 }
 
+
+.lcp {
+  height: calc(100% - 88px);
+  overflow-y: scroll;
+}
+
 .rc {
   height: calc(100% - 48px);
   overflow-y: auto;
@@ -121,7 +127,7 @@ body {
 /* search, add */
 .input-wrap {
   display: flex;
-  padding: 8px;
+  padding: 12px 8px 12px 12px;
   height: 24px;
   align-items: center;
 }
@@ -136,7 +142,7 @@ body {
     sans-serif;
   font-size: 16px;
   border-width: 0 0 1px;
-  width: calc(100% - 76px);
+  width: calc(100% - 64px);
   margin: 0 0 0 0;
 }
 
@@ -155,6 +161,7 @@ body {
 
 .x-icon {
   padding-left: 0px !important;
+  padding-right: 0px !important;
 }
 
 .remove-marginbot {
@@ -339,6 +346,7 @@ a.toggle-link:hover {
   font-size: 14px;
   display: inline-flex;
   text-decoration: none;
+  margin-right: 12px;
   font-family: Roboto Mono, Courier, monospace;
 }
 

@@ -67,8 +67,8 @@ const ResizeHandler = (state) => {
   console.log("Resize triggered...", window.innerWidth, window.innerHeight);
   const newState = {
     ...state,
-    isMobile: Math.min(window.innerWidth, window.innerHeight) < 768,
-    showLeft: false
+    isMobile: Math.min(window.innerWidth) < 768,
+    showLeft: state.showLeft,
   };
   return [newState,     [
     attachMarkdown,
@@ -182,7 +182,7 @@ const LinkNumberDec = (length, backlinks = true, collapsed) => {
 // left view mobile
 const leftOpenMb = (props) => {
   return h("div", { class: "side-pane left-pane side-pane-mb" }, [
-    h("div", { class: "lc" }, [
+    h("div", { class: "lcp" }, [
       // needs to be wrapped otherwise hyperapp errors
       h("div", {}, [ToggleList.view(linksList(props))]),
       // needs to be wrapped otherwise hyperapp errors
@@ -226,7 +226,7 @@ const leftClose = (props) => {
 
 const leftOpen = (props) => {
   return h("div", { class: "side-pane left-pane" }, [
-    h("div", {class:"lc"}, [
+    h("div", {class:"lcp"}, [
       h("div", { class: "right-content-wrap" }, [
         h("div", {} , [ToggleList.view(linksList(props))]),
         h("div", {} , [ToggleList.view(backlinksList(props))]),
@@ -259,16 +259,6 @@ const left = (props) => {
   }
   return leftOpen(props);
 };
-
-const right = (props) => {
-  if (props.isMobile) {
-    return h("div", {}, text(""))
-  }
-  return h("div", { class: `footer public-r-f` }, [
-    h("div", { class: `footer-content-wrap` }, [
-    ])
-  ])
-} 
 
 
 // central mb 
@@ -306,28 +296,26 @@ const centralMb = (props) => {
 // central section
 const central = (props) => {
 
-
-  const oneExpandedSide = props.showLeft ? !props.showRight : props.showRight;
-  const bothExpandedSides = props.showLeft && props.showRight;
+  const oneExpandedSide = props.showLeft;
 
   let centralWidth;
-  const leftPadding = props.showLeft ? "pd-l-sm" : "pd-l-md";
-  const rightPadding = "pd-r-md";
+  let contentWidth;
 
   if (oneExpandedSide) {
-    centralWidth = "cp-md"
-  } else if (bothExpandedSides) {
-    centralWidth = "cp-sm"
+    centralWidth = window.innerWidth - 240;
   } else {
-    centralWidth = "cp-lg"
+    centralWidth = window.innerWidth - 40;
   }
+
+
+  contentWidth = centralWidth > 1182 ? 882 : centralWidth - 300;
 
   if (props.isMobile) {
     return centralMb(props)
   }
 
-  return h("div", { class: `central-pane  ${centralWidth}` }, [
-    h("div", { class: `central-content-wrap ${leftPadding} ${rightPadding}` }, [
+  return h("div", { class: `central-pane`, style: { "width": `${centralWidth}px` } }, [
+    h("div", { class: `central-content-wrap`, style: { "width": `${contentWidth}px` } }, [
       h("div", { class: "title-bar" }, [
         h("div", { class: "titlebar-title" }, text(props.note.name)),
       ]),
@@ -335,30 +323,33 @@ const central = (props) => {
         h("div", { id: "container", class: "main" }),
       ]),
     ]),
-    h("div", { class: `footer` }, [
-      h("div", { class: `footer-content-wrap ${leftPadding} ${rightPadding}` }, [
-        h("a", { class: "sponsor", href:"https://deta.space/discovery/yarc" }, [
-          h("div", { innerHTML: svg, class: "sponsor-svg" }),
-          h("div", { class: "sponsor-message" }, text("Install on Deta")),
+    h("div", { class: `footer`, style: { "width": `${centralWidth}px` } }, [
+      h(
+        "div",
+        { class: `footer-content-wrap`, style: { "width": `${contentWidth}px` } },
+        [
+          h("a", { class: "sponsor", href:"https://deta.space/discovery/yarc" }, [
+            h("div", { innerHTML: svg, class: "sponsor-svg" }),
+            h("div", { class: "sponsor-message" }, text("Install on Deta")),
+          ]),
         ]),
-      ])
-    ]),
+    ])
   ]);
 };
 
 const main = (props) => {
-  return h("div", { class: "wrapper" }, [left(props), central(props), right(props)]);
+  return h("div", { class: "wrapper" }, [left(props), central(props)]);
 };
 
 
 const initState = {
   note: input,
   showLeft: true,
-  showRight: true,
   collapseLinks: false,
   collapseBacklinks: false,
-  isMobile: Math.min(window.innerWidth, window.innerHeight) < 768,
+  isMobile: Math.min(window.innerWidth) < 768,
 };
+
 
 app({
   init: [

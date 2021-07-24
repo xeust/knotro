@@ -184,7 +184,6 @@ const attachCodeJar = (dispatch, options) => {
     var container = document.getElementById("container");
     var contentDiv = document.querySelector(".content-wrapper");
     const scrollTop = contentDiv.scrollTop;
-    console.log(scrollTop);
     container.innerHTML = "";
     jar = CodeMirror(container, {
       value: options.content,
@@ -737,7 +736,6 @@ const central = (props) => {
 
   // shrink the content-wrap divs based on central width
   // 886, 768, 480, 288
-  console.log(centralWidth);
 
   return h("div", { class: `central-pane`, style: { "width": `${centralWidth}px` } }, [
     h("div", { class: `central-content-wrap`, style: { "width": `${contentWidth}px` } }, [
@@ -885,11 +883,8 @@ const mobileNav = (props) => {
     h("div", { class: "lc" }, [
       // needs to be wrapped otherwise hyperapp errors
       h("div", {}, [ToggleList.view(searchList(props))]),
-      // needs to be wrapped otherwise hyperapp errors
       h("div", {}, [ToggleList.view(recentList(props))]),
-      // needs to be wrapped otherwise hyperapp errors
       h("div", {}, [ToggleList.view(linksList(props))]),
-      // needs to be wrapped otherwise hyperapp errors
       h("div", {}, [ToggleList.view(backlinksList(props))]),
     ]),
     h("div", { class: "link-desc" }, [
