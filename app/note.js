@@ -492,13 +492,13 @@ const searchNotes = async (dispatch, options) => {
   dispatch(UpdateSearchNotes, links);
 };
 
-const UpdateSearchNotes = (state, notes) => ({
+const UpdateSearchNotes = (state, notes) => [{
   ...state,
   searchLinks: notes,
-});
+}, [renderIcons]];
 
 const GetSearchLinks = (state) => {
-  return [state, [searchNotes, { state, UpdateSearchNotes }]];
+  return [state, [searchNotes, { state, UpdateSearchNotes }], [renderIcons]];
 };
 
 const ControlModule = (state, type) => {
@@ -705,14 +705,14 @@ const viewBtn = (props) => {
 
 const lockBtn = (props) => {
   return h("a", { class: "icon-wrap", onclick: Share, alt: "Make Note Public", title: "Make Note Public" }, [
-    h("i", { "data-feather": "lock", class: "icon" }),
+    h("i", { "data-feather": "share", class: "icon" }),
   ]);
 };
 
 const unlockBtn = (props) => {
   return h("div", {}, [
-    h("a", { class: "icon-wrap", onclick: Share, alt: "Make Note Private", title: "Make Note Private" }, [
-      h("i", { "data-feather": "unlock", class: "icon" }),
+    h("a", { class: "icon-wrap", onclick: Share, alt: "Make Note Private", title: "Make Note Private", style: {color: "#98b9f9"} }, [
+      h("i", { "data-feather": "share", class: "icon" }),
     ]),
   ]);
 };
