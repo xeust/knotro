@@ -922,7 +922,7 @@ const mobileMain = (props) => {
       ]),
       h(
         "div",
-        { class: "last-modified mlauto last-modified-mb " },
+        { class: "last-modified mlauto last-modified-mb truncated " },
         text(`${getlastEdited(props.note.last_modified)}`)
       ),
     ]),
@@ -944,15 +944,12 @@ const LinkNumberDec = (length, backlinks = true, collapsed) => {
 
 const publicContent = (props) => {
   const publicUrl = `${location.origin}/public/${props.note.name}`;
-  const urlMb = props.isMobile ? "url-wrapper-mb" : ""
-  const tagMb = props.isMobile ? "url-tag-mb" : ""
-  const contentMb = props.isMobile ? "url-content-mb" : ""
   return props.note.is_public === true
-      ? h("div", { class: `url-content mlauto ${contentMb}` }, [
-          h("div", { class: `url-tag ${tagMb}`}, text(`public url:${" "}`)),
+      ? h("div", { class: `mlauto url-content` }, [
+          h("div", { class: `url-tag`}, text(`public url:${" "}`)),
           h(
             "a",
-            { class: `url-wrapper ${urlMb} truncated`, href: publicUrl },
+            { class: `url-wrapper truncated`, href: publicUrl },
             text(publicUrl)
           ),
         ])

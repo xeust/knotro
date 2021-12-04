@@ -127,7 +127,7 @@ body {
 /* search, add */
 .input-wrap {
   display: flex;
-  padding: 12px 8px 12px 12px;
+  padding: 8px 8px 8px 12px;
   height: 24px;
   align-items: center;
 }
@@ -336,7 +336,7 @@ a.toggle-link:hover {
 .last-modified {
   height: 24px;
   font-size: 14px;
-  max-width: 35%;
+  max-width: 40%;
   color: #8f8f8f;
   font-family: Roboto Mono, Courier, monospace;
 }
@@ -352,8 +352,9 @@ a.toggle-link:hover {
 
 /* public url */
 .url-content {
-  max-width: 65%;
   display: flex;
+  padding-right: 12px;
+  max-width: 80%;
 }
 
 .url-tag {
@@ -362,15 +363,17 @@ a.toggle-link:hover {
   color: #8f8f8f;
   white-space: nowrap;
   margin-left: 1em;
+  margin-right: 0.5em;
   font-family: Roboto Mono, Courier, monospace;
 }
+
+
 
 a.url-wrapper {
   height: 24px;
   font-size: 14px;
   font-weight: 700;
   color: #98b9f9;
-  max-width: 80%;
   text-decoration: none;
   font-family: Roboto Mono, Courier, monospace;
 
@@ -499,16 +502,9 @@ ul {
 }
 
 .last-modified-mb {
-  padding-right: 5vw;
+  padding-right: 12px;
 }
 
-.url-tag-mb {
-  max-width: 100%;
-}
-
-.url-content-mb {
-  max-width: 60%;
-}
 
 a.url-wrapper-mb {
   height: 24px;
@@ -520,7 +516,7 @@ a.url-wrapper-mb {
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
-  max-width: 50%;
+  max-width: 70%;
 }
 
 .ellipsis {
