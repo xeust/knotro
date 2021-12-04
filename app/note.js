@@ -641,6 +641,19 @@ const ToggleList = {
 
 // List views
 // do the border lines here.
+const searchList = ToggleList.model({
+  getter: (state) => ({
+    value: state.collapseSearch,
+    tag: "Search",
+    links: state.searchLinks,
+    hasTopBorder: false
+  }),
+  setter: (state, toggleSearch) => [
+    { ...state, collapseSearch: toggleSearch },
+    [renderIcons],
+  ],
+});
+
 const recentList = ToggleList.model({
   getter: (state) => ({
     value: state.collapseRecent,
@@ -659,7 +672,9 @@ const linksList = ToggleList.model({
     value: state.collapseLinks,
     tag: "Links",
     links: state.note.links,
-    hasTopBorder: false
+    hasTopBorder: !state.isMobile || 
+      (state.isMobile && state.searchLinks.length === 0 && state.note.recent_notes.length === 0) 
+      ? false : true
   }),
   setter: (state, toggleLinks) => [
     { ...state, collapseLinks: toggleLinks },
@@ -672,23 +687,12 @@ const backlinksList = ToggleList.model({
     value: state.collapseBacklinks,
     tag: "Backlinks",
     links: state.note.backlinks,
-    hasTopBorder: state.note.links.length > 0 ? true : false
+    hasTopBorder: (state.note.links.length > 0) || 
+    (state.isMobile && (state.note.recent_notes.length || state.searchLinks.length)) 
+    ? true : false
   }),
   setter: (state, toggleBacklinks) => [
     { ...state, collapseBacklinks: toggleBacklinks },
-    [renderIcons],
-  ],
-});
-
-const searchList = ToggleList.model({
-  getter: (state) => ({
-    value: state.collapseSearch,
-    tag: "Search",
-    links: state.searchLinks,
-    hasTopBorder: false
-  }),
-  setter: (state, toggleSearch) => [
-    { ...state, collapseSearch: toggleSearch },
     [renderIcons],
   ],
 });
