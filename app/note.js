@@ -606,15 +606,17 @@ const ToggleList = {
       value: getter(state).value,
       tag: getter(state).tag,
       links: getter(state).links,
+      hasTopBorder: getter(state).hasTopBorder,
       Toggle,
     });
   },
   view: (model) => {
+    const topBorder = model.hasTopBorder ? "toggle-list-top" : "";
     if (model.links.length === 0) {
       return h("div", {}, []);
     }
     if (model.value) {
-      return h("div", { class: "toggle-list" }, [
+      return h("div", { class: `toggle-list ${topBorder}` }, [
         h("a", { class: "toggle-title collapsed", onclick: model.Toggle }, [
           h("div", { class: "title-tag" }, text(model.tag)),
           h("div", { class: "icon-wrap mlauto" }, [
@@ -623,7 +625,7 @@ const ToggleList = {
         ]),
       ]);
     }
-    return h("div", { class: "toggle-list" }, [
+    return h("div", { class: `toggle-list ${topBorder}` }, [
       h("a", { class: "toggle-title", onclick: model.Toggle }, [
         h("div", { class: "title-tag" }, text(model.tag)),
         h("a", { class: "icon-wrap mlauto toggle-chevron-active" }, [
@@ -644,6 +646,7 @@ const recentList = ToggleList.model({
     value: state.collapseRecent,
     tag: "Recent",
     links: state.note.recent_notes,
+    hasTopBorder: state.searchLinks.length > 0 ? true : false
   }),
   setter: (state, toggleRecent) => [
     { ...state, collapseRecent: toggleRecent },
@@ -656,6 +659,7 @@ const linksList = ToggleList.model({
     value: state.collapseLinks,
     tag: "Links",
     links: state.note.links,
+    hasTopBorder: false
   }),
   setter: (state, toggleLinks) => [
     { ...state, collapseLinks: toggleLinks },
@@ -668,6 +672,7 @@ const backlinksList = ToggleList.model({
     value: state.collapseBacklinks,
     tag: "Backlinks",
     links: state.note.backlinks,
+    hasTopBorder: state.note.links.length > 0 ? true : false
   }),
   setter: (state, toggleBacklinks) => [
     { ...state, collapseBacklinks: toggleBacklinks },
@@ -680,6 +685,7 @@ const searchList = ToggleList.model({
     value: state.collapseSearch,
     tag: "Search",
     links: state.searchLinks,
+    hasTopBorder: false
   }),
   setter: (state, toggleSearch) => [
     { ...state, collapseSearch: toggleSearch },
