@@ -10,6 +10,8 @@ let jar;
 
 // helpers
 
+const nameToKey = (name) => atob(name).replaceAll("=", "_");
+
 const linkSub = (rawMD, links) => {
   let newMD = rawMD;
   for (const each of links) {
@@ -276,9 +278,10 @@ const UpdateNote = (state, note) => {
   };
   const content = note.content;
   const uniqueLinks = getUniqueLinks(content);
+  const isEdit = state.view === "EDIT";
   return [
     newState,
-    [attachCodeJar, { content }],
+    isEdit ? [attachCodeJar, { content }] : [attachMarkdown, { rawMD: content, uniqueLinks }],
     [renderIcons]
   ];
 };
@@ -525,16 +528,6 @@ const ControlModule = (state, type) => {
     },
   };
 
-  const inputHandler = (state, event) => ({
-    ...state,
-    controls: {
-      ...state.controls,
-      [type]: {
-        inputValue: event.target.value,
-      },
-    },
-  });
-
   const open = (state) => {
     const newState = {
       ...state,
@@ -560,6 +553,24 @@ const ControlModule = (state, type) => {
     return [newState, [renderIcons]];
   };
 
+  const inputHandler = (state, event) => {
+    if (event.key === 'Enter') {
+      return types[type].onConfirm
+    } else if (event.key === 'Escape') {
+      return close(state)
+    }
+
+    return {
+      ...state,
+      controls: {
+        ...state.controls,
+        [type]: {
+          inputValue: event.target.value,
+        },
+      },
+    } 
+  };
+
   const isOpen = state.controls.active === type;
 
   if (isOpen) {
@@ -568,7 +579,7 @@ const ControlModule = (state, type) => {
         class: "input",
         id: types[type].inputId,
         placeholder: types[type].placeholder,
-        oninput: inputHandler,
+        onkeyup: inputHandler,
       }),
       h(
         "a",

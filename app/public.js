@@ -96,59 +96,59 @@ const ToggleLeft = (state) => {
 
 
 // Toggle List Module
-
 const ToggleList = {
   init: (x) => x,
   toggle: (x) => !x,
   model: ({ getter, setter }) => {
-    const Toggle = (state) => setter(state, ToggleList.toggle(getter(state).value));
+    const Toggle = (state) =>
+      setter(state, ToggleList.toggle(getter(state).value));
 
     return (state) => ({
       value: getter(state).value,
       tag: getter(state).tag,
       links: getter(state).links,
+      hasTopBorder: getter(state).hasTopBorder,
       Toggle,
     });
   },
   view: (model) => {
+    const topBorder = model.hasTopBorder ? "toggle-list-top" : "";
     if (model.links.length === 0) {
       return h("div", {}, []);
     }
     if (model.value) {
-      return h("div", { class: "toggle-list" }, [
-          h("a", { class: "toggle-title collapsed", onclick: model.Toggle }, [
-            h(
-              "div",
-              { class: "title-tag" },
-              text(model.tag)
-            ),
-            h(
-              "div",
-              { class: "icon-wrap mlauto" },
-              [h("i", { "data-feather": "chevron-down", class: "icon" })]
-            )
-          ])
+      return h("div", { class: `toggle-list ${topBorder}` }, [
+        h("a", { class: "toggle-title collapsed", onclick: model.Toggle }, [
+          h("div", { class: "title-tag" }, text(model.tag)),
+          h("div", { class: "icon-wrap mlauto" }, [
+            h("i", { "data-feather": "chevron-down", class: "icon" }),
+          ]),
+        ]),
       ]);
     }
-    return h("div", { class: "toggle-list" }, [
+    return h("div", { class: `toggle-list ${topBorder}` }, [
       h("a", { class: "toggle-title", onclick: model.Toggle }, [
         h("div", { class: "title-tag" }, text(model.tag)),
-        h(
-          "a",
-          { class: "icon-wrap mlauto toggle-chevron-active" },
-          [h("i", { "data-feather": "chevron-up", class: "icon" })]
-        ),
+        h("a", { class: "icon-wrap mlauto toggle-chevron-active" }, [
+          h("i", { "data-feather": "chevron-up", class: "icon" }),
+        ]),
       ]),
       ...model.links.map((link) =>
-        h("a", { href: `/public/${link}`, class: "toggle-link ellipsis" }, text(link))
+        h("a", { href: `#${link}`, class: "toggle-link ellipsis" }, text(link))
       ),
     ]);
   },
 };
 
+
 // list views
 const linksList = ToggleList.model({
-  getter: (state) => ({value: state.collapseLinks, tag: "Links", links: state.note.links}),
+  getter: (state) => ({
+    value: state.collapseLinks,
+    tag: "Links",
+    links: state.note.links,
+    hasTopBorder: !state.isMobile ? false : true
+  }),
   setter: (state, toggleLinks) => [
     { ...state, collapseLinks: toggleLinks },
     [renderIcons],
@@ -156,7 +156,14 @@ const linksList = ToggleList.model({
 });
 
 const backlinksList = ToggleList.model({
-  getter: (state) => ({value:state.collapseBacklinks, tag: "Backlinks", links: state.note.backlinks}),
+  getter: (state) => ({
+    value: state.collapseBacklinks,
+    tag: "Backlinks",
+    links: state.note.backlinks,
+    hasTopBorder: (state.note.links.length > 0) || 
+    state.isMobile
+    ? true : false
+  }),
   setter: (state, toggleBacklinks) => [
     { ...state, collapseBacklinks: toggleBacklinks },
     [renderIcons],
