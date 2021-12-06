@@ -179,6 +179,9 @@ body {
   flex-direction: column;
   padding-left: 12px;
   padding-bottom: 24px;
+}
+
+.toggle-list-top {
   border-top: 1px solid #eaeaea;
 }
 

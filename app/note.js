@@ -207,7 +207,7 @@ const attachCodeJar = (dispatch, options) => {
         clearTimeout(timeout);
         timeout = setTimeout(function () {
           dispatch(DebounceSave);
-        }, 1500);
+        }, 700);
       }
     });
   });
@@ -278,7 +278,7 @@ const UpdateNote = (state, note) => {
   const uniqueLinks = getUniqueLinks(content);
   return [
     newState,
-    [attachMarkdown, { rawMD: content, uniqueLinks }],
+    [attachCodeJar, { content }],
     [renderIcons]
   ];
 };
@@ -1049,7 +1049,7 @@ const HashHandler = (state, hash) => {
 };
 
 const initState = {
-  view: "VIEW",
+  view: "EDIT",
   note: {
     name: "Loading",
     content: "Loading...",
