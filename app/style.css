@@ -89,6 +89,7 @@ body {
 
 .footer-content-wrap {
   display: flex;
+  align-items: center;
   margin: 0 auto;
 }
 
@@ -114,6 +115,7 @@ body {
 
 .icon-wrap {
   display: flex;
+  align-items: center;
   width: 24px;
   height: 24px;
   padding: 8px;
@@ -124,6 +126,21 @@ body {
   color: #313131;
   cursor: pointer;
 }
+
+.icon-wrap-small {
+  display: flex;
+  align-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 2px;
+  color: #8f8f8f;
+}
+
+.icon-wrap-small:hover {
+  color: #313131;
+  cursor: pointer;
+}
+
 
 /* search, add */
 .input-wrap {
@@ -357,7 +374,7 @@ a.toggle-link:hover {
 /* public url */
 .url-content {
   display: flex;
-  padding-right: 12px;
+  height: 24px;
   max-width: 80%;
 }
 
@@ -503,6 +520,10 @@ ul {
 
 .footer-mb {
   width: 100vw;
+}
+
+.footer-showleft-mb {
+  padding-right: 16px;
 }
 
 .last-modified-mb {

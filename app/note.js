@@ -725,15 +725,15 @@ const viewBtn = (props) => {
 };
 
 const lockBtn = (props) => {
-  return h("a", { class: "icon-wrap", onclick: Share, alt: "Make Note Public", title: "Make Note Public" }, [
-    h("i", { "data-feather": "share", class: "icon" }),
+  return h("a", { class: "icon-wrap-small", onclick: Share, alt: "Make Note Public", title: "Make Note Public" }, [
+    h("i", { "data-feather": "share-2", class: "icon" }),
   ]);
 };
 
 const unlockBtn = (props) => {
   return h("div", {}, [
-    h("a", { class: "icon-wrap", onclick: Share, alt: "Make Note Private", title: "Make Note Private", style: {color: "#98b9f9"} }, [
-      h("i", { "data-feather": "share", class: "icon" }),
+    h("a", { class: "icon-wrap-small", onclick: Share, alt: "Make Note Private", title: "Make Note Private", style: {color: "#98b9f9"} }, [
+      h("i", { "data-feather": "share-2", class: "icon" }),
     ]),
   ]);
 };
@@ -764,7 +764,6 @@ const central = (props) => {
         h("div", { class: "titlebar-title" }, text(props.note.name)),
         h("div", { class: "titlebar-right" }, [
           props.view === "EDIT" ? editBtn(props) : viewBtn(props),
-          props.note.is_public ? unlockBtn(props) : lockBtn(props),
         ]),
       ]),
       h("div", { class: "content-wrapper" }, [
@@ -912,7 +911,7 @@ const mobileNav = (props) => {
       LinkNumberDec(props.note.links.length, false, false),
       LinkNumberDec(props.note.backlinks.length, true, false),
     ]),
-    h("div", { class: "footer" }, [
+    h("div", { class: "footer footer-showleft-mb" }, [
       h("a", { class: "icon-wrap", onclick: ToggleLeft }, [
         h("i", { "data-feather": "chevrons-left", class: "icon" }),
       ]),
@@ -929,7 +928,6 @@ const mobileMain = (props) => {
       h("div", { class: "titlebar-title" }, text(props.note.name)),
       h("div", { class: "titlebar-right" }, [
         props.view === "EDIT" ? editBtn(props) : viewBtn(props),
-        props.note.is_public ? unlockBtn(props) : lockBtn(props),
       ]),
     ]),
     h("div", { class: `central-mb` }, [
@@ -967,6 +965,7 @@ const publicContent = (props) => {
   const publicUrl = `${location.origin}/public/${props.note.name}`;
   return props.note.is_public === true
       ? h("div", { class: `mlauto url-content` }, [
+          unlockBtn(props),
           h("div", { class: `url-tag`}, text(`public url:${" "}`)),
           h(
             "a",
@@ -974,8 +973,8 @@ const publicContent = (props) => {
             text(publicUrl)
           ),
         ])
-      : h("div", { class: "url-content mlauto" }, [
-          h("div", { class: "url-tag " }, text("")),
+      : h("div", { class: "mlauto" }, [
+          lockBtn(props),
         ]);
 };
 
