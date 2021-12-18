@@ -14,6 +14,15 @@ app = App(fast)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+default_content = ["have the curiosity to open the Door in the Wall...", 
+"come back through the Door in the Wall, not quite the same, humbler yet better equipped...",
+"that's all the motorcycle is, a system of concepts worked out in steel...",
+f"For the game of creation, a sacred \"Yes\" is needed...",
+"one cannot fly into flying...",
+"where is your way...",
+"try Cmd/Ctrl + i to change the view...",
+"try Cmd/Ctrl + j to toggle focus mode..."]
+
 
 @app.get("/")
 def html_handler():
@@ -37,12 +46,11 @@ def search_handler(search_term: str):
 async def read_note(note_name: str, json: bool = False):
     note = get_note(note_name)
     note_dict = {}
-    print(note_name)
     if note:
       note_dict = note.dict()
     
     else:
-      new_note = Note(name=note_name)
+      new_note = Note(name=note_name, content=random.choice(default_content))
       note_dict = new_note.dict()
       note_key = urlsafe_key(note_name)
       note_dict["last_modified"] = str(datetime.now(timezone.utc).isoformat())

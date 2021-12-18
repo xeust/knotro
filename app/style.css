@@ -13,6 +13,14 @@ body {
   flex-direction: column;
 }
 
+a {
+  color: #578df8;
+}
+
+a:hover {
+  color: #234da1;
+}
+
 /* control panes */
 
 .wrapper {
@@ -113,6 +121,11 @@ body {
   border-bottom: 1px solid #eaeaea;
 }
 
+.control-message {
+  color: #8f8f8f;
+  padding: 8px 8px 8px 12px;
+}
+
 .icon-wrap {
   display: flex;
   align-items: center;
@@ -174,7 +187,7 @@ body {
 }
 
 .x:hover {
-  color:red
+  color:red;
 }
 
 .x-icon {
@@ -213,6 +226,7 @@ body {
   font-size: 24px;
   padding-top: 8px;
   font-weight: bold;
+  color: #313131;
 }
 
 a.toggle-title:hover {

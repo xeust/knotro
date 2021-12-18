@@ -397,6 +397,13 @@ const View = (state) => {
   ];
 };
 
+const ToggleView = (state) => {
+  if (state.view === "VIEW") {
+    return Edit(state)
+  }
+  return View(state)
+}
+
 const Share = (state) => {
   const newState = {
     ...state,
@@ -432,6 +439,18 @@ const ToggleLeft = (state) => {
 
   return [newState, [renderIcons]];
 };
+
+const ToggleFocusMode = (state) => {
+  const newState = {
+    ...state,
+    showLeft: !(state.showLeft || state.showRight),
+    showRight: !(state.showLeft || state.showRight),
+    note: {
+      ...state.note,
+    },
+  };
+  return [newState, [renderIcons]];
+}
 
 const UncollapseAndFocus = (state, type = "") => {
   const types = {
@@ -497,11 +516,12 @@ const searchNotes = async (dispatch, options) => {
 
 const UpdateSearchNotes = (state, notes) => [{
   ...state,
+  hasSearched: true,
   searchLinks: notes,
 }, [renderIcons]];
 
 const GetSearchLinks = (state) => {
-  return [state, [searchNotes, { state, UpdateSearchNotes }], [renderIcons]];
+  return [state, [searchNotes, { state }], [renderIcons]];
 };
 
 const ControlModule = (state, type) => {
@@ -545,6 +565,7 @@ const ControlModule = (state, type) => {
   const close = (state) => {
     const newState = {
       ...state,
+      hasSearched: false,
       controls: {
         ...state.controls,
         active: "",
@@ -562,6 +583,7 @@ const ControlModule = (state, type) => {
 
     return {
       ...state,
+      hasSearched: type === "SEARCH" ? false : state.hasSearched,
       controls: {
         ...state.controls,
         [type]: {
@@ -604,6 +626,15 @@ const ControlModule = (state, type) => {
     h("i", { "data-feather": types[type].iconKey, class: "icon" }),
   ]);
 };
+
+const ControlMessage = props => {
+  const msg = props.hasSearched && props.searchLinks.length === 0 ? "No search results" : null;
+  if (msg) {
+    return h("div", {class: "control-message"}, text(msg))
+  } else {
+    return h("div", {}, [])
+  }
+}
 
 // Toggle List Module
 const ToggleList = {
@@ -828,6 +859,7 @@ const leftOpen = (props) => {
     h("div", { class: "control-wrap" }, [
       ControlModule(props, "ADD"),
       ControlModule(props, "SEARCH"),
+      ControlMessage(props),
     ]),
     h("div", { class: "lc" }, [
       // needs to be wrapped otherwise hyperapp errors
@@ -899,6 +931,7 @@ const mobileNav = (props) => {
     h("div", { class: "control-wrap" }, [
       ControlModule(props, "ADD"),
       ControlModule(props, "SEARCH"),
+      ControlMessage(props),
     ]),
     h("div", { class: "lc" }, [
       // needs to be wrapped otherwise hyperapp errors
@@ -1058,6 +1091,31 @@ const HashHandler = (state, hash) => {
   ];
 };
 
+// S3. keyboard shortcut handlers
+const _onkeydown = (dispatch, options) => {
+  const handler = (event) => dispatch(options.action, event);
+  addEventListener("keydown", handler);
+  requestAnimationFrame(handler);
+  console.log("woah");
+  return () => removeEventListener("keydown", handler);
+};
+
+const onkeydown = (action) => [_onkeydown, { action }];
+
+const KeydownHandler = (state, event) => {
+  if (event.metaKey || event.ctrlKey) {
+    if (event.key === 'i') {
+      return ToggleView(state)
+    } else if (event.key === 'j') {
+      return ToggleFocusMode(state)
+    }
+  } 
+  return [
+    state,
+    [renderIcons]
+  ];
+};
+
 const initState = {
   view: "EDIT",
   note: {
@@ -1081,6 +1139,7 @@ const initState = {
       inputValue: "",
     },
   },
+  hasSearched: false,
   searchLinks: [],
   showLeft: true,
   showRight: true,
@@ -1097,6 +1156,7 @@ app({
   subscriptions: (state) => [
     onhashchange(HashHandler),
     onresize(ResizeHandler),
+    onkeydown(KeydownHandler)
   ],
   node: document.getElementById("app"),
 });
