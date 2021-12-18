@@ -8,7 +8,6 @@ body {
   font-size: 1rem;
   background-color: #fff;
   color: #313131;
-  height: 100vh;
   margin: 0px;
   display: flex;
   flex-direction: column;
@@ -18,7 +17,9 @@ body {
 
 .wrapper {
   display: flex;
-  height: 100%;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
 }
 
 .side-pane {
