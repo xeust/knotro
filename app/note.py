@@ -10,8 +10,16 @@ deta = Deta()
 
 notes = deta.Base("knotro_notes")
 
-
 base_url = "/"
+
+default_content = ["have the curiosity to open the Door in the Wall...", 
+"come back through the Door in the Wall, not quite the same, humbler yet better equipped...",
+"that's all the motorcycle is, a system of concepts worked out in steel...",
+f"For the game of creation, a sacred \"Yes\" is needed...",
+"one cannot fly into flying...",
+"where is your way...",
+"try Cmd/Ctrl + i to change the view...",
+"try Cmd/Ctrl + j to toggle focus mode..."]
 
 if not os.getenv("DETA_SPACE_APP"):
     base_url = "https://" + os.environ["DETA_PATH"] + ".deta.dev/"
@@ -114,7 +122,7 @@ def add_backlink_or_create(note_name, backlink):
         
     else:
         backlinks = [backlink]
-        note = Note(name=note_name, backlinks=backlinks)
+        note = Note(name=note_name, backlinks=backlinks, content=random.choice(default_content))
         return db_update_note(note)
 
 
