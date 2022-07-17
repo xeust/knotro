@@ -1,0 +1,23 @@
+name: knotro
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    branches: [ "space-staging" ]
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  builder:
+    # forced to use ubuntu-latest for now
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - id: run-action
+        uses: deta/publish-pc-app@main
+        with:
+          app: "4187959c-ee3e-4d19-84a0-ae06138849d6"
+          desc: "the future of notes"
+        env:
+          DETA_ACCESS_TOKEN: ${{ secrets.DETA_ACCESS_TOKEN }}
