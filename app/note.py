@@ -21,7 +21,7 @@ f"For the game of creation, a sacred \"Yes\" is needed...",
 "try Cmd/Ctrl + i to change the view...",
 "try Cmd/Ctrl + j to toggle focus mode..."]
 
-if not os.getenv("DETA_SPACE_APP"):
+if not os.getenv("DETA_SPACE_APP") and os.getenv("DETA_RUNTIME"):
     base_url = "https://" + os.environ["DETA_PATH"] + ".deta.dev/"
 
 

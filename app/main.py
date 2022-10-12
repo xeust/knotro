@@ -1,4 +1,3 @@
-from deta import App
 from fastapi import FastAPI, Response, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -8,9 +7,8 @@ from jinja2 import Template
 from note import *
 
 
-fast = FastAPI()
 
-app = App(fast)
+app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -114,19 +112,3 @@ async def modify_public(note_name: str, note_status: NoteStatus):
         return {"message": "success"}
     else:
         return {"message":"failed"}
-
-    
-@app.lib.run("del")
-def runner(event):
-    note_name = event.json.get("name")
-    key = urlsafe_key(note_name)
-    note = notes.get(key)
-    return notes.delete(note["key"])
-
-
-@app.lib.run("get")
-def runner(event):
-    note_name = event.json.get("name")
-    key = urlsafe_key(note_name)
-    note = notes.get(key)
-    return note

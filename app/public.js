@@ -134,7 +134,7 @@ const ToggleList = {
         ]),
       ]),
       ...model.links.map((link) =>
-        h("a", { href: `#${link}`, class: "toggle-link ellipsis" }, text(link))
+        h("a", { href: `${window.location.origin}/public/${link}`, class: "toggle-link ellipsis" }, text(link))
       ),
     ]);
   },
@@ -207,11 +207,11 @@ const leftOpenMb = (props) => {
         "a",
         {
           class: "sponsor mlauto sponsor-mb",
-          href: "https://deta.space/discovery/yarc",
+          href: "https://alpha.deta.space/",
         },
         [
           h("div", { innerHTML: svg, class: "sponsor-svg" }),
-          h("div", { class: "sponsor-message" }, text("Install on Deta")),
+          h("div", { class: "sponsor-message" }, text("Knotro + Deta")),
         ]
       ),
     ]),
@@ -289,11 +289,11 @@ const centralMb = (props) => {
         "a",
         {
           class: "sponsor mlauto sponsor-mb",
-          href: "https://deta.space/discovery/yarc",
+          href: "https://alpha.deta.space",
         },
         [
           h("div", { innerHTML: svg, class: "sponsor-svg" }),
-          h("div", { class: "sponsor-message" }, text("Install on Deta")),
+          h("div", { class: "sponsor-message" }, text("Knotro + Deta")),
         ]
       ),
     ]),
@@ -335,9 +335,9 @@ const central = (props) => {
         "div",
         { class: `footer-content-wrap`, style: { "width": `${contentWidth}px` } },
         [
-          h("a", { class: "sponsor", href:"https://deta.space/discovery/yarc" }, [
+          h("a", { class: "sponsor", href:"https://alpha.deta.space" }, [
             h("div", { innerHTML: svg, class: "sponsor-svg" }),
-            h("div", { class: "sponsor-message" }, text("Install on Deta")),
+            h("div", { class: "sponsor-message" }, text("Knotro + Deta")),
           ]),
         ]),
     ])
