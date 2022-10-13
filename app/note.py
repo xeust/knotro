@@ -8,7 +8,8 @@ from deta import Deta
 
 deta = Deta()
 
-notes = deta.Base("knotro_notes")
+notes = deta.Base("notes")
+drive_notes = deta.Drive("notes")
 
 base_url = "/"
 
@@ -73,7 +74,6 @@ def recent_notes():
 # get note, transform if empty lists
 def get_note(note_name):
     note_key = urlsafe_key(note_name)
-    print(note_key)
     note_dict = notes.get(note_key)
 
     if not note_dict:
@@ -98,6 +98,7 @@ def db_update_note(note: Note):
     note_dict["last_modified"] = str(datetime.now(timezone.utc).isoformat())
     note_dict["recent_index"] = datetime.utcnow().timestamp()
     notes.put(note_dict, urlsafe_key(note.name))
+    drive_notes.put(f"{note_dict["name"]}.md", str(note_dict["content"]))
     return Note(**note_dict)
 
 # remove a backlink from a note

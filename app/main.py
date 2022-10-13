@@ -104,7 +104,7 @@ async def add_note(new_note: Note):
     
     return {"message": "success"}
 
-@app.put("/public/{note_name}")
+@app.put("/make_public/{note_name}")
 async def modify_public(note_name: str, note_status: NoteStatus):
     note = modify_public_status(note_name, note_status.is_public)
 

@@ -159,7 +159,7 @@ const updateDatabase = async (dispatch, options) => {
 };
 
 const modifyPublic = (dispatch, options) => {
-  const response = fetch(`/public/${encodeURI(options.note.name)}`, {
+  const response = fetch(`/make_public/${encodeURI(options.note.name)}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
