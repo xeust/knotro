@@ -98,7 +98,7 @@ def db_update_note(note: Note):
     note_dict["last_modified"] = str(datetime.now(timezone.utc).isoformat())
     note_dict["recent_index"] = datetime.utcnow().timestamp()
     notes.put(note_dict, urlsafe_key(note.name))
-    drive_notes.put(f"{note_dict["name"]}.md", str(note_dict["content"]))
+    drive_notes.put(f"{note_dict['name']}.md", str(note_dict["content"]))
     return Note(**note_dict)
 
 # remove a backlink from a note
