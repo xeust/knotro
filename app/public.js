@@ -315,7 +315,7 @@ const central = (props) => {
   }
 
 
-  contentWidth = centralWidth > 1182 ? 882 : centralWidth - 300;
+  contentWidth = centralWidth > 1182 ? 768 : centralWidth - 300;
 
   if (props.isMobile) {
     return centralMb(props)

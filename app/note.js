@@ -6,6 +6,7 @@
 // */
 
 const converter = new showdown.Converter();
+converter.setOption('simpleLineBreaks', true);
 let jar;
 
 // helpers
@@ -220,6 +221,7 @@ const attachMarkdown = (dispatch, options) => {
 
   const convertedMarkdown = linkSub(rawMD, uniqueLinks);
   const html = converter.makeHtml(convertedMarkdown);
+  console.log(html);
   requestAnimationFrame(() => {
     const container = document.getElementById("container");
     container.innerHTML = html;
@@ -234,7 +236,6 @@ const getLocalNote = (name) => {
 const lazyLoadNote = (dispatch, options) => {
   // check if there is a local version of the note
   const note = getLocalNote(options.state.route);
-  console.log(note);
   if (note) {
     const content = note.content;
     const uniqueLinks = getUniqueLinks(content);
@@ -784,7 +785,7 @@ const central = (props) => {
     centralWidth = window.innerWidth - 80;
   }
 
-  contentWidth = centralWidth > 1182 ? 882 : centralWidth - 300;
+  contentWidth = centralWidth > 1182 ? 768 : centralWidth - 300;
 
   // shrink the content-wrap divs based on central width
   // 886, 768, 480, 288
@@ -1096,7 +1097,6 @@ const _onkeydown = (dispatch, options) => {
   const handler = (event) => dispatch(options.action, event);
   addEventListener("keydown", handler);
   requestAnimationFrame(handler);
-  console.log("woah");
   return () => removeEventListener("keydown", handler);
 };
 
