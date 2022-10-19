@@ -351,7 +351,7 @@ const main = (props) => {
 
 const initState = {
   note: input,
-  showLeft: true,
+  showLeft: Math.min(window.innerWidth) < 768 ? false : true,
   collapseLinks: false,
   collapseBacklinks: false,
   isMobile: Math.min(window.innerWidth) < 768,

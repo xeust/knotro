@@ -1141,7 +1141,7 @@ const initState = {
   },
   hasSearched: false,
   searchLinks: [],
-  showLeft: true,
+  showLeft: Math.min(window.innerWidth) < 768 ? false : true,
   showRight: true,
   collapseRecent: false,
   collapseLinks: false,

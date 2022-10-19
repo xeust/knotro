@@ -129,10 +129,11 @@ a:hover {
 .icon-wrap {
   display: flex;
   align-items: center;
-  width: 24px;
-  height: 24px;
+  width: 40px;
+  height: 40px;
   padding: 8px;
   color: #8f8f8f;
+  box-sizing: border-box;
 }
 
 .icon-wrap:hover {
