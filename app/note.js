@@ -785,10 +785,10 @@ const central = (props) => {
     centralWidth = window.innerWidth - 80;
   }
 
-  contentWidth = centralWidth > 1182 ? 768 : centralWidth - 300;
+  contentWidth = centralWidth > 1182 ? 768 : centralWidth - 340;
 
   // shrink the content-wrap divs based on central width
-  // 886, 768, 480, 288
+  // 768, 480, 288
 
   return h("div", { class: `central-pane`, style: { "width": `${centralWidth}px` } }, [
     h("div", { class: `central-content-wrap`, style: { "width": `${contentWidth}px` } }, [
