@@ -148,6 +148,7 @@ a:hover {
   height: 20px;
   padding: 2px;
   color: #8f8f8f;
+  box-sizing: border-box;
 }
 
 .icon-wrap-small:hover {
@@ -160,8 +161,9 @@ a:hover {
 .input-wrap {
   display: flex;
   padding: 8px 8px 8px 12px;
-  height: 24px;
+  height: 40px;
   align-items: center;
+  box-sizing: border-box;
 }
 
 .input {
