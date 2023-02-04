@@ -1,11 +1,10 @@
-from fastapi import FastAPI, Response, HTTPException
-from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
-from fastapi.staticfiles import StaticFiles
-from datetime import datetime, timezone
-from pydantic import BaseModel
-from jinja2 import Template
 from note import *
-
+from jinja2 import Template
+from pydantic import BaseModel
+from datetime import datetime, timezone
+from fastapi import FastAPI, Response, HTTPException
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
 
 
 app = FastAPI()

@@ -1,0 +1,11 @@
+# Spacefile Docs: https://alpha.deta.space/docs/en/reference/spacefile 
+v: 0
+icon: ./knotro.webp
+app_name: Knotro
+micros:
+    - name: app
+      src: .
+      engine: python3.9
+      primary: true
+      presets:
+        api_keys: true
