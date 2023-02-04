@@ -1,7 +1,0 @@
-v: 0
-icon: ./knotro.png
-micros:
-  - name: knotro
-    directory: app
-    engine: python3.9
-    primary: true
