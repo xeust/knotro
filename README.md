@@ -1,7 +1,11 @@
 ## yarc
 
 
+<<<<<<< HEAD
 ![yarc](assets/yarc_backlinks.png)
+=======
+![yarc](playground/assets/yarc_backlinks.png)
+>>>>>>> knotro-dev
 
 ### General Info
 
@@ -32,7 +36,7 @@ The home page lets one search for or go directly to notes.
 
 ### Deploying
 
-My instance of yarc is running on [Deta](https://www.deta.sh/).
+My instance of knotro is running on [Deta Space](https://deta.space/discovery/@max/knospace).
 
 It could, with little modification, be configured to run elsewhere (it's a FastAPI app), but a database is needed.
 

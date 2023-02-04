@@ -1,6 +1,0 @@
-bleach==3.3.0
-deta==0.6
-fastapi==0.65.2
-Jinja2==2.11.3
-MarkupSafe==1.1.1
-starlette
