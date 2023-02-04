@@ -1,4 +1,4 @@
-bleach==3.1.5
+bleach==3.3.0
 deta==0.9
 fastapi==0.60.1
 Jinja2==2.11.2
