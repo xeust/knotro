@@ -7,6 +7,6 @@ packaging==20.4
 pydantic==1.6.1
 pyparsing==2.4.7
 six==1.15.0
-starlette==0.13.6
+starlette==0.25.0
 webencodings==0.5.1
 aiofiles
