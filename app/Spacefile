@@ -1,6 +1,6 @@
 # Spacefile Docs: https://alpha.deta.space/docs/en/reference/spacefile 
 v: 0
-icon: ./knotro.webp
+icon: ./knotro.png
 app_name: Knotro
 micros:
     - name: app
@@ -9,3 +9,6 @@ micros:
       primary: true
       presets:
         api_keys: true
+      public_routes:
+        - "/public*"
+        - "/static*"
