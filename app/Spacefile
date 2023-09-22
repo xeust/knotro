@@ -12,3 +12,7 @@ micros:
       public_routes:
         - "/public*"
         - "/static*"
+      run:
+        uvicorn main:app
+      dev:
+        uvicorn main:app --reload

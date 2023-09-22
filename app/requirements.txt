@@ -10,3 +10,4 @@ six==1.15.0
 starlette==0.13.6
 webencodings==0.5.1
 aiofiles
+uvicorn
